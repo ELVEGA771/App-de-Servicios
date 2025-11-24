@@ -1,0 +1,132 @@
+import 'package:servicios_app/core/api/dio_client.dart';
+import 'package:servicios_app/core/models/contratacion.dart';
+import 'package:servicios_app/core/models/api_response.dart';
+import 'package:servicios_app/config/constants.dart';
+
+class ContratacionService {
+  final DioClient _dioClient = DioClient();
+
+  // Get contrataciones by cliente
+  Future<ApiResponse<List<Contratacion>>> getContratacionesByCliente({
+    int page = 1,
+    int limit = AppConstants.DEFAULT_PAGE_SIZE,
+    String? estado,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+      if (estado != null) 'estado': estado,
+    };
+
+    final response = await _dioClient.get(
+      '/contrataciones/cliente',
+      queryParameters: queryParams,
+    );
+
+    final contrataciones = (response.data['data'] as List)
+        .map((e) => Contratacion.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    return ApiResponse(
+      success: response.data['success'] as bool,
+      data: contrataciones,
+      message: response.data['message'] as String?,
+      pagination: response.data['pagination'] != null
+          ? PaginationData.fromJson(response.data['pagination'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  // Get contrataciones by empresa
+  Future<ApiResponse<List<Contratacion>>> getContratacionesByEmpresa({
+    int page = 1,
+    int limit = AppConstants.DEFAULT_PAGE_SIZE,
+    String? estado,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+      if (estado != null) 'estado': estado,
+    };
+
+    final response = await _dioClient.get(
+      '/contrataciones/empresa',
+      queryParameters: queryParams,
+    );
+
+    final contrataciones = (response.data['data'] as List)
+        .map((e) => Contratacion.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    return ApiResponse(
+      success: response.data['success'] as bool,
+      data: contrataciones,
+      message: response.data['message'] as String?,
+      pagination: response.data['pagination'] != null
+          ? PaginationData.fromJson(response.data['pagination'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  // Get contratacion by ID
+  Future<Contratacion> getContratacionById(int id) async {
+    final response = await _dioClient.get('/contrataciones/$id');
+    return Contratacion.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  // Create contratacion
+  Future<Contratacion> createContratacion({
+    required int servicioId,
+    required int sucursalId,
+    int? direccionId,
+    DateTime? fechaProgramada,
+    String? codigoCupon,
+    String? metodoPago,
+    String? notas,
+  }) async {
+    final response = await _dioClient.post(
+      '/contrataciones',
+      data: {
+        'id_servicio': servicioId,
+        'id_sucursal': sucursalId,
+        if (direccionId != null) 'id_direccion': direccionId,
+        if (fechaProgramada != null)
+          'fecha_programada': fechaProgramada.toIso8601String(),
+        if (codigoCupon != null) 'codigo_cupon': codigoCupon,
+        if (metodoPago != null) 'metodo_pago': metodoPago,
+        if (notas != null) 'notas': notas,
+      },
+    );
+    return Contratacion.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  // Update contratacion status
+  Future<Contratacion> updateEstado({
+    required int id,
+    required String nuevoEstado,
+  }) async {
+    final response = await _dioClient.patch(
+      '/contrataciones/$id/estado',
+      data: {'nuevo_estado': nuevoEstado},
+    );
+    return Contratacion.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  // Cancel contratacion
+  Future<Contratacion> cancelContratacion({
+    required int id,
+    String? motivo,
+  }) async {
+    final response = await _dioClient.post(
+      '/contrataciones/$id/cancelar',
+      data: motivo != null ? {'motivo': motivo} : null,
+    );
+    return Contratacion.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  // Get estadísticas for empresa dashboard
+  Future<Map<String, dynamic>> getEstadisticas() async {
+    final response = await _dioClient.get('/contrataciones/empresa/estadisticas');
+    return response.data['data'] as Map<String, dynamic>;
+  }
+}

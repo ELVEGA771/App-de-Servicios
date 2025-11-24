@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(flutter create:*)",
+      "Bash(flutter devices:*)",
+      "Bash(curl:*)",
+      "Bash(npm run dev:*)",
+      "Bash(flutter run:*)",
+      "Bash(cat:*)",
+      "Bash(pkill:*)",
+      "Bash(/tmp/flutter_reload_trigger:*)",
+      "Bash(mysql:*)",
+      "Bash(killall:*)",
+      "Bash(nc:*)",
+      "Bash(kill:*)",
+      "Bash(xargs:*)",
+      "Bash(lsof:*)",
+      "Bash(/dev/pts/0)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(timeout 2 bash:*)",
+      "Bash(/dev/tcp/localhost/57362)",
+      "Bash(python3:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
