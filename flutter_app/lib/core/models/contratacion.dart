@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class Contratacion {
   final int id;
   final int idCliente;

@@ -11,7 +11,7 @@ class ContratacionProvider with ChangeNotifier {
   PaginationData? _pagination;
   Map<String, dynamic>? _estadisticas;
   bool _isLoading = false;
-  bool _isLoadingMore = false;
+  final bool _isLoadingMore = false;
   String? _error;
 
   // Getters
@@ -101,7 +101,8 @@ class ContratacionProvider with ChangeNotifier {
   Future<void> loadContratacionDetails(int id) async {
     _setLoading(true);
     try {
-      _selectedContratacion = await _contratacionService.getContratacionById(id);
+      _selectedContratacion =
+          await _contratacionService.getContratacionById(id);
     } catch (e) {
       _setError(e.toString());
     } finally {

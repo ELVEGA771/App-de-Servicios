@@ -52,65 +52,87 @@ class Servicio {
         return imagenes.map((e) => e.toString()).toList();
       }
       if (imagenes is String) {
-        // Split by comma instead of JSON parsing
         return imagenes.split(',').map((e) => e.trim()).toList();
       }
       return null;
     }
 
     try {
-      // Handle both formats: id_servicio and id
-      int id = json['id_servicio'] as int? ?? json['id'] as int;
-      print('DEBUG Servicio.fromJson: id = $id');
+      // --- CORRECCIÓN DE IDs (Manejar posible String) ---
+      int id;
+      if (json['id_servicio'] != null) {
+        id = int.parse(json['id_servicio'].toString());
+      } else {
+        id = int.parse(json['id'].toString());
+      }
 
       // Handle both formats: servicio_nombre and nombre
-      String nombre = json['servicio_nombre'] as String? ?? json['nombre'] as String;
-      print('DEBUG Servicio.fromJson: nombre = $nombre');
+      String nombre =
+          json['servicio_nombre'] as String? ?? json['nombre'] as String;
 
-      // Handle both formats: precio_base and precio
-      num precio = json['precio_base'] as num? ?? json['precio'] as num;
-      print('DEBUG Servicio.fromJson: precio = $precio');
+      // --- CORRECCIÓN DEL PRECIO (EL ERROR ESTABA AQUÍ) ---
+      // Permitimos que venga como String o como num y lo convertimos a double seguro
+      dynamic precioData = json['precio_base'] ?? json['precio'];
+      double precio = 0.0;
+
+      if (precioData != null) {
+        if (precioData is num) {
+          precio = precioData.toDouble();
+        } else if (precioData is String) {
+          precio = double.tryParse(precioData) ?? 0.0;
+        }
+      }
+      print('DEBUG Servicio.fromJson: precio parseado = $precio');
 
       // Handle both formats: servicio_estado and estado
-      String estado = json['servicio_estado'] as String? ?? json['estado'] as String? ?? 'disponible';
-      print('DEBUG Servicio.fromJson: estado = $estado');
+      String estado = json['servicio_estado'] as String? ??
+          json['estado'] as String? ??
+          'disponible';
 
       // Parse duration - could be int or String
       String? duracionEstimada;
       if (json['duracion_estimada'] != null) {
         duracionEstimada = json['duracion_estimada'].toString();
       }
-      print('DEBUG Servicio.fromJson: duracionEstimada = $duracionEstimada');
 
-    return Servicio(
-      id: id,
-      idEmpresa: json['id_empresa'] as int?,
-      idCategoria: json['id_categoria'] as int?,
-      nombre: nombre,
-      descripcion: json['descripcion'] as String? ?? '',
-      precio: precio.toDouble(),
-      duracionEstimada: duracionEstimada,
-      imagenPrincipal: json['imagen_principal'] as String? ?? json['imagen_url'] as String?,
-      imagenesAdicionales: parseImagenes(json['imagenes_adicionales']),
-      videoUrl: json['video_url'] as String?,
-      estado: estado,
-      calificacionPromedio: json['calificacion_promedio'] != null
-          ? (json['calificacion_promedio'] as num).toDouble()
-          : (json['empresa_calificacion'] != null
-              ? double.tryParse(json['empresa_calificacion'].toString())
-              : null),
-      totalCalificaciones: json['total_calificaciones'] as int?,
-      fechaCreacion: json['fecha_creacion'] != null
-          ? DateTime.parse(json['fecha_creacion'] as String)
-          : DateTime.now(),
-      fechaActualizacion: json['fecha_actualizacion'] != null
-          ? DateTime.parse(json['fecha_actualizacion'] as String)
-          : DateTime.now(),
-      empresaNombre: json['empresa_nombre'] as String?,
-      empresaLogo: json['empresa_logo'] as String?,
-      categoriaNombre: json['categoria_nombre'] as String?,
-      totalContrataciones: json['total_contrataciones'] as int?,
-    );
+      return Servicio(
+        id: id,
+        idEmpresa: json['id_empresa'] != null
+            ? int.tryParse(json['id_empresa'].toString())
+            : null,
+        idCategoria: json['id_categoria'] != null
+            ? int.tryParse(json['id_categoria'].toString())
+            : null,
+        nombre: nombre,
+        descripcion: json['descripcion'] as String? ?? '',
+        precio: precio, // Usamos la variable convertida arriba
+        duracionEstimada: duracionEstimada,
+        imagenPrincipal: json['imagen_principal'] as String? ??
+            json['imagen_url'] as String?,
+        imagenesAdicionales: parseImagenes(json['imagenes_adicionales']),
+        videoUrl: json['video_url'] as String?,
+        estado: estado,
+        calificacionPromedio: json['calificacion_promedio'] != null
+            ? double.tryParse(json['calificacion_promedio'].toString())
+            : (json['empresa_calificacion'] != null
+                ? double.tryParse(json['empresa_calificacion'].toString())
+                : null),
+        totalCalificaciones: json['total_calificaciones'] != null
+            ? int.tryParse(json['total_calificaciones'].toString())
+            : null,
+        fechaCreacion: json['fecha_creacion'] != null
+            ? DateTime.parse(json['fecha_creacion'] as String)
+            : DateTime.now(),
+        fechaActualizacion: json['fecha_actualizacion'] != null
+            ? DateTime.parse(json['fecha_actualizacion'] as String)
+            : DateTime.now(),
+        empresaNombre: json['empresa_nombre'] as String?,
+        empresaLogo: json['empresa_logo'] as String?,
+        categoriaNombre: json['categoria_nombre'] as String?,
+        totalContrataciones: json['total_contrataciones'] != null
+            ? int.tryParse(json['total_contrataciones'].toString())
+            : null,
+      );
     } catch (e, stackTrace) {
       print('ERROR Servicio.fromJson: $e');
       print('Stack trace: $stackTrace');
@@ -143,9 +165,11 @@ class Servicio {
   }
 
   bool get isActive => estado == 'activo';
-  bool get hasRating => calificacionPromedio != null && calificacionPromedio! > 0;
+  bool get hasRating =>
+      calificacionPromedio != null && calificacionPromedio! > 0;
   bool get hasVideo => videoUrl != null && videoUrl!.isNotEmpty;
-  bool get hasImages => imagenesAdicionales != null && imagenesAdicionales!.isNotEmpty;
+  bool get hasImages =>
+      imagenesAdicionales != null && imagenesAdicionales!.isNotEmpty;
 
   Servicio copyWith({
     int? id,

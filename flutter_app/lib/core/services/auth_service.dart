@@ -3,9 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:servicios_app/config/constants.dart';
 import 'package:servicios_app/core/api/dio_client.dart';
 import 'package:servicios_app/core/models/auth_response.dart';
-import 'package:servicios_app/core/models/usuario.dart';
-import 'package:servicios_app/core/models/cliente.dart';
-import 'package:servicios_app/core/models/empresa.dart';
 
 class AuthService {
   final DioClient _dioClient = DioClient();
@@ -77,7 +74,8 @@ class AuthService {
       data['telefono'] = telefono;
     }
     if (fechaNacimiento != null) {
-      data['fecha_nacimiento'] = fechaNacimiento.toIso8601String().split('T')[0];
+      data['fecha_nacimiento'] =
+          fechaNacimiento.toIso8601String().split('T')[0];
     }
 
     final response = await _dioClient.post(

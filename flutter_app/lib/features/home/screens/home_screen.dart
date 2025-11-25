@@ -6,6 +6,7 @@ import 'package:servicios_app/core/providers/servicio_provider.dart';
 import 'package:servicios_app/core/providers/notificacion_provider.dart';
 import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_dashboard_screen.dart';
+import 'package:servicios_app/features/empresa/screens/empresa_services_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +21,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    // CAMBIO AQUÍ: Usar addPostFrameCallback
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
   }
 
   Future<void> _loadInitialData() async {
@@ -171,13 +175,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.search, color: AppTheme.textSecondaryColor),
+                        const Icon(Icons.search,
+                            color: AppTheme.textSecondaryColor),
                         const SizedBox(width: 12),
                         Text(
                           'Buscar servicios...',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppTheme.textSecondaryColor,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
                         ),
                       ],
                     ),
@@ -200,7 +206,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.only(right: 12),
                       child: InkWell(
                         onTap: () {
-                          servicioProvider.setFilters(categoriaId: categoria.id);
+                          servicioProvider.setFilters(
+                              categoriaId: categoria.id);
                         },
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
@@ -241,7 +248,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Center(child: CircularProgressIndicator()),
                     )
                   : SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 0.75,
                         crossAxisSpacing: 12,
@@ -265,7 +273,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: AppTheme.backgroundColor,
-                                        borderRadius: const BorderRadius.vertical(
+                                        borderRadius:
+                                            const BorderRadius.vertical(
                                           top: Radius.circular(12),
                                         ),
                                       ),
@@ -330,14 +339,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildServicesTab() {
-    return const Center(child: Text('Mis Servicios - Implementar'));
+    return const EmpresaServicesScreen();
   }
 
   Widget _buildProfileTab() {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          final authProvider =
+              Provider.of<AuthProvider>(context, listen: false);
           authProvider.logout();
           AppRoutes.navigateToLogin(context);
         },

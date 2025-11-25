@@ -1,6 +1,17 @@
+import 'dart:io'; // Necesitas importar esto arriba
+
 class AppConstants {
   // API Configuration
-  static const String API_BASE_URL = 'http://localhost:5001/api';
+  static String get API_BASE_URL {
+    if (Platform.isAndroid) {
+      // 10.0.2.2 es la dirección especial para que el emulador vea tu PC
+      return 'http://10.0.2.2:5001/api';
+    } else {
+      // Para Windows, iOS y Web, localhost funciona bien
+      return 'http://localhost:5001/api';
+    }
+  }
+
   static const String API_TIMEOUT = '30000'; // 30 seconds
 
   // Storage Keys
@@ -47,7 +58,12 @@ class AppConstants {
 
   // Image Upload
   static const int MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-  static const List<String> ALLOWED_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'webp'];
+  static const List<String> ALLOWED_IMAGE_TYPES = [
+    'jpg',
+    'jpeg',
+    'png',
+    'webp'
+  ];
 
   // Video
   static const int MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
@@ -58,10 +74,14 @@ class AppConstants {
   static const Duration CACHE_DURATION_LONG = Duration(days: 1);
 
   // Error Messages
-  static const String ERROR_NETWORK = 'Error de conexión. Verifica tu internet.';
-  static const String ERROR_TIMEOUT = 'La solicitud tardó demasiado. Intenta de nuevo.';
-  static const String ERROR_UNAUTHORIZED = 'Sesión expirada. Inicia sesión nuevamente.';
-  static const String ERROR_FORBIDDEN = 'No tienes permiso para realizar esta acción.';
+  static const String ERROR_NETWORK =
+      'Error de conexión. Verifica tu internet.';
+  static const String ERROR_TIMEOUT =
+      'La solicitud tardó demasiado. Intenta de nuevo.';
+  static const String ERROR_UNAUTHORIZED =
+      'Sesión expirada. Inicia sesión nuevamente.';
+  static const String ERROR_FORBIDDEN =
+      'No tienes permiso para realizar esta acción.';
   static const String ERROR_NOT_FOUND = 'Recurso no encontrado.';
   static const String ERROR_SERVER = 'Error del servidor. Intenta más tarde.';
   static const String ERROR_UNKNOWN = 'Ocurrió un error inesperado.';
@@ -72,4 +92,17 @@ class AppConstants {
   static const String SUCCESS_UPDATE = 'Actualización exitosa';
   static const String SUCCESS_DELETE = 'Eliminado exitosamente';
   static const String SUCCESS_CREATE = 'Creado exitosamente';
+
+  static String fixImageUrl(String url) {
+    if (url.isEmpty) return url;
+
+    // Si estamos en Android (Emulador), cambiamos localhost por 10.0.2.2
+    if (Platform.isAndroid) {
+      return url
+          .replaceFirst('localhost', '10.0.2.2')
+          .replaceFirst('127.0.0.1', '10.0.2.2');
+    }
+
+    return url;
+  }
 }

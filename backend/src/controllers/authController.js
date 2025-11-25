@@ -69,10 +69,28 @@ const register = async (req, res, next) => {
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
 
+    let additionalData = {};
+    if (tipo_usuario === USER_TYPES.COMPANY) {
+        // Buscamos la empresa recién creada para devolver su ID
+        const empresa = await Empresa.findByUserId(result.userId);
+        if (empresa) {
+            additionalData.empresa = {
+                id_empresa: empresa.id_empresa, // ¡Este es el ID que te falta!
+                razon_social: empresa.razon_social,
+                ruc_nit: empresa.ruc_nit
+            };
+        }
+    } else if (tipo_usuario === USER_TYPES.CLIENT) {
+        const cliente = await Cliente.findByUserId(result.userId);
+        if (cliente) {
+            additionalData.cliente = cliente;
+        }
+    }
     sendSuccess(
       res,
       {
         user: { id_usuario: result.userId, email, nombre, apellido, tipo_usuario },
+        ...additionalData, // <-- Importante: Agregar esto aquí
         accessToken,
         refreshToken
       },
