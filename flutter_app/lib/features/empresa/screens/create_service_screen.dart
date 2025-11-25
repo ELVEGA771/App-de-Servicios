@@ -66,7 +66,8 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
         _categorias = categorias;
         _isLoadingCategorias = false;
       });
-      print('DEBUG: Estado actualizado. _categorias.length = ${_categorias.length}');
+      print(
+          'DEBUG: Estado actualizado. _categorias.length = ${_categorias.length}');
     } catch (e) {
       print('DEBUG: Error al cargar categorías: $e');
       setState(() {
@@ -202,7 +203,9 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
         String errorMessage = 'Error al crear servicio';
         if (e.toString().contains('VALIDATION_ERROR')) {
           errorMessage = 'Por favor verifica los campos del formulario';
-        } else if (e.toString().contains('Duration must be a positive number')) {
+        } else if (e
+            .toString()
+            .contains('Duration must be a positive number')) {
           errorMessage = 'La duración debe ser un número positivo (ej: 2)';
         } else if (e.toString().contains('Network')) {
           errorMessage = 'Error de conexión. Verifica tu internet';
@@ -326,7 +329,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
 
                     // Categoría
                     DropdownButtonFormField<int>(
-                      value: _selectedCategoriaId,
+                      initialValue: _selectedCategoriaId,
                       decoration: InputDecoration(
                         labelText: 'Categoría',
                         prefixIcon: const Icon(Icons.category),
@@ -356,7 +359,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
 
                     // Sucursal (opcional)
                     DropdownButtonFormField<int>(
-                      value: _selectedSucursalId,
+                      initialValue: _selectedSucursalId,
                       decoration: InputDecoration(
                         labelText: 'Sucursal (opcional)',
                         prefixIcon: const Icon(Icons.store),
@@ -375,7 +378,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
                             value: sucursal.idSucursal,
                             child: Text(sucursal.nombreSucursal),
                           );
-                        }).toList(),
+                        }),
                       ],
                       onChanged: (value) {
                         setState(() {

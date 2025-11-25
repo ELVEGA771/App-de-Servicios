@@ -9,7 +9,7 @@ class Cupon {
   final double? descuentoMaximo;
   final DateTime? fechaInicio;
   final DateTime? fechaExpiracion;
-  final int? usos Maximos;
+  final int? usosMaximos;
   final int? cantidadUsada;
   final String estado;
   final DateTime fechaCreacion;
@@ -84,8 +84,10 @@ class Cupon {
   }
 
   bool get isActive => estado == 'activo';
-  bool get isExpired => fechaExpiracion != null && fechaExpiracion!.isBefore(DateTime.now());
-  bool get isStarted => fechaInicio == null || fechaInicio!.isBefore(DateTime.now());
+  bool get isExpired =>
+      fechaExpiracion != null && fechaExpiracion!.isBefore(DateTime.now());
+  bool get isStarted =>
+      fechaInicio == null || fechaInicio!.isBefore(DateTime.now());
   bool get isValid => isActive && !isExpired && isStarted;
   bool get isPercentage => tipoDescuento == 'porcentaje';
   bool get isFixed => tipoDescuento == 'monto_fijo';
