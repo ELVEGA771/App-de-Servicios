@@ -93,11 +93,12 @@ class AuthService {
     required String email,
     required String password,
     required String nombre,
-    required String apellido, // NUEVO CAMPO
+    required String apellido,
     String? descripcion,
     String? telefono,
     String? rfc,
     String? razonSocial,
+    String? pais,
   }) async {
     final data = {
       'email': email,
@@ -120,6 +121,7 @@ class AuthService {
     if (razonSocial != null && razonSocial.isNotEmpty) {
       data['razon_social'] = razonSocial;
     }
+    if (pais != null && pais.isNotEmpty) data['pais'] = pais;
 
     final response = await _dioClient.post(
       '/auth/register',

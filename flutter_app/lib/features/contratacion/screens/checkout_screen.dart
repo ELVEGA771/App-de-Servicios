@@ -254,7 +254,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               )
             else
               DropdownButtonFormField<int>(
-                value: _selectedDireccionId,
+                initialValue: _selectedDireccionId,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.location_on),

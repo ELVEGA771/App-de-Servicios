@@ -22,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _razonSocialController = TextEditingController();
   final _rfcController = TextEditingController();
   final _descripcionController = TextEditingController();
+  final _paisController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -38,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _razonSocialController.dispose();
     _rfcController.dispose();
     _descripcionController.dispose();
+    _paisController.dispose();
     super.dispose();
   }
 
@@ -75,6 +77,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         descripcion: _descripcionController.text.trim().isEmpty
             ? null
             : _descripcionController.text.trim(),
+        pais: _paisController.text.trim().isEmpty
+            ? null
+            : _paisController.text.trim(),
       );
     }
 
@@ -267,6 +272,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Por favor ingresa la razón social';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // NUEVO CAMPO PAIS
+                  TextFormField(
+                    controller: _paisController,
+                    decoration: const InputDecoration(
+                      labelText: 'País de Operación',
+                      prefixIcon: Icon(Icons.public), // Icono de mundo
+                    ),
+                    validator: (value) {
+                      // Puedes hacerlo obligatorio o no
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingresa el país';
                       }
                       return null;
                     },

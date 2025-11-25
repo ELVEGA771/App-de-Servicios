@@ -123,6 +123,7 @@ class AuthProvider with ChangeNotifier {
     String? telefono,
     String? rfc,
     String? razonSocial,
+    String? pais,
   }) async {
     _setLoading(true);
     _clearError();
@@ -136,6 +137,7 @@ class AuthProvider with ChangeNotifier {
         telefono: telefono,
         rfc: rfc,
         razonSocial: razonSocial,
+        pais: pais,
       );
       _setAuthData(authResponse);
       return true;

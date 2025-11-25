@@ -173,8 +173,9 @@ class ServicioService {
     if (precio != null) data['precio'] = precio;
     if (duracionEstimada != null) data['duracion_estimada'] = duracionEstimada;
     if (imagenPrincipal != null) data['imagen_principal'] = imagenPrincipal;
-    if (imagenesAdicionales != null)
+    if (imagenesAdicionales != null) {
       data['imagenes_adicionales'] = imagenesAdicionales;
+    }
     if (videoUrl != null) data['video_url'] = videoUrl;
     if (estado != null) data['estado'] = estado;
 

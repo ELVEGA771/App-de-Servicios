@@ -16,7 +16,8 @@ class SucursalService {
       'limit': limit,
     };
 
-    final response = await _dioClient.get('/sucursales', queryParameters: queryParams);
+    final response =
+        await _dioClient.get('/sucursales', queryParameters: queryParams);
 
     final sucursales = (response.data['data'] as List)
         .map((e) => Sucursal.fromJson(e as Map<String, dynamic>))
@@ -27,7 +28,8 @@ class SucursalService {
       data: sucursales,
       message: response.data['message'] as String?,
       pagination: response.data['pagination'] != null
-          ? PaginationData.fromJson(response.data['pagination'] as Map<String, dynamic>)
+          ? PaginationData.fromJson(
+              response.data['pagination'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -50,7 +52,10 @@ class SucursalService {
   Future<Sucursal> createSucursal({
     required String nombreSucursal,
     String? telefono,
-    String? email,
+    // Email eliminado
+    String? horarioApertura,
+    String? horarioCierre,
+    String? diasLaborales,
     required String callePrincipal,
     String? calleSecundaria,
     String? numero,
@@ -67,7 +72,11 @@ class SucursalService {
       data: {
         'nombre_sucursal': nombreSucursal,
         if (telefono != null && telefono.isNotEmpty) 'telefono': telefono,
-        if (email != null && email.isNotEmpty) 'email': email,
+        // Nuevos campos
+        if (horarioApertura != null) 'horario_apertura': horarioApertura,
+        if (horarioCierre != null) 'horario_cierre': horarioCierre,
+        if (diasLaborales != null) 'dias_laborales': diasLaborales,
+
         'calle_principal': callePrincipal,
         if (calleSecundaria != null && calleSecundaria.isNotEmpty)
           'calle_secundaria': calleSecundaria,
@@ -79,7 +88,8 @@ class SucursalService {
         if (pais != null && pais.isNotEmpty) 'pais': pais,
         if (latitud != null) 'latitud': latitud,
         if (longitud != null) 'longitud': longitud,
-        if (referencia != null && referencia.isNotEmpty) 'referencia': referencia,
+        if (referencia != null && referencia.isNotEmpty)
+          'referencia': referencia,
       },
     );
     return Sucursal.fromJson(response.data['data'] as Map<String, dynamic>);
@@ -90,7 +100,10 @@ class SucursalService {
     required int id,
     String? nombreSucursal,
     String? telefono,
-    String? email,
+    // Email eliminado
+    String? horarioApertura,
+    String? horarioCierre,
+    String? diasLaborales,
     String? callePrincipal,
     String? calleSecundaria,
     String? numero,
@@ -106,7 +119,11 @@ class SucursalService {
     final data = <String, dynamic>{};
     if (nombreSucursal != null) data['nombre_sucursal'] = nombreSucursal;
     if (telefono != null) data['telefono'] = telefono;
-    if (email != null) data['email'] = email;
+    // Nuevos campos
+    if (horarioApertura != null) data['horario_apertura'] = horarioApertura;
+    if (horarioCierre != null) data['horario_cierre'] = horarioCierre;
+    if (diasLaborales != null) data['dias_laborales'] = diasLaborales;
+
     if (callePrincipal != null) data['calle_principal'] = callePrincipal;
     if (calleSecundaria != null) data['calle_secundaria'] = calleSecundaria;
     if (numero != null) data['numero'] = numero;
