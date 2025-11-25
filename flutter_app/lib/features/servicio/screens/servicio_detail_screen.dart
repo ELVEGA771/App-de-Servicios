@@ -194,16 +194,35 @@ class _ServicioDetailScreenState extends State<ServicioDetailScreen> {
               // Si es cliente, mostrar botón de contratar
               return ElevatedButton(
                 onPressed: () {
-                  // IMPORTANTE: Aquí asumimos que el servicio tiene una sucursal asignada o usamos la primera
-                  // Para este ejemplo básico, usaremos 1 como sucursalId placeholder
-                  // En una app real, el usuario debería elegir la sucursal si hay varias
-                  AppRoutes.navigateToCheckout(context, widget.servicioId, 1);
+                  final servicio =
+                      Provider.of<ServicioProvider>(context, listen: false)
+                          .selectedServicio;
+
+                  if (servicio == null) return;
+
+                  // 2. Determinar la sucursal ID.
+                  // Si el backend envía 'sucursales' (que agregamos al modelo), usamos la primera.
+                  // Si no, usamos 1 como fallback temporal, pero lo ideal es que el backend envíe esto.
+                  int sucursalId = 1;
+
+                  if (servicio.sucursalesDisponibles != null &&
+                      servicio.sucursalesDisponibles!.isNotEmpty) {
+                    // Asumiendo que sucursalesDisponibles es una lista de mapas con 'id_sucursal'
+                    sucursalId =
+                        servicio.sucursalesDisponibles![0]['id_sucursal'];
+                  }
+
+                  // 3. Navegar al checkout
+                  AppRoutes.navigateToCheckout(
+                      context, widget.servicioId, sucursalId);
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  backgroundColor:
+                      AppTheme.primaryColor, // Asegurar color visible
                 ),
                 child: const Text(
                   'Contratar Ahora',

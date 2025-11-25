@@ -93,6 +93,7 @@ class AuthService {
     required String email,
     required String password,
     required String nombre,
+    required String apellido, // NUEVO CAMPO
     String? descripcion,
     String? telefono,
     String? rfc,
@@ -103,6 +104,7 @@ class AuthService {
       'password': password,
       'tipo_usuario': AppConstants.USER_TYPE_COMPANY,
       'nombre': nombre,
+      'apellido': apellido, // AGREGAR AL MAPA
     };
 
     // Only add optional fields if they have values

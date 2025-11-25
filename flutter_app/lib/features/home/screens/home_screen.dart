@@ -7,6 +7,7 @@ import 'package:servicios_app/core/providers/notificacion_provider.dart';
 import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_dashboard_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_services_screen.dart';
+import 'package:servicios_app/features/profile/screens/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -343,17 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProfileTab() {
-    return Center(
-      child: ElevatedButton(
-        onPressed: () {
-          final authProvider =
-              Provider.of<AuthProvider>(context, listen: false);
-          authProvider.logout();
-          AppRoutes.navigateToLogin(context);
-        },
-        child: const Text('Cerrar Sesión'),
-      ),
-    );
+    return const ProfileScreen();
   }
 
   List<BottomNavigationBarItem> _buildClienteNavItems() {

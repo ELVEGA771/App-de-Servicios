@@ -15,6 +15,8 @@ class Servicio {
   final DateTime fechaCreacion;
   final DateTime fechaActualizacion;
 
+  final List<dynamic>? sucursalesDisponibles;
+
   // Datos adicionales de relaciones
   final String? empresaNombre;
   final String? empresaLogo;
@@ -41,6 +43,7 @@ class Servicio {
     this.empresaLogo,
     this.categoriaNombre,
     this.totalContrataciones,
+    this.sucursalesDisponibles,
   });
 
   factory Servicio.fromJson(Map<String, dynamic> json) {
@@ -132,6 +135,7 @@ class Servicio {
         totalContrataciones: json['total_contrataciones'] != null
             ? int.tryParse(json['total_contrataciones'].toString())
             : null,
+        sucursalesDisponibles: json['sucursales'] as List<dynamic>?,
       );
     } catch (e, stackTrace) {
       print('ERROR Servicio.fromJson: $e');
