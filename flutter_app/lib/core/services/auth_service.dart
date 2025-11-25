@@ -93,16 +93,19 @@ class AuthService {
     required String email,
     required String password,
     required String nombre,
+    required String apellido,
     String? descripcion,
     String? telefono,
     String? rfc,
     String? razonSocial,
+    String? pais,
   }) async {
     final data = {
       'email': email,
       'password': password,
       'tipo_usuario': AppConstants.USER_TYPE_COMPANY,
       'nombre': nombre,
+      'apellido': apellido, // AGREGAR AL MAPA
     };
 
     // Only add optional fields if they have values
@@ -118,6 +121,7 @@ class AuthService {
     if (razonSocial != null && razonSocial.isNotEmpty) {
       data['razon_social'] = razonSocial;
     }
+    if (pais != null && pais.isNotEmpty) data['pais'] = pais;
 
     final response = await _dioClient.post(
       '/auth/register',

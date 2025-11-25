@@ -8,6 +8,7 @@ const setupSwagger = require('./config/swagger');
 const { rateLimiterMiddleware } = require('./middleware/rateLimiter');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
@@ -32,6 +33,8 @@ app.use(compression());
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // HTTP request logger
 if (process.env.NODE_ENV === 'development') {
@@ -82,6 +85,9 @@ app.use('/api/empresas', empresaRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/notificaciones', notificacionRoutes);
 app.use('/api/sucursales', sucursalRoutes);
+
+const uploadRoutes = require('./routes/uploadRoutes'); // Importar
+app.use('/api/upload', uploadRoutes);
 
 // Swagger documentation
 setupSwagger(app);

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/models/categoria.dart';
 import 'package:servicios_app/core/models/sucursal.dart';
-import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/core/services/categoria_service.dart';
 import 'package:servicios_app/core/services/servicio_service.dart';
 import 'package:servicios_app/core/services/sucursal_service.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class CreateServiceScreen extends StatefulWidget {
   const CreateServiceScreen({super.key});
@@ -36,6 +36,10 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
   bool _isLoading = false;
   bool _isLoadingCategorias = true;
   bool _isLoadingSucursales = true;
+
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -465,19 +469,65 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
                     const SizedBox(height: 16),
 
                     // URL de imagen (opcional)
-                    TextFormField(
-                      controller: _imagenUrlController,
-                      decoration: InputDecoration(
-                        labelText: 'URL de Imagen (opcional)',
-                        hintText: 'https://ejemplo.com/imagen.jpg',
-                        prefixIcon: const Icon(Icons.image),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    Row(
+                      children: [
+                        // El campo de texto se expande
+                        Expanded(
+                          child: TextFormField(
+                            controller: _imagenUrlController,
+                            decoration: InputDecoration(
+                              labelText: 'URL de Imagen (opcional)',
+                              hintText: 'https://...',
+                              prefixIcon: const Icon(Icons.image),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            keyboardType: TextInputType.url,
+                          ),
+                        ),
+                        const SizedBox(
+                            width: 12), // Espacio entre campo y botón
+
+                        // Botón de subida
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.primaryColor),
+                          ),
+                          child: IconButton(
+                            // Si se está subiendo, deshabilita el botón. Si no, llama a _pickImage
+                            onPressed: _isUploading ? null : _pickImage,
+                            icon: _isUploading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2))
+                                : const Icon(Icons.add_photo_alternate,
+                                    color: AppTheme.primaryColor),
+                            tooltip: 'Subir imagen de galería',
+                          ),
+                        ),
+                      ],
+                    ),
+
+// Muestra una vista previa pequeña si ya se eligió una foto
+                    if (_imageFile != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              _imageFile!,
+                              height: 150,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                         ),
                       ),
-                      keyboardType: TextInputType.url,
-                    ),
-                    const SizedBox(height: 24),
 
                     // Botón de crear
                     ElevatedButton(
@@ -534,5 +584,50 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
               ),
             ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85, // Optimizar un poco
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+          _isUploading = true;
+        });
+
+        // Subir inmediatamente para obtener URL
+        try {
+          final url =
+              await _servicioService.uploadServicioImage(pickedFile.path);
+
+          if (mounted) {
+            setState(() {
+              _imagenUrlController.text =
+                  url; // Pone la URL en el campo automáticamente
+              _isUploading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Imagen subida correctamente')),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            setState(() {
+              _isUploading = false;
+              _imageFile = null; // Revertir si falló
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error al subir imagen: $e')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
   }
 }

@@ -47,12 +47,15 @@ class AuthProvider with ChangeNotifier {
       if (isLoggedIn) {
         final userData = await _authService.getUserData();
         if (userData != null) {
-          _usuario = Usuario.fromJson(userData['usuario'] as Map<String, dynamic>);
+          _usuario =
+              Usuario.fromJson(userData['usuario'] as Map<String, dynamic>);
           if (userData['cliente'] != null) {
-            _cliente = Cliente.fromJson(userData['cliente'] as Map<String, dynamic>);
+            _cliente =
+                Cliente.fromJson(userData['cliente'] as Map<String, dynamic>);
           }
           if (userData['empresa'] != null) {
-            _empresa = Empresa.fromJson(userData['empresa'] as Map<String, dynamic>);
+            _empresa =
+                Empresa.fromJson(userData['empresa'] as Map<String, dynamic>);
           }
           _isAuthenticated = true;
         }
@@ -115,10 +118,12 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String password,
     required String nombre,
+    required String apellido, // NUEVO CAMPO
     String? descripcion,
     String? telefono,
     String? rfc,
     String? razonSocial,
+    String? pais,
   }) async {
     _setLoading(true);
     _clearError();
@@ -127,10 +132,12 @@ class AuthProvider with ChangeNotifier {
         email: email,
         password: password,
         nombre: nombre,
+        apellido: apellido, // PASAR AL SERVICIO
         descripcion: descripcion,
         telefono: telefono,
         rfc: rfc,
         razonSocial: razonSocial,
+        pais: pais,
       );
       _setAuthData(authResponse);
       return true;
@@ -182,10 +189,12 @@ class AuthProvider with ChangeNotifier {
       final userData = await _authService.getMe();
       _usuario = Usuario.fromJson(userData['usuario'] as Map<String, dynamic>);
       if (userData['cliente'] != null) {
-        _cliente = Cliente.fromJson(userData['cliente'] as Map<String, dynamic>);
+        _cliente =
+            Cliente.fromJson(userData['cliente'] as Map<String, dynamic>);
       }
       if (userData['empresa'] != null) {
-        _empresa = Empresa.fromJson(userData['empresa'] as Map<String, dynamic>);
+        _empresa =
+            Empresa.fromJson(userData['empresa'] as Map<String, dynamic>);
       }
       notifyListeners();
     } catch (e) {

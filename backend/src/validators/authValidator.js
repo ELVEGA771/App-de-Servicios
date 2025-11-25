@@ -36,9 +36,11 @@ const registerValidator = [
     .optional()
     .trim()
     .isLength({ max: 50 }).withMessage('RUC/NIT is too long'),
-  body('fecha_nacimiento')
-    .optional()
-    .isISO8601().withMessage('Invalid date format')
+  body('pais')
+    .if(body('tipo_usuario').equals(USER_TYPES.COMPANY))
+    .optional() // O .notEmpty() si lo hiciste obligatorio en BD
+    .trim()
+    .isLength({ max: 50 }).withMessage('Country name is too long'),
 ];
 
 const loginValidator = [

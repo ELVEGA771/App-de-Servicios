@@ -92,4 +92,17 @@ class AppConstants {
   static const String SUCCESS_UPDATE = 'Actualización exitosa';
   static const String SUCCESS_DELETE = 'Eliminado exitosamente';
   static const String SUCCESS_CREATE = 'Creado exitosamente';
+
+  static String fixImageUrl(String url) {
+    if (url.isEmpty) return url;
+
+    // Si estamos en Android (Emulador), cambiamos localhost por 10.0.2.2
+    if (Platform.isAndroid) {
+      return url
+          .replaceFirst('localhost', '10.0.2.2')
+          .replaceFirst('127.0.0.1', '10.0.2.2');
+    }
+
+    return url;
+  }
 }

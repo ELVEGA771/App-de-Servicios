@@ -14,7 +14,7 @@ const logger = require('../utils/logger');
  */
 const register = async (req, res, next) => {
   try {
-    const { email, password, nombre, apellido, telefono, tipo_usuario, razon_social, ruc_nit, fecha_nacimiento } = req.body;
+    const { email, password, nombre, apellido, telefono, tipo_usuario, razon_social, ruc_nit, pais } = req.body;
 
     // Check if email already exists
     const existingUser = await Usuario.findByEmail(email);
@@ -40,8 +40,8 @@ const register = async (req, res, next) => {
       // Create cliente or empresa based on tipo_usuario
       if (tipo_usuario === USER_TYPES.CLIENT) {
         const [clienteResult] = await connection.execute(
-          'INSERT INTO cliente (id_usuario, fecha_nacimiento) VALUES (?, ?)',
-          [userId, fecha_nacimiento || null]
+          'INSERT INTO cliente (id_usuario) VALUES (?)',
+          [userId || null]
         );
         entityId = clienteResult.insertId;
       } else if (tipo_usuario === USER_TYPES.COMPANY) {
@@ -49,8 +49,8 @@ const register = async (req, res, next) => {
           throw new Error('razon_social is required for empresa registration');
         }
         const [empresaResult] = await connection.execute(
-          'INSERT INTO empresa (id_usuario, razon_social, ruc_nit) VALUES (?, ?, ?)',
-          [userId, razon_social, ruc_nit || null]
+          'INSERT INTO empresa (id_usuario, razon_social, ruc_nit, pais) VALUES (?, ?, ?, ?)',
+          [userId, razon_social, ruc_nit || null, pais || null]
         );
         entityId = empresaResult.insertId;
       }
@@ -69,10 +69,33 @@ const register = async (req, res, next) => {
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
 
+    let additionalData = {};
+    if (tipo_usuario === USER_TYPES.COMPANY) {
+        // Buscamos la empresa recién creada para devolver su ID
+        const empresa = await Empresa.findByUserId(result.userId);
+        if (empresa) {
+            additionalData.empresa = {
+                id_empresa: empresa.id_empresa,
+                id_usuario: result.userId, // <--- CORRECCIÓN: Agregado id_usuario
+                nombre: nombre,            // <--- CORRECCIÓN: Agregado nombre
+                razon_social: empresa.razon_social,
+                ruc_nit: empresa.ruc_nit,
+                pais: empresa.pais,
+                descripcion: empresa.descripcion || '', // Opcional: Evitar nulls
+                logo: empresa.logo_url // Opcional
+            };
+        }
+    } else if (tipo_usuario === USER_TYPES.CLIENT) {
+        const cliente = await Cliente.findByUserId(result.userId);
+        if (cliente) {
+            additionalData.cliente = cliente;
+        }
+    }
     sendSuccess(
       res,
       {
         user: { id_usuario: result.userId, email, nombre, apellido, tipo_usuario },
+        ...additionalData, 
         accessToken,
         refreshToken
       },
@@ -84,10 +107,10 @@ const register = async (req, res, next) => {
   }
 };
 
-/**
- * Login user
- * POST /api/auth/login
- */
+// ... resto del archivo (login, getMe, etc) se mantiene igual ...
+// Solo asegúrate de copiar el resto de las funciones que ya tenías en el archivo original.
+// Aquí te incluyo login, getMe, updateMe, changePassword y logout para que el archivo esté completo si copias todo.
+
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -166,10 +189,6 @@ const login = async (req, res, next) => {
   }
 };
 
-/**
- * Get current user profile
- * GET /api/auth/me
- */
 const getMe = async (req, res, next) => {
   try {
     const user = await Usuario.findById(req.user.id_usuario);
@@ -211,10 +230,6 @@ const getMe = async (req, res, next) => {
   }
 };
 
-/**
- * Update current user profile
- * PUT /api/auth/me
- */
 const updateMe = async (req, res, next) => {
   try {
     const { nombre, apellido, telefono, foto_perfil_url, razon_social, descripcion, logo_url, fecha_nacimiento } = req.body;
@@ -260,10 +275,6 @@ const updateMe = async (req, res, next) => {
   }
 };
 
-/**
- * Change password
- * PUT /api/auth/change-password
- */
 const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -295,14 +306,8 @@ const changePassword = async (req, res, next) => {
   }
 };
 
-/**
- * Logout (client-side token invalidation)
- * POST /api/auth/logout
- */
 const logout = async (req, res, next) => {
   try {
-    // In a stateless JWT system, logout is handled client-side by removing the token
-    // For enhanced security, you could implement token blacklisting here
     logger.info(`User logged out: ${req.user.email}`);
     sendSuccess(res, null, 'Logout successful');
   } catch (error) {

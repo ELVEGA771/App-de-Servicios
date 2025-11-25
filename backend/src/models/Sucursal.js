@@ -70,6 +70,9 @@ class Sucursal {
         s.id_sucursal,
         s.nombre_sucursal,
         s.telefono,
+        s.horario_apertura,
+        s.horario_cierre,
+        s.dias_laborales,
         s.estado,
         d.ciudad,
         d.calle_principal,
@@ -113,15 +116,19 @@ class Sucursal {
       // Then, create the sucursal
       const sucursalQuery = `
         INSERT INTO sucursal (
-          id_empresa, id_direccion, nombre_sucursal, telefono, estado
+          id_empresa, id_direccion, nombre_sucursal, telefono, 
+          horario_apertura, horario_cierre, dias_laborales, estado
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const sucursalParams = [
         sucursalData.id_empresa,
         idDireccion,
         sucursalData.nombre_sucursal,
         sucursalData.telefono || null,
+        sucursalData.horario_apertura || null,
+        sucursalData.horario_cierre || null,
+        sucursalData.dias_laborales || '1111100',
         sucursalData.estado || 'activa'
       ];
       const [sucursalResult] = await connection.query(sucursalQuery, sucursalParams);
@@ -146,6 +153,18 @@ class Sucursal {
       if (sucursalData.telefono !== undefined) {
         sucursalFields.push('telefono = ?');
         sucursalParams.push(sucursalData.telefono);
+      }
+      if (sucursalData.horario_apertura !== undefined) {
+        sucursalFields.push('horario_apertura = ?');
+        sucursalParams.push(sucursalData.horario_apertura);
+      }
+      if (sucursalData.horario_cierre !== undefined) {
+        sucursalFields.push('horario_cierre = ?');
+        sucursalParams.push(sucursalData.horario_cierre);
+      }
+      if (sucursalData.dias_laborales !== undefined) {
+        sucursalFields.push('dias_laborales = ?');
+        sucursalParams.push(sucursalData.dias_laborales);
       }
       if (sucursalData.estado !== undefined) {
         sucursalFields.push('estado = ?');
@@ -255,4 +274,4 @@ class Sucursal {
   }
 }
 
-module.exports = Sucursal;
+module.exports = Sucursal;;

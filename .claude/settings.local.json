@@ -21,7 +21,9 @@
       "Bash(flutter pub get:*)",
       "Bash(timeout 2 bash:*)",
       "Bash(/dev/tcp/localhost/57362)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

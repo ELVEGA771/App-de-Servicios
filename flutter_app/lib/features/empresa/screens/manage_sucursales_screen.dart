@@ -141,7 +141,8 @@ class _ManageSucursalesScreenState extends State<ManageSucursalesScreen> {
   }
 
   Future<void> _navigateToCreateSucursal() async {
-    final result = await Navigator.pushNamed(context, '/empresa/sucursal/create');
+    final result =
+        await Navigator.pushNamed(context, '/empresa/sucursal/create');
     if (result == true) {
       _loadSucursales();
     }
@@ -200,7 +201,8 @@ class _ManageSucursalesScreenState extends State<ManageSucursalesScreen> {
                               Icon(
                                 Icons.store_outlined,
                                 size: 80,
-                                color: AppTheme.textSecondaryColor.withOpacity(0.5),
+                                color: AppTheme.textSecondaryColor
+                                    .withOpacity(0.5),
                               ),
                               const SizedBox(height: 16),
                               const Text(
@@ -348,7 +350,8 @@ class _ManageSucursalesScreenState extends State<ManageSucursalesScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  if (sucursal.telefono != null && sucursal.telefono!.isNotEmpty)
+                  if (sucursal.telefono != null &&
+                      sucursal.telefono!.isNotEmpty)
                     Expanded(
                       child: Row(
                         children: [
@@ -365,29 +368,6 @@ class _ManageSucursalesScreenState extends State<ManageSucursalesScreen> {
                                 fontSize: 13,
                                 color: AppTheme.textSecondaryColor,
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (sucursal.email != null && sucursal.email!.isNotEmpty)
-                    Expanded(
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.email,
-                            size: 16,
-                            color: AppTheme.textSecondaryColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              sucursal.email!,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.textSecondaryColor,
-                              ),
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

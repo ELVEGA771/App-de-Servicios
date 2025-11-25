@@ -22,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _razonSocialController = TextEditingController();
   final _rfcController = TextEditingController();
   final _descripcionController = TextEditingController();
+  final _paisController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -38,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _razonSocialController.dispose();
     _rfcController.dispose();
     _descripcionController.dispose();
+    _paisController.dispose();
     super.dispose();
   }
 
@@ -62,6 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         nombre: _nombreController.text.trim(),
+        apellido: _apellidoController.text.trim(), // AÑADIR APELLIDO
         razonSocial: _razonSocialController.text.trim().isEmpty
             ? null
             : _razonSocialController.text.trim(),
@@ -74,6 +77,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         descripcion: _descripcionController.text.trim().isEmpty
             ? null
             : _descripcionController.text.trim(),
+        pais: _paisController.text.trim().isEmpty
+            ? null
+            : _paisController.text.trim(),
       );
     }
 
@@ -223,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: _userType == 'cliente'
                         ? 'Nombre'
-                        : 'Nombre de la Empresa',
+                        : 'Nombre Administrador',
                     prefixIcon: Icon(
                       _userType == 'cliente' ? Icons.person : Icons.business,
                     ),
@@ -238,22 +244,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // Apellido (only for cliente)
-                if (_userType == 'cliente') ...[
-                  TextFormField(
-                    controller: _apellidoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Apellido',
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu apellido';
-                      }
-                      return null;
-                    },
+                TextFormField(
+                  controller: _apellidoController,
+                  decoration: InputDecoration(
+                    labelText: _userType == 'cliente'
+                        ? 'Apellido'
+                        : 'Apellido Administrador',
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
-                  const SizedBox(height: 16),
-                ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa tu apellido';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
 
                 // Razón Social (only for empresa)
                 if (_userType == 'empresa') ...[
@@ -271,10 +277,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
+
+                  // NUEVO CAMPO PAIS
+                  TextFormField(
+                    controller: _paisController,
+                    decoration: const InputDecoration(
+                      labelText: 'País de Operación',
+                      prefixIcon: Icon(Icons.public), // Icono de mundo
+                    ),
+                    validator: (value) {
+                      // Puedes hacerlo obligatorio o no
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingresa el país';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _rfcController,
                     decoration: const InputDecoration(
-                      labelText: 'RFC (opcional)',
+                      labelText: 'RUC',
                       prefixIcon: Icon(Icons.badge_outlined),
                     ),
                   ),
@@ -367,7 +390,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     return ElevatedButton(
-                      onPressed: authProvider.isLoading ? null : _handleRegister,
+                      onPressed:
+                          authProvider.isLoading ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),

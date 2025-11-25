@@ -30,7 +30,8 @@ class ServicioService {
       if (ordenar != null) 'ordenar': ordenar,
     };
 
-    final response = await _dioClient.get('/servicios', queryParameters: queryParams);
+    final response =
+        await _dioClient.get('/servicios', queryParameters: queryParams);
 
     final servicios = (response.data['data'] as List)
         .map((e) => Servicio.fromJson(e as Map<String, dynamic>))
@@ -41,7 +42,8 @@ class ServicioService {
       data: servicios,
       message: response.data['message'] as String?,
       pagination: response.data['pagination'] != null
-          ? PaginationData.fromJson(response.data['pagination'] as Map<String, dynamic>)
+          ? PaginationData.fromJson(
+              response.data['pagination'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -68,7 +70,8 @@ class ServicioService {
       if (ciudad != null) 'ciudad': ciudad,
     };
 
-    final response = await _dioClient.get('/servicios/search', queryParameters: queryParams);
+    final response =
+        await _dioClient.get('/servicios/search', queryParameters: queryParams);
 
     final servicios = (response.data['data'] as List)
         .map((e) => Servicio.fromJson(e as Map<String, dynamic>))
@@ -79,7 +82,8 @@ class ServicioService {
       data: servicios,
       message: response.data['message'] as String?,
       pagination: response.data['pagination'] != null
-          ? PaginationData.fromJson(response.data['pagination'] as Map<String, dynamic>)
+          ? PaginationData.fromJson(
+              response.data['pagination'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -104,7 +108,8 @@ class ServicioService {
       'categoria': categoriaId,
     };
 
-    final response = await _dioClient.get('/servicios', queryParameters: queryParams);
+    final response =
+        await _dioClient.get('/servicios', queryParameters: queryParams);
 
     final servicios = (response.data['data'] as List)
         .map((e) => Servicio.fromJson(e as Map<String, dynamic>))
@@ -115,7 +120,8 @@ class ServicioService {
       data: servicios,
       message: response.data['message'] as String?,
       pagination: response.data['pagination'] != null
-          ? PaginationData.fromJson(response.data['pagination'] as Map<String, dynamic>)
+          ? PaginationData.fromJson(
+              response.data['pagination'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -167,7 +173,9 @@ class ServicioService {
     if (precio != null) data['precio'] = precio;
     if (duracionEstimada != null) data['duracion_estimada'] = duracionEstimada;
     if (imagenPrincipal != null) data['imagen_principal'] = imagenPrincipal;
-    if (imagenesAdicionales != null) data['imagenes_adicionales'] = imagenesAdicionales;
+    if (imagenesAdicionales != null) {
+      data['imagenes_adicionales'] = imagenesAdicionales;
+    }
     if (videoUrl != null) data['video_url'] = videoUrl;
     if (estado != null) data['estado'] = estado;
 
@@ -182,8 +190,9 @@ class ServicioService {
 
   // Upload servicio image
   Future<String> uploadServicioImage(String filePath) async {
+    // Nota: Cambiamos la ruta a '/upload' que es la que creaste en el backend
     final response = await _dioClient.uploadFile(
-      '/servicios/upload-image',
+      '/upload',
       filePath,
       'imagen',
     );

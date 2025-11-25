@@ -19,7 +19,7 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
   // Form controllers
   final _nombreController = TextEditingController();
   final _telefonoController = TextEditingController();
-  final _emailController = TextEditingController();
+
   final _callePrincipalController = TextEditingController();
   final _calleSecundariaController = TextEditingController();
   final _numeroController = TextEditingController();
@@ -27,6 +27,21 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
   final _provinciaController = TextEditingController();
   final _codigoPostalController = TextEditingController();
   final _referenciaController = TextEditingController();
+
+  // Time variables
+  TimeOfDay? _aperturaTime;
+  TimeOfDay? _cierreTime;
+
+  final List<bool> _selectedDays = List.filled(7, false);
+  final List<String> _dayNames = [
+    'Lunes',
+    'Martes',
+    'Miércoles',
+    'Jueves',
+    'Viernes',
+    'Sábado',
+    'Domingo'
+  ];
 
   bool _isLoading = false;
   bool get _isEditing => widget.sucursal != null;
@@ -36,6 +51,8 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
     super.initState();
     if (_isEditing) {
       _loadSucursalData();
+    } else {
+      for (int i = 0; i < 5; i++) _selectedDays[i] = true;
     }
   }
 
@@ -43,7 +60,24 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
     final sucursal = widget.sucursal!;
     _nombreController.text = sucursal.nombreSucursal;
     _telefonoController.text = sucursal.telefono ?? '';
-    _emailController.text = sucursal.email ?? '';
+
+    if (sucursal.diasLaborales != null && sucursal.diasLaborales!.length == 7) {
+      for (int i = 0; i < 7; i++) {
+        _selectedDays[i] = sucursal.diasLaborales![i] == '1';
+      }
+    } else {
+      // Fallback si viene texto antiguo o nulo
+      for (int i = 0; i < 5; i++) _selectedDays[i] = true;
+    }
+
+    // Parse times
+    if (sucursal.horarioApertura != null) {
+      _aperturaTime = _parseTime(sucursal.horarioApertura!);
+    }
+    if (sucursal.horarioCierre != null) {
+      _cierreTime = _parseTime(sucursal.horarioCierre!);
+    }
+
     _callePrincipalController.text = sucursal.callePrincipal;
     _calleSecundariaController.text = sucursal.calleSecundaria ?? '';
     _numeroController.text = sucursal.numero ?? '';
@@ -53,11 +87,23 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
     _referenciaController.text = sucursal.referencia ?? '';
   }
 
+  TimeOfDay _parseTime(String timeStr) {
+    try {
+      final parts = timeStr.split(':');
+      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    } catch (e) {
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+  }
+
+  String _getDiasLaboralesString() {
+    return _selectedDays.map((day) => day ? '1' : '0').join();
+  }
+
   @override
   void dispose() {
     _nombreController.dispose();
     _telefonoController.dispose();
-    _emailController.dispose();
     _callePrincipalController.dispose();
     _calleSecundariaController.dispose();
     _numeroController.dispose();
@@ -68,16 +114,54 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
     super.dispose();
   }
 
+  Future<void> _selectTime(BuildContext context, bool isApertura) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: isApertura
+          ? (_aperturaTime ?? const TimeOfDay(hour: 9, minute: 0))
+          : (_cierreTime ?? const TimeOfDay(hour: 18, minute: 0)),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isApertura) {
+          _aperturaTime = picked;
+        } else {
+          _cierreTime = picked;
+        }
+      });
+    }
+  }
+
+  String _formatTimeForDB(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    if (!_selectedDays.contains(true)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Selecciona al menos un día laboral'),
+            backgroundColor: AppTheme.warningColor),
+      );
+      return;
+    }
     setState(() {
       _isLoading = true;
     });
 
     try {
+      final String? apertura =
+          _aperturaTime != null ? _formatTimeForDB(_aperturaTime!) : null;
+      final String? cierre =
+          _cierreTime != null ? _formatTimeForDB(_cierreTime!) : null;
+      final String diasLaboralesStr = _getDiasLaboralesString();
+
       if (_isEditing) {
         await _sucursalService.updateSucursal(
           id: widget.sucursal!.idSucursal,
@@ -85,9 +169,11 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
           telefono: _telefonoController.text.trim().isEmpty
               ? null
               : _telefonoController.text.trim(),
-          email: _emailController.text.trim().isEmpty
-              ? null
-              : _emailController.text.trim(),
+          // Campos nuevos
+          horarioApertura: apertura,
+          horarioCierre: cierre,
+          diasLaborales: diasLaboralesStr,
+
           callePrincipal: _callePrincipalController.text.trim(),
           calleSecundaria: _calleSecundariaController.text.trim().isEmpty
               ? null
@@ -110,9 +196,11 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
           telefono: _telefonoController.text.trim().isEmpty
               ? null
               : _telefonoController.text.trim(),
-          email: _emailController.text.trim().isEmpty
-              ? null
-              : _emailController.text.trim(),
+          // Campos nuevos
+          horarioApertura: apertura,
+          horarioCierre: cierre,
+          diasLaborales: diasLaboralesStr,
+
           callePrincipal: _callePrincipalController.text.trim(),
           calleSecundaria: _calleSecundariaController.text.trim().isEmpty
               ? null
@@ -171,6 +259,8 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
           errorMessage = 'Por favor verifica los campos del formulario';
         } else if (e.toString().contains('Network')) {
           errorMessage = 'Error de conexión. Verifica tu internet';
+        } else {
+          errorMessage = 'Error: $e';
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -311,29 +401,106 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
                 ),
                 keyboardType: TextInputType.phone,
               ),
+
+              const SizedBox(height: 24),
+
+              // SECCIÓN HORARIOS
+              const Text(
+                'Horarios de Atención',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 16),
 
-              // Email
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'Ej: sucursal@empresa.com',
-                  prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _selectTime(context, true),
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Apertura',
+                          prefixIcon: const Icon(Icons.access_time),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          _aperturaTime?.format(context) ?? 'Seleccionar',
+                          style: TextStyle(
+                            color: _aperturaTime != null
+                                ? Colors.black
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _selectTime(context, false),
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Cierre',
+                          prefixIcon: const Icon(Icons.access_time_filled),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          _cierreTime?.format(context) ?? 'Seleccionar',
+                          style: TextStyle(
+                            color: _cierreTime != null
+                                ? Colors.black
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Días laborales
+              const Text('Días Laborales',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 8),
+
+              // LISTA DE CHECKBOXES PARA DÍAS
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                          .hasMatch(value)) {
-                    return 'Ingresa un email válido';
-                  }
-                  return null;
-                },
+                child: Column(
+                  children: List.generate(7, (index) {
+                    return Column(
+                      children: [
+                        CheckboxListTile(
+                          title: Text(_dayNames[index]),
+                          value: _selectedDays[index],
+                          activeColor: AppTheme.primaryColor,
+                          dense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 16),
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _selectedDays[index] = value ?? false;
+                            });
+                          },
+                        ),
+                        if (index < 6)
+                          const Divider(height: 1, indent: 16, endIndent: 16),
+                      ],
+                    );
+                  }),
+                ),
               ),
               const SizedBox(height: 24),
 

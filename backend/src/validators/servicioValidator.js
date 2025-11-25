@@ -21,7 +21,8 @@ const createServicioValidator = [
   body('imagen_url')
     .optional()
     .trim()
-    .isURL().withMessage('Invalid image URL'),
+    // CAMBIO AQUÍ: require_tld: false permite 'localhost'
+    .isURL({ require_tld: false }).withMessage('Invalid image URL'), 
   body('estado')
     .optional()
     .isIn(Object.values(SERVICE_STATUS)).withMessage('Invalid service status')
@@ -47,7 +48,8 @@ const updateServicioValidator = [
   body('imagen_url')
     .optional()
     .trim()
-    .isURL().withMessage('Invalid image URL'),
+    // CAMBIO AQUÍ TAMBIÉN
+    .isURL({ require_tld: false }).withMessage('Invalid image URL'),
   body('estado')
     .optional()
     .isIn(Object.values(SERVICE_STATUS)).withMessage('Invalid service status')
