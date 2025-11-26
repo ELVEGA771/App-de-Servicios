@@ -4,6 +4,7 @@ import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/features/profile/screens/addresses_screen.dart'; // Importar la pantalla creada
+import 'package:servicios_app/features/profile/screens/change_password_screen.dart'; // <--- Agregar importación
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -114,7 +115,13 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.lock_outline,
                     title: 'Cambiar Contraseña',
                     onTap: () {
-                      // Implementar cambio de contraseña o diálogo
+                      // Navegar a la pantalla de cambio de contraseña
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChangePasswordScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 24),
