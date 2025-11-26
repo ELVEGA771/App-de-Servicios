@@ -19,7 +19,7 @@ class ContratacionService {
     };
 
     final response = await _dioClient.get(
-      '/contrataciones/cliente',
+      '/contrataciones',
       queryParameters: queryParams,
     );
 
@@ -50,7 +50,7 @@ class ContratacionService {
     };
 
     final response = await _dioClient.get(
-      '/contrataciones/empresa',
+      '/contrataciones',
       queryParameters: queryParams,
     );
 
