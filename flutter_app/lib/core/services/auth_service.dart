@@ -3,7 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:servicios_app/config/constants.dart';
 import 'package:servicios_app/core/api/dio_client.dart';
 import 'package:servicios_app/core/models/auth_response.dart';
-
+import 'dart:io'; // <--- Agrega este import arriba
+import 'package:dio/dio.dart'; // <--- Asegúrate de tener este import
 class AuthService {
   final DioClient _dioClient = DioClient();
 
@@ -52,6 +53,42 @@ class AuthService {
     }
   }
 
+  // Subir imagen al servidor
+  Future<String?> uploadImage(File file) async {
+    try {
+      String fileName = file.path.split('/').last;
+      
+      // Preparamos el archivo para envío (FormData)
+      FormData formData = FormData.fromMap({
+        // CORRECCIÓN: Cambiamos "file" por "imagen" para coincidir con el backend
+        "imagen": await MultipartFile.fromFile(file.path, filename: fileName),
+      });
+
+      // Hacemos el POST sobreescribiendo el Content-Type
+      final response = await _dioClient.post(
+        '/upload', 
+        data: formData,
+        // AGREGA ESTO: Forzamos null en contentType para que Dio calcule el boundary correctamente
+        // y elimine el 'application/json' que pueda estar poniendo el interceptor.
+        options: Options(
+          contentType: 'multipart/form-data', 
+        ),
+      );
+      // Verificamos la respuesta
+      if (response.data is Map && response.data.containsKey('url')) {
+        return response.data['url'];
+      } else if (response.data['data'] != null && response.data['data']['url'] != null) {
+        return response.data['data']['url'];
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error subiendo imagen: $e');
+      rethrow;
+    }
+  }
+
+
   // Register Cliente
   Future<AuthResponse> registerCliente({
     required String email,
@@ -87,6 +124,57 @@ class AuthService {
     await _saveAuthData(authResponse);
     return authResponse;
   }
+
+  // Actualizar perfil
+  Future<void> updateProfile(Map<String, dynamic> data) async {
+    await _dioClient.put('/auth/me', data: data);
+  }
+
+  // Obtener perfil actualizado
+  Future<Map<String, dynamic>> getMe() async {
+    final response = await _dioClient.get('/auth/me');
+    return response.data;
+  }
+
+  // Guardar datos actualizados en el almacenamiento local
+  Future<void> updateLocalUserData(Map<String, dynamic> responseData) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // 1. Extraer la data real (a veces viene en 'data', a veces directa)
+    final data = (responseData.containsKey('data') && responseData['data'] is Map) 
+        ? responseData['data'] 
+        : responseData;
+
+    // 2. Construir el mapa con las claves EXACTAS que usa _saveAuthData
+    // El backend manda 'user', pero tu app espera 'usuario'.
+    final Map<String, dynamic> storageData = {};
+
+    // Mapeo de Usuario
+    if (data.containsKey('user')) {
+      storageData['usuario'] = data['user'];
+    } else if (data.containsKey('usuario')) {
+      storageData['usuario'] = data['usuario'];
+    }
+
+    // Mapeo de Empresa
+    if (data.containsKey('empresa')) {
+      storageData['empresa'] = data['empresa'];
+    }
+
+    // Mapeo de Cliente
+    if (data.containsKey('cliente')) {
+      storageData['cliente'] = data['cliente'];
+    }
+
+    // 3. Guardar usando la constante correcta
+    // Usamos jsonEncode para guardar el objeto como String, igual que en el login
+    print('DEBUG: Actualizando datos locales en ${AppConstants.KEY_USER_DATA}...');
+    await prefs.setString(
+      AppConstants.KEY_USER_DATA, 
+      jsonEncode(storageData),
+    );
+  }
+  
 
   // Register Empresa
   Future<AuthResponse> registerEmpresa({
@@ -133,11 +221,7 @@ class AuthService {
     return authResponse;
   }
 
-  // Get current user
-  Future<Map<String, dynamic>> getMe() async {
-    final response = await _dioClient.get('/auth/me');
-    return response.data['data'] as Map<String, dynamic>;
-  }
+ 
 
   // Change password
   Future<void> changePassword({
@@ -147,8 +231,9 @@ class AuthService {
     await _dioClient.put(
       '/auth/change-password',
       data: {
-        'current_password': currentPassword,
-        'new_password': newPassword,
+        // CORRECCIÓN: Usar camelCase para coincidir con el backend
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
       },
     );
   }
