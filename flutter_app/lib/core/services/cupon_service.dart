@@ -32,13 +32,36 @@ class CuponService {
     }
   }
 
+  // Actualizar
+  Future<bool> updateCupon(int id, Map<String, dynamic> data) async {
+    try {
+      await _dioClient.put('/cupones/$id', data: data);
+      return true;
+    } catch (e) {
+      print('Error actualizando cupón: $e');
+      return false;
+    }
+  }
+
+  // Eliminar
+  Future<bool> deleteCupon(int id) async {
+    try {
+      await _dioClient.delete('/cupones/$id');
+      return true;
+    } catch (e) {
+      print('Error eliminando cupón: $e');
+      return false;
+    }
+  }
+
   // Nuevo: Obtener cupones de la empresa
   Future<List<Cupon>> getEmpresaCupones(int empresaId) async {
     try {
-      final response = await _dioClient.get('/cupones/empresa/$empresaId');
+      final response = await _dioClient.get('/cupones');
       final List<dynamic> data = response.data['data'];
       return data.map((json) => Cupon.fromJson(json)).toList();
     } catch (e) {
+      print('Error obteniendo cupones: $e');
       return [];
     }
   }

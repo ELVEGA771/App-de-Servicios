@@ -687,10 +687,12 @@ DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_crear_cupon$$
 CREATE PROCEDURE sp_crear_cupon(
     IN p_codigo VARCHAR(50),
+    IN p_descripcion TEXT,
     IN p_tipo_descuento ENUM('porcentaje', 'monto_fijo'),
     IN p_valor_descuento DECIMAL(10,2),
     IN p_monto_minimo DECIMAL(10,2),
     IN p_cantidad_disponible INT,
+    IN p_fecha_inicio DATETIME,
     IN p_fecha_expiracion DATETIME,
     IN p_id_empresa INT,
     OUT p_id_cupon INT,
@@ -713,22 +715,26 @@ BEGIN
     ELSE
         INSERT INTO cupon (
             codigo, 
+            descripcion,
             tipo_descuento, 
             valor_descuento, 
             monto_minimo_compra, 
             cantidad_disponible, 
             cantidad_usada, 
+            fecha_inicio,
             fecha_expiracion, 
             activo, 
             aplicable_a, -- Por defecto 'todos' los servicios de la empresa para simplificar
             id_empresa
         ) VALUES (
-            UPPER(p_codigo), 
+            UPPER(p_codigo),
+            p_descripcion, 
             p_tipo_descuento, 
             p_valor_descuento, 
             p_monto_minimo, 
             p_cantidad_disponible, 
             0, -- Cantidad usada inicia en 0
+            p_fecha_inicio,
             p_fecha_expiracion, 
             1, -- Activo por defecto
             'todos', 
@@ -761,6 +767,66 @@ BEGIN
     FROM cupon
     WHERE id_empresa = p_id_empresa
     ORDER BY fecha_expiracion DESC;
+END$$
+
+DELIMITER ;
+
+
+DELIMITER $$
+
+-- 1. SP para EDITAR
+DROP PROCEDURE IF EXISTS sp_editar_cupon$$
+CREATE PROCEDURE sp_editar_cupon(
+    IN p_id_cupon INT,
+    IN p_codigo VARCHAR(50),
+    IN p_descripcion TEXT,
+    IN p_tipo_descuento ENUM('porcentaje', 'monto_fijo'),
+    IN p_valor_descuento DECIMAL(10,2),
+    IN p_monto_minimo DECIMAL(10,2),
+    IN p_cantidad_disponible INT,
+    IN p_fecha_inicio DATETIME,
+    IN p_fecha_expiracion DATETIME,
+    OUT p_mensaje VARCHAR(255)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_mensaje = 'Error al actualizar el cupón.';
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+    
+    -- Verificar si existe otro cupón con el mismo código (excluyendo el actual)
+    IF EXISTS (SELECT 1 FROM cupon WHERE codigo = p_codigo AND id_cupon != p_id_cupon) THEN
+        SET p_mensaje = 'El código ya está en uso por otro cupón.';
+    ELSE
+        UPDATE cupon SET 
+            codigo = UPPER(p_codigo),
+            descripcion = p_descripcion,
+            tipo_descuento = p_tipo_descuento,
+            valor_descuento = p_valor_descuento,
+            monto_minimo_compra = p_monto_minimo,
+            cantidad_disponible = p_cantidad_disponible,
+            fecha_inicio = p_fecha_inicio,
+            fecha_expiracion = p_fecha_expiracion
+        WHERE id_cupon = p_id_cupon;
+        
+        SET p_mensaje = 'Cupón actualizado correctamente.';
+    END IF;
+    
+    COMMIT;
+END$$
+
+-- 2. SP para ELIMINAR
+DROP PROCEDURE IF EXISTS sp_eliminar_cupon$$
+CREATE PROCEDURE sp_eliminar_cupon(
+    IN p_id_cupon INT,
+    OUT p_mensaje VARCHAR(255)
+)
+BEGIN
+    DELETE FROM cupon WHERE id_cupon = p_id_cupon;
+    SET p_mensaje = 'Cupón eliminado correctamente.';
 END$$
 
 DELIMITER ;

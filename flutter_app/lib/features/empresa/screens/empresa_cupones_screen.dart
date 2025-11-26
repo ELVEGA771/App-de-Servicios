@@ -5,6 +5,7 @@ import 'package:servicios_app/core/models/cupon.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/core/services/cupon_service.dart';
 import 'package:intl/intl.dart';
+import 'package:servicios_app/features/empresa/screens/create_cupon_screen.dart';
 
 class EmpresaCuponesScreen extends StatefulWidget {
   const EmpresaCuponesScreen({super.key});
@@ -68,6 +69,9 @@ class _EmpresaCuponesScreenState extends State<EmpresaCuponesScreen> {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5), // Ajuste ligero para espacio
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -112,24 +116,111 @@ class _EmpresaCuponesScreenState extends State<EmpresaCuponesScreen> {
                               ),
                           ],
                         ),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: cupon.activo && !isExpired
-                                ? Colors.green[100]
-                                : Colors.red[100],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            cupon.activo && !isExpired ? 'Activo' : 'Inactivo',
-                            style: TextStyle(
-                                fontSize: 10,
+                        // ---------------------------------------------------
+                        // AQUÍ EMPIEZA LA INTEGRACIÓN (trailing modificado)
+                        // ---------------------------------------------------
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize
+                              .min, // IMPORTANTE: Para que no ocupe todo el ancho
+                          children: [
+                            // 1. TU BADGE DE ESTADO EXISTENTE
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
                                 color: cupon.activo && !isExpired
-                                    ? Colors.green[800]
-                                    : Colors.red[800],
-                                fontWeight: FontWeight.bold),
-                          ),
+                                    ? Colors.green[100]
+                                    : Colors.red[100],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                cupon.activo && !isExpired
+                                    ? 'Activo'
+                                    : 'Inactivo',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    color: cupon.activo && !isExpired
+                                        ? Colors.green[800]
+                                        : Colors.red[800],
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            const SizedBox(width: 4), // Pequeña separación
+
+                            // 2. BOTÓN EDITAR (Integrado)
+                            IconButton(
+                              icon: const Icon(Icons.edit,
+                                  color: Colors.blue,
+                                  size: 20), // Icono un poco más pequeño
+                              constraints:
+                                  const BoxConstraints(), // Quita padding extra por defecto
+                              padding:
+                                  const EdgeInsets.all(8), // Padding controlado
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    // Asegúrate de importar tu CreateCuponScreen y pasarle el parámetro
+                                    builder: (_) =>
+                                        CreateCuponScreen(cuponToEdit: cupon),
+                                  ),
+                                );
+                                if (result == true) {
+                                  _loadCupones();
+                                }
+                              },
+                            ),
+
+                            // 3. BOTÓN BORRAR (Integrado)
+                            IconButton(
+                              icon: const Icon(Icons.delete,
+                                  color: Colors.red, size: 20),
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.all(8),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Eliminar Cupón'),
+                                    content: const Text(
+                                        '¿Estás seguro? Esta acción no se puede deshacer.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () async {
+                                          Navigator.pop(ctx);
+
+                                          final cuponService = CuponService();
+                                          final success = await cuponService
+                                              .deleteCupon(cupon.id);
+
+                                          if (success) {
+                                            _loadCupones();
+                                            if (mounted) {
+                                              // Buena práctica verificar mounted después de await
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                    content: Text(
+                                                        'Cupón eliminado')),
+                                              );
+                                            }
+                                          }
+                                        },
+                                        child: const Text('Eliminar',
+                                            style:
+                                                TextStyle(color: Colors.red)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     );
