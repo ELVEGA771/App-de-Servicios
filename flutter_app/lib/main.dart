@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:servicios_app/config/theme.dart';
-import 'package:servicios_app/config/routes.dart';
+import 'package:servicios_app/routes/app_router.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/core/providers/servicio_provider.dart';
 import 'package:servicios_app/core/providers/contratacion_provider.dart';
@@ -36,14 +36,20 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => NotificacionProvider()),
       ],
-      child: MaterialApp(
-        title: 'Servicios App',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.light,
-        onGenerateRoute: AppRoutes.generateRoute,
-        initialRoute: AppRoutes.splash,
+      child: Builder(
+        builder: (context) {
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          final appRouter = AppRouter(authProvider);
+
+          return MaterialApp.router(
+            title: 'Servicios App',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.light,
+            routerConfig: appRouter.router,
+          );
+        },
       ),
     );
   }
