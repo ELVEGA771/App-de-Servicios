@@ -19,10 +19,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchContratacionesFuture = _fetchContrataciones();
-      setState(() {});
-    });
+    _fetchContratacionesFuture = _fetchContrataciones();
   }
 
   Future<void> _fetchContrataciones() {
@@ -32,58 +29,107 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mis Contrataciones'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              setState(() {
-                _fetchContratacionesFuture = _fetchContrataciones();
-              });
-            },
+    return DefaultTabController(
+      length: 5,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Mis Contrataciones'),
+          centerTitle: true,
+          bottom: const TabBar(
+            isScrollable: true,
+            labelColor: AppTheme.primaryColor,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: AppTheme.primaryColor,
+            tabs: [
+              Tab(text: 'Todos'),
+              Tab(text: 'Pendientes'),
+              Tab(text: 'En Proceso'),
+              Tab(text: 'Completados'),
+              Tab(text: 'Cancelados'),
+            ],
           ),
-        ],
-      ),
-      body: FutureBuilder<void>(
-        future: _fetchContratacionesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child:
-                  Text('Error al cargar las contrataciones: ${snapshot.error}'),
-            );
-          } else {
-            return Consumer<ContratacionProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (provider.contrataciones.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'Aún no has contratado ningún servicio.',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  );
-                }
-                return RefreshIndicator(
-                  onRefresh: _fetchContrataciones,
-                  child: ListView.builder(
-                    itemCount: provider.contrataciones.length,
-                    itemBuilder: (context, index) {
-                      final contratacion = provider.contrataciones[index];
-                      return _OrderHistoryItem(contratacion: contratacion);
-                    },
-                  ),
-                );
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                setState(() {
+                  _fetchContratacionesFuture = _fetchContrataciones();
+                });
               },
-            );
-          }
+            ),
+          ],
+        ),
+        body: FutureBuilder<void>(
+          future: _fetchContratacionesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                    'Error al cargar las contrataciones: ${snapshot.error}'),
+              );
+            } else {
+              return Consumer<ContratacionProvider>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  final allOrders = provider.contrataciones;
+
+                  return TabBarView(
+                    children: [
+                      _buildOrderList(allOrders),
+                      _buildOrderList(allOrders
+                          .where((c) => c.estado == 'pendiente')
+                          .toList()),
+                      _buildOrderList(allOrders
+                          .where((c) => ['confirmado', 'en_proceso']
+                              .contains(c.estado))
+                          .toList()),
+                      _buildOrderList(allOrders
+                          .where((c) => c.estado == 'completado')
+                          .toList()),
+                      _buildOrderList(allOrders
+                          .where((c) => ['cancelado', 'rechazado']
+                              .contains(c.estado))
+                          .toList()),
+                    ],
+                  );
+                },
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrderList(List<Contratacion> orders) {
+    if (orders.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.assignment_outlined, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No hay órdenes en esta categoría',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _fetchContrataciones,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 10, bottom: 20),
+        itemCount: orders.length,
+        itemBuilder: (context, index) {
+          final contratacion = orders[index];
+          return _OrderHistoryItem(contratacion: contratacion);
         },
       ),
     );

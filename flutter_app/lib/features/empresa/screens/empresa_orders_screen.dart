@@ -20,14 +20,24 @@ class _EmpresaOrdersScreenState extends State<EmpresaOrdersScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
+    _tabController.addListener(_handleTabSelection);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadOrders();
     });
   }
 
+  void _handleTabSelection() {
+    if (_tabController.index == 5) {
+      // Historial tab
+      Provider.of<ContratacionProvider>(context, listen: false)
+          .loadHistorialEmpresa(refresh: true);
+    }
+  }
+
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabSelection);
     _tabController.dispose();
     super.dispose();
   }
@@ -45,10 +55,15 @@ class _EmpresaOrdersScreenState extends State<EmpresaOrdersScreen>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
+          labelColor: AppTheme.primaryColor,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: AppTheme.primaryColor,
           tabs: const [
             Tab(text: 'Todas'),
             Tab(text: 'Pendientes'),
             Tab(text: 'Activas'),
+            Tab(text: 'En Proceso'),
+            Tab(text: 'Completadas'),
             Tab(text: 'Historial'),
           ],
         ),
@@ -59,13 +74,25 @@ class _EmpresaOrdersScreenState extends State<EmpresaOrdersScreen>
             return const Center(child: CircularProgressIndicator());
           }
 
+          final allOrders = provider.contrataciones;
+
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildOrdersList(provider.contrataciones),
-              _buildOrdersList(provider.getContratacionesByEstado('pendiente')),
-              _buildOrdersList(provider.contratacionesActivas),
-              _buildOrdersList(provider.contratacionesCompletadas),
+              _buildOrdersList(allOrders),
+              _buildOrdersList(allOrders
+                  .where((c) => c.estado == 'pendiente')
+                  .toList()),
+              _buildOrdersList(allOrders
+                  .where((c) => c.estado == 'confirmado')
+                  .toList()),
+              _buildOrdersList(allOrders
+                  .where((c) => c.estado == 'en_proceso')
+                  .toList()),
+              _buildOrdersList(allOrders
+                  .where((c) => c.estado == 'completado')
+                  .toList()),
+              _buildHistoryList(provider.historial),
             ],
           );
         },
@@ -97,6 +124,95 @@ class _EmpresaOrdersScreenState extends State<EmpresaOrdersScreen>
         },
       ),
     );
+  }
+
+  Widget _buildHistoryList(List<HistorialContratacion> historial) {
+    if (historial.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text('No hay historial de cambios'),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => Provider.of<ContratacionProvider>(context, listen: false)
+          .loadHistorialEmpresa(refresh: true),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: historial.length,
+        itemBuilder: (context, index) {
+          final item = historial[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.grey[200],
+                child: Icon(_getStatusIcon(item.estadoNuevo),
+                    color: _getStatusColor(item.estadoNuevo)),
+              ),
+              title: Text('Orden #${item.idContratacion}'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      '${item.estadoAnterior ?? 'Inicio'} ➔ ${item.estadoNuevo}'),
+                  if (item.notas != null && item.notas!.isNotEmpty)
+                    Text('Nota: ${item.notas}',
+                        style: const TextStyle(fontStyle: FontStyle.italic)),
+                  Text(
+                    DateFormat('dd MMM yyyy, HH:mm').format(item.fechaCambio),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+              isThreeLine: true,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'pendiente':
+        return Icons.access_time;
+      case 'confirmado':
+        return Icons.check_circle_outline;
+      case 'en_proceso':
+        return Icons.run_circle_outlined;
+      case 'completado':
+        return Icons.check_circle;
+      case 'cancelado':
+      case 'rechazado':
+        return Icons.cancel_outlined;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'pendiente':
+        return Colors.orange;
+      case 'confirmado':
+        return Colors.blue;
+      case 'en_proceso':
+        return Colors.purple;
+      case 'completado':
+        return Colors.green;
+      case 'cancelado':
+      case 'rechazado':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }
 
@@ -272,3 +388,4 @@ class _EmpresaOrderItem extends StatelessWidget {
     );
   }
 }
+

@@ -23,6 +23,7 @@ class NotificacionProvider with ChangeNotifier {
   // Load notificaciones
   Future<void> loadNotificaciones() async {
     _setLoading(true);
+    _error = null;
     try {
       _notificaciones = await _notificacionService.getNotificaciones();
       _unreadCount = await _notificacionService.getUnreadCount();
@@ -45,13 +46,44 @@ class NotificacionProvider with ChangeNotifier {
 
   // Mark as read
   Future<bool> markAsRead(int id) async {
+    _error = null;
     try {
       await _notificacionService.markAsRead(id);
 
       final index = _notificaciones.indexWhere((n) => n.id == id);
       if (index != -1) {
-        _notificaciones[index] = _notificaciones[index].copyWith(leida: true);
-        _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
+        if (!_notificaciones[index].leida) {
+          _notificaciones[index] = _notificaciones[index].copyWith(leida: true);
+          _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
+          notifyListeners();
+        }
+      }
+
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+
+  // Toggle read status
+  Future<bool> toggleRead(int id) async {
+    _error = null;
+    try {
+      final newStatus = await _notificacionService.toggleRead(id);
+
+      final index = _notificaciones.indexWhere((n) => n.id == id);
+      if (index != -1) {
+        final oldStatus = _notificaciones[index].leida;
+        _notificaciones[index] = _notificaciones[index].copyWith(leida: newStatus);
+        
+        if (oldStatus != newStatus) {
+          if (newStatus) {
+            _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
+          } else {
+            _unreadCount++;
+          }
+        }
         notifyListeners();
       }
 
@@ -64,6 +96,7 @@ class NotificacionProvider with ChangeNotifier {
 
   // Mark all as read
   Future<bool> markAllAsRead() async {
+    _error = null;
     try {
       await _notificacionService.markAllAsRead();
 
@@ -80,6 +113,7 @@ class NotificacionProvider with ChangeNotifier {
 
   // Delete notificacion
   Future<bool> deleteNotificacion(int id) async {
+    _error = null;
     try {
       await _notificacionService.deleteNotificacion(id);
 

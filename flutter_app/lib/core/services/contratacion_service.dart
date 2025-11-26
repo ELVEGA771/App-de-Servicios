@@ -89,12 +89,12 @@ class ContratacionService {
       data: {
         'id_servicio': servicioId,
         'id_sucursal': sucursalId,
-        if (direccionId != null) 'id_direccion': direccionId,
+        if (direccionId != null) 'id_direccion_entrega': direccionId,
         if (fechaProgramada != null)
           'fecha_programada': fechaProgramada.toIso8601String(),
         if (codigoCupon != null) 'codigo_cupon': codigoCupon,
         if (metodoPago != null) 'metodo_pago': metodoPago,
-        if (notas != null) 'notas': notas,
+        if (notas != null) 'notas_cliente': notas,
       },
     );
     return Contratacion.fromJson(response.data['data'] as Map<String, dynamic>);
@@ -104,10 +104,14 @@ class ContratacionService {
   Future<Contratacion> updateEstado({
     required int id,
     required String nuevoEstado,
+    String? notas,
   }) async {
-    final response = await _dioClient.patch(
+    final response = await _dioClient.put(
       '/contrataciones/$id/estado',
-      data: {'nuevo_estado': nuevoEstado},
+      data: {
+        'estado': nuevoEstado,
+        if (notas != null) 'notas_empresa': notas,
+      },
     );
     return Contratacion.fromJson(response.data['data'] as Map<String, dynamic>);
   }
@@ -117,7 +121,7 @@ class ContratacionService {
     required int id,
     String? motivo,
   }) async {
-    final response = await _dioClient.post(
+    final response = await _dioClient.put(
       '/contrataciones/$id/cancelar',
       data: motivo != null ? {'motivo': motivo} : null,
     );
@@ -128,5 +132,34 @@ class ContratacionService {
   Future<Map<String, dynamic>> getEstadisticas() async {
     final response = await _dioClient.get('/contrataciones/empresa/estadisticas');
     return response.data['data'] as Map<String, dynamic>;
+  }
+
+  // Get historial de contrataciones (empresa)
+  Future<ApiResponse<List<HistorialContratacion>>> getHistorialEmpresa({
+    int page = 1,
+    int limit = AppConstants.DEFAULT_PAGE_SIZE,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+    };
+
+    final response = await _dioClient.get(
+      '/contrataciones/empresa/historial',
+      queryParameters: queryParams,
+    );
+
+    final historial = (response.data['data'] as List)
+        .map((e) => HistorialContratacion.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    return ApiResponse(
+      success: response.data['success'] as bool,
+      data: historial,
+      message: response.data['message'] as String?,
+      pagination: response.data['pagination'] != null
+          ? PaginationData.fromJson(response.data['pagination'] as Map<String, dynamic>)
+          : null,
+    );
   }
 }

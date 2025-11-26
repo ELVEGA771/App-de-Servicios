@@ -9,6 +9,7 @@ import 'package:servicios_app/core/providers/contratacion_provider.dart';
 import 'package:servicios_app/core/providers/favorito_provider.dart';
 import 'package:servicios_app/core/providers/chat_provider.dart';
 import 'package:servicios_app/core/providers/notificacion_provider.dart';
+import 'package:servicios_app/core/providers/direccion_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FavoritoProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => NotificacionProvider()),
+        ChangeNotifierProvider(create: (_) => DireccionProvider()),
       ],
       child: MaterialApp(
         title: 'Servicios App',

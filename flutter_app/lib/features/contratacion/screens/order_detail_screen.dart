@@ -28,11 +28,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _updateStatus(String newStatus) async {
+    final notes = await _showStatusUpdateDialog(newStatus);
+    if (notes == null) return;
+
     setState(() => _isLoadingAction = true);
     try {
       final success = await Provider.of<ContratacionProvider>(context,
               listen: false)
-          .updateEstado(id: widget.orderId, nuevoEstado: newStatus);
+          .updateEstado(id: widget.orderId, nuevoEstado: newStatus, notas: notes);
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -44,8 +47,59 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  Future<String?> _showStatusUpdateDialog(String status) async {
+    final controller = TextEditingController();
+    String title = 'Actualizar Estado';
+    String message = '¿Estás seguro de cambiar el estado a $status?';
+    Color color = AppTheme.primaryColor;
+
+    if (status == 'rechazado') {
+      title = 'Rechazar Orden';
+      message = '¿Estás seguro de rechazar esta orden? Esta acción no se puede deshacer.';
+      color = Colors.red;
+    } else if (status == 'confirmado') {
+      title = 'Aceptar Orden';
+      message = 'Al aceptar, te comprometes a realizar el servicio en la fecha programada.';
+      color = Colors.green;
+    }
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title, style: TextStyle(color: color)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Notas de la empresa (Opcional)',
+                hintText: 'Agrega detalles o razones...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _cancelOrder() async {
-    // Show confirmation dialog
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -88,8 +142,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final isEmpresa = Provider.of<AuthProvider>(context).isEmpresa;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('Orden #${widget.orderId}'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        title: Text('Orden #${widget.orderId}', style: const TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
       ),
       body: Consumer<ContratacionProvider>(
         builder: (context, provider, child) {
@@ -104,21 +163,34 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(order),
-                const SizedBox(height: 24),
-                _buildServiceInfo(order),
-                const SizedBox(height: 24),
-                _buildPaymentInfo(order),
-                const SizedBox(height: 24),
+                _buildStatusCard(order),
+                const SizedBox(height: 20),
+                _buildSectionTitle('Detalles del Servicio'),
+                const SizedBox(height: 10),
+                _buildServiceCard(order),
+                const SizedBox(height: 20),
+                _buildSectionTitle('Información de Pago'),
+                const SizedBox(height: 10),
+                _buildPaymentCard(order),
                 if (order.notas != null && order.notas!.isNotEmpty) ...[
-                  _buildNotes(order),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
+                  _buildSectionTitle('Notas del Cliente'),
+                  const SizedBox(height: 10),
+                  _buildNotesCard(order.notas!),
                 ],
+                if (order.notasEmpresa != null && order.notasEmpresa!.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  _buildSectionTitle('Notas de la Empresa'),
+                  const SizedBox(height: 10),
+                  _buildNotesCard(order.notasEmpresa!, isEmpresa: true),
+                ],
+                const SizedBox(height: 30),
                 _buildActions(order, isEmpresa),
+                const SizedBox(height: 30),
               ],
             ),
           );
@@ -127,154 +199,181 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  Widget _buildHeader(Contratacion order) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Estado',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                _buildStatusChip(order.estado),
-              ],
-            ),
-            const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Fecha Programada',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                Text(
-                  order.fechaProgramada != null
-                      ? DateFormat('dd MMM yyyy, HH:mm')
-                          .format(order.fechaProgramada!)
-                      : 'Por definir',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ],
-            ),
-          ],
-        ),
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
       ),
     );
   }
 
-  Widget _buildServiceInfo(Contratacion order) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Detalles del Servicio',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+  Widget _buildStatusCard(Contratacion order) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Estado Actual', style: TextStyle(color: Colors.grey)),
+              _buildStatusChip(order.estado),
+            ],
+          ),
+          const Divider(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Fecha Programada', style: TextStyle(color: Colors.grey)),
+              Text(
+                order.fechaProgramada != null
+                    ? DateFormat('dd MMM yyyy, HH:mm').format(order.fechaProgramada!)
+                    : 'Por definir',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(Contratacion order) {
+    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              image: order.servicioImagen != null
+                  ? DecorationImage(
+                      image: NetworkImage(order.servicioImagen!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: order.servicioImagen == null
+                ? const Icon(Icons.image_outlined, size: 32, color: Colors.grey)
+                : null,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                    image: order.servicioImagen != null
-                        ? DecorationImage(
-                            image: NetworkImage(order.servicioImagen!),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
+                Text(
+                  order.servicioNombre ?? 'Servicio',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: order.servicioImagen == null
-                      ? const Icon(Icons.image, size: 40, color: Colors.grey)
-                      : null,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        order.servicioNombre ?? 'Servicio',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        order.empresaNombre ?? 'Empresa',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '\$${order.precioBase.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ],
+                const SizedBox(height: 4),
+                Text(
+                  order.empresaNombre ?? 'Empresa',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  currencyFormat.format(order.precioBase),
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildPaymentInfo(Contratacion order) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Información de Pago',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+  Widget _buildPaymentCard(Contratacion order) {
+    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildPaymentRow('Subtotal', order.precioBase, currencyFormat),
+          if (order.descuento != null && order.descuento! > 0)
+            _buildPaymentRow('Descuento', -order.descuento!, currencyFormat, isDiscount: true),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(),
+          ),
+          _buildPaymentRow('Total', order.precioFinal, currencyFormat, isTotal: true),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
               children: [
-                _buildPaymentRow('Subtotal', order.precioBase),
-                if (order.descuento != null && order.descuento! > 0)
-                  _buildPaymentRow('Descuento', -order.descuento!,
-                      isDiscount: true),
-                const Divider(),
-                _buildPaymentRow('Total', order.precioFinal, isTotal: true),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(Icons.payment, size: 20, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Método de pago: ${order.metodoPago?.toUpperCase() ?? 'NO ESPECIFICADO'}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
+                Icon(Icons.payment, size: 20, color: Colors.grey[600]),
+                const SizedBox(width: 12),
+                Text(
+                  'Método: ${order.metodoPago?.toUpperCase() ?? 'NO ESPECIFICADO'}',
+                  style: TextStyle(
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildPaymentRow(String label, double amount,
+  Widget _buildPaymentRow(String label, double amount, NumberFormat format,
       {bool isTotal = false, bool isDiscount = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -283,18 +382,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         children: [
           Text(
             label,
-            style: isTotal
-                ? const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)
-                : null,
-          ),
-          Text(
-            '${isDiscount ? "-" : ""}\$${amount.abs().toStringAsFixed(2)}',
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
               fontSize: isTotal ? 16 : 14,
+              color: isTotal ? Colors.black : Colors.grey[700],
+            ),
+          ),
+          Text(
+            isDiscount ? "-${format.format(amount.abs())}" : format.format(amount),
+            style: TextStyle(
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+              fontSize: isTotal ? 18 : 14,
               color: isDiscount
                   ? Colors.green
-                  : (isTotal ? AppTheme.primaryColor : null),
+                  : (isTotal ? AppTheme.primaryColor : Colors.black),
             ),
           ),
         ],
@@ -302,22 +403,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  Widget _buildNotes(Contratacion order) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Notas Adicionales',
-          style: Theme.of(context).textTheme.titleLarge,
+  Widget _buildNotesCard(String notes, {bool isEmpresa = false}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isEmpresa ? Colors.blue[50] : Colors.yellow[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isEmpresa ? Colors.blue.withOpacity(0.2) : Colors.yellow.withOpacity(0.2),
         ),
-        const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(order.notas!),
-          ),
+      ),
+      child: Text(
+        notes,
+        style: TextStyle(
+          color: isEmpresa ? Colors.blue[900] : Colors.brown[900],
+          height: 1.5,
         ),
-      ],
+      ),
     );
   }
 
@@ -334,11 +437,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           child: ElevatedButton(
             onPressed: _cancelOrder,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: Colors.red[50],
+              foregroundColor: Colors.red,
+              elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Cancelar Orden'),
+            child: const Text('Cancelar Orden', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         );
       }
@@ -357,6 +462,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               foregroundColor: Colors.red,
               side: const BorderSide(color: Colors.red),
               padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Rechazar'),
           ),
@@ -368,7 +474,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
+              elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Aceptar'),
           ),
@@ -380,7 +488,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           child: ElevatedButton(
             onPressed: () => _updateStatus('en_proceso'),
             style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Iniciar Servicio'),
           ),
@@ -394,7 +506,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
+              elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Marcar como Completado'),
           ),
@@ -409,44 +523,56 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildStatusChip(String status) {
     Color color;
+    Color textColor = Colors.white;
     String label;
 
     switch (status) {
       case 'pendiente':
-        color = Colors.orange;
+        color = Colors.orange[100]!;
+        textColor = Colors.orange[900]!;
         label = 'Pendiente';
         break;
       case 'confirmado':
-        color = Colors.blue;
+        color = Colors.blue[100]!;
+        textColor = Colors.blue[900]!;
         label = 'Confirmado';
         break;
       case 'en_proceso':
-        color = Colors.purple;
+        color = Colors.purple[100]!;
+        textColor = Colors.purple[900]!;
         label = 'En Proceso';
         break;
       case 'completado':
-        color = Colors.green;
+        color = Colors.green[100]!;
+        textColor = Colors.green[900]!;
         label = 'Completado';
         break;
       case 'cancelado':
-        color = Colors.red;
+        color = Colors.red[100]!;
+        textColor = Colors.red[900]!;
         label = 'Cancelado';
         break;
       case 'rechazado':
-        color = Colors.red;
+        color = Colors.red[100]!;
+        textColor = Colors.red[900]!;
         label = 'Rechazado';
         break;
       default:
-        color = Colors.grey;
+        color = Colors.grey[200]!;
+        textColor = Colors.grey[800]!;
         label = status;
     }
 
-    return Chip(
-      label: Text(
-        label.toUpperCase(),
-        style: const TextStyle(color: Colors.white, fontSize: 12),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
       ),
-      backgroundColor: color,
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

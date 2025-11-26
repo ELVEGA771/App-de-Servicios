@@ -23,6 +23,16 @@ const markAsRead = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+const toggleRead = async (req, res, next) => {
+  try {
+    const result = await Notificacion.toggleRead(req.params.id);
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+    sendSuccess(res, result, 'Notification read status toggled');
+  } catch (error) { next(error); }
+};
+
 const markAllAsRead = async (req, res, next) => {
   try {
     await Notificacion.markAllAsRead(req.user.id_usuario);
@@ -30,4 +40,4 @@ const markAllAsRead = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { getNotificaciones, getUnreadCount, markAsRead, markAllAsRead };
+module.exports = { getNotificaciones, getUnreadCount, markAsRead, toggleRead, markAllAsRead };

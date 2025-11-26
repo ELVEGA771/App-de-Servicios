@@ -135,6 +135,36 @@ class Cliente {
     const results = await executeQuery(query, [idCliente]);
     return results[0] || null;
   }
+
+  /**
+   * Update address relation (alias, es_principal)
+   */
+  static async updateAddressRelation(idCliente, idDireccion, alias, esPrincipal) {
+    const fields = [];
+    const params = [];
+
+    if (alias !== undefined) {
+      fields.push('alias = ?');
+      params.push(alias);
+    }
+    
+    // es_principal is usually handled by setPrincipalAddress to ensure only one is principal
+    // but if we are just updating the alias, we might not touch es_principal
+    // If es_principal is passed and is true, we should probably call setPrincipalAddress instead or as well.
+
+    if (fields.length > 0) {
+      params.push(idCliente);
+      params.push(idDireccion);
+      const query = `UPDATE direcciones_del_cliente SET ${fields.join(', ')} WHERE id_cliente = ? AND id_direccion = ?`;
+      await executeQuery(query, params);
+    }
+    
+    if (esPrincipal === true) {
+        await this.setPrincipalAddress(idCliente, idDireccion);
+    }
+    
+    return true;
+  }
 }
 
 module.exports = Cliente;

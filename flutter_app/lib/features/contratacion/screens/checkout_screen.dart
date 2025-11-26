@@ -8,7 +8,8 @@ import 'package:servicios_app/core/models/direccion.dart';
 import 'package:servicios_app/core/models/servicio.dart';
 import 'package:servicios_app/core/providers/contratacion_provider.dart';
 import 'package:servicios_app/core/providers/servicio_provider.dart';
-import 'package:servicios_app/core/api/dio_client.dart'; // Para obtener direcciones
+import 'package:servicios_app/core/providers/direccion_provider.dart';
+import 'package:servicios_app/features/profile/screens/address_list_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final int servicioId;
@@ -25,15 +26,23 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _notasController = TextEditingController();
 
   // Estado
   bool _isLoading = true;
-  List<Direccion> _direcciones = [];
-  int? _selectedDireccionId;
+  Direccion? _selectedDireccion;
   DateTime? _fechaProgramada;
   Servicio? _servicio;
+  String _selectedPaymentMethod = 'efectivo';
+
+  List<Map<String, dynamic>> get _paymentMethods => [
+    {'id': 'efectivo', 'name': 'Efectivo', 'icon': Icons.money},
+    {'id': 'tarjeta_credito', 'name': 'Tarjeta de Crédito', 'icon': Icons.credit_card},
+    {'id': 'tarjeta_debito', 'name': 'Tarjeta de Débito', 'icon': Icons.credit_card},
+    {'id': 'transferencia', 'name': 'Transferencia', 'icon': Icons.account_balance},
+    {'id': 'paypal', 'name': 'PayPal', 'icon': Icons.payment},
+    {'id': 'otro', 'name': 'Otro', 'icon': Icons.more_horiz},
+  ];
 
   @override
   void initState() {
@@ -54,24 +63,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         _servicio = servicioProvider.selectedServicio;
       }
 
-      // 2. Cargar direcciones del cliente (Directo via DioClient ya que no hay DireccionProvider aun)
-      // Endpoint: GET /api/direcciones
-      final dioClient = DioClient();
-      final response = await dioClient.get('/direcciones');
-
+      // 2. Cargar direcciones via Provider
+      final direccionProvider = Provider.of<DireccionProvider>(context, listen: false);
+      if (direccionProvider.direcciones.isEmpty) {
+        await direccionProvider.loadDirecciones();
+      }
+      
       if (mounted) {
-        final List<dynamic> data = response.data['data'];
         setState(() {
-          _direcciones = data.map((json) => Direccion.fromJson(json)).toList();
-          // Seleccionar la dirección principal por defecto
-          if (_direcciones.isNotEmpty) {
-            try {
-              final principal = _direcciones.firstWhere((d) => d.esPrincipal);
-              _selectedDireccionId = principal.id;
-            } catch (e) {
-              _selectedDireccionId = _direcciones.first.id;
-            }
-          }
+          _selectedDireccion = direccionProvider.selectedDireccion;
           _isLoading = false;
         });
       }
@@ -102,7 +102,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _submitOrder() async {
-    if (_selectedDireccionId == null) {
+    if (_selectedDireccion == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Por favor selecciona una dirección de entrega')),
@@ -116,10 +116,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final result = await provider.createContratacion(
       servicioId: widget.servicioId,
       sucursalId: widget.sucursalId,
-      direccionId: _selectedDireccionId,
+      direccionId: _selectedDireccion!.id,
       fechaProgramada: _fechaProgramada,
       notas: _notasController.text.isEmpty ? null : _notasController.text,
-      metodoPago: 'efectivo', // Por defecto o implementar selector
+      metodoPago: _selectedPaymentMethod,
     );
 
     if (mounted) {
@@ -227,54 +227,54 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const Text('Dirección de Entrega',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            if (_direcciones.isEmpty)
-              Card(
-                color: Colors.orange[50],
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      const Text('No tienes direcciones registradas.',
-                          textAlign: TextAlign.center),
-                      TextButton(
-                        onPressed: () {
-                          // Navegar a crear dirección (necesita implementarse esa pantalla)
-                          // Por ahora un placeholder
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'Funcionalidad de crear dirección pendiente de implementar en UI')),
-                          );
-                        },
-                        child: const Text('Agregar Dirección'),
-                      ),
-                    ],
+            InkWell(
+              onTap: () async {
+                final selected = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AddressListScreen(selectionMode: true),
                   ),
+                );
+                if (selected != null && selected is Direccion) {
+                  setState(() {
+                    _selectedDireccion = selected;
+                  });
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              )
-            else
-              DropdownButtonFormField<int>(
-                initialValue: _selectedDireccionId,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                items: _direcciones.map((d) {
-                  return DropdownMenuItem(
-                    value: d.id,
-                    child: SizedBox(
-                      width: 200,
-                      child: Text(
-                        d.alias.isNotEmpty
-                            ? '${d.alias} - ${d.direccionCorta}'
-                            : d.direccionCorta,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on, color: AppTheme.primaryColor),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _selectedDireccion == null
+                          ? const Text('Seleccionar dirección de entrega',
+                              style: TextStyle(color: Colors.grey))
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _selectedDireccion!.alias,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  _selectedDireccion!.direccionCorta,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                     ),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedDireccionId = val),
+                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                  ],
+                ),
               ),
+            ),
 
             const SizedBox(height: 24),
 
@@ -294,6 +294,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ? 'Seleccionar fecha (Opcional)'
                       : DateFormat('dd/MM/yyyy').format(_fechaProgramada!),
                 ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Método de Pago
+            const Text('Método de Pago',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: _paymentMethods.map((method) {
+                  final isSelected = _selectedPaymentMethod == method['id'];
+                  return RadioListTile<String>(
+                    value: method['id'],
+                    groupValue: _selectedPaymentMethod,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedPaymentMethod = value);
+                      }
+                    },
+                    title: Row(
+                      children: [
+                        Icon(method['icon'],
+                            color: isSelected ? AppTheme.primaryColor : Colors.grey),
+                        const SizedBox(width: 12),
+                        Text(method['name']),
+                      ],
+                    ),
+                    activeColor: AppTheme.primaryColor,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  );
+                }).toList(),
               ),
             ),
 

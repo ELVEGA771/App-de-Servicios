@@ -5,7 +5,12 @@ class Contratacion {
    * Find contratacion by ID
    */
   static async findById(id) {
-    const query = 'SELECT * FROM vista_contrataciones_detalle WHERE id_contratacion = ?';
+    const query = `
+      SELECT v.*, p.metodo_pago, p.estado_pago 
+      FROM vista_contrataciones_detalle v
+      LEFT JOIN pago p ON v.id_contratacion = p.id_contratacion
+      WHERE v.id_contratacion = ?
+    `;
     const results = await executeQuery(query, [id]);
     return results[0] || null;
   }
@@ -16,24 +21,37 @@ class Contratacion {
   static async getByCliente(idCliente, page = 1, limit = 20, estado = null) {
     const offset = (page - 1) * limit;
     let query = `
-      SELECT * FROM vista_contrataciones_detalle
-      WHERE id_contratacion IN (
+      SELECT v.*, p.metodo_pago, p.estado_pago 
+      FROM vista_contrataciones_detalle v
+      LEFT JOIN pago p ON v.id_contratacion = p.id_contratacion
+      WHERE v.id_contratacion IN (
         SELECT id_contratacion FROM contratacion WHERE id_cliente = ?
       )
     `;
     const params = [idCliente];
 
     if (estado) {
-      query += ' AND estado_contratacion = ?';
+      query += ' AND v.estado_contratacion = ?';
       params.push(estado);
     }
 
     // Count total
-    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
-    const countResult = await executeQuery(countQuery, params);
+    const countQuery = `
+      SELECT COUNT(*) as total 
+      FROM vista_contrataciones_detalle v
+      WHERE v.id_contratacion IN (
+        SELECT id_contratacion FROM contratacion WHERE id_cliente = ?
+      )
+      ${estado ? ' AND v.estado_contratacion = ?' : ''}
+    `;
+    // Re-use params for count, but be careful with limit/offset
+    const countParams = [idCliente];
+    if (estado) countParams.push(estado);
+
+    const countResult = await executeQuery(countQuery, countParams);
     const total = countResult[0].total;
 
-    query += ' ORDER BY fecha_solicitud DESC LIMIT ? OFFSET ?';
+    query += ' ORDER BY v.fecha_solicitud DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
     const results = await executeQuery(query, params);
@@ -46,9 +64,11 @@ class Contratacion {
   static async getByEmpresa(idEmpresa, page = 1, limit = 20, estado = null) {
     const offset = (page - 1) * limit;
     let query = `
-      SELECT vcd.* FROM vista_contrataciones_detalle vcd
+      SELECT vcd.*, p.metodo_pago, p.estado_pago 
+      FROM vista_contrataciones_detalle vcd
       INNER JOIN contratacion c ON vcd.id_contratacion = c.id_contratacion
       INNER JOIN servicio s ON c.id_servicio = s.id_servicio
+      LEFT JOIN pago p ON vcd.id_contratacion = p.id_contratacion
       WHERE s.id_empresa = ?
     `;
     const params = [idEmpresa];
@@ -59,8 +79,19 @@ class Contratacion {
     }
 
     // Count total
-    const countQuery = query.replace('SELECT vcd.*', 'SELECT COUNT(*) as total');
-    const countResult = await executeQuery(countQuery, params);
+    const countQuery = `
+      SELECT COUNT(*) as total 
+      FROM vista_contrataciones_detalle vcd
+      INNER JOIN contratacion c ON vcd.id_contratacion = c.id_contratacion
+      INNER JOIN servicio s ON c.id_servicio = s.id_servicio
+      WHERE s.id_empresa = ?
+      ${estado ? ' AND vcd.estado_contratacion = ?' : ''}
+    `;
+    
+    const countParams = [idEmpresa];
+    if (estado) countParams.push(estado);
+
+    const countResult = await executeQuery(countQuery, countParams);
     const total = countResult[0].total;
 
     query += ' ORDER BY vcd.fecha_solicitud DESC LIMIT ? OFFSET ?';
@@ -175,6 +206,47 @@ class Contratacion {
 
     const results = await executeQuery(query, [idContratacion, userId]);
     return results[0].count > 0;
+  }
+
+  /**
+   * Update payment status
+   */
+  static async updatePaymentStatus(idContratacion, status) {
+    const query = 'UPDATE pago SET estado_pago = ? WHERE id_contratacion = ?';
+    await executeQuery(query, [status, idContratacion]);
+    return true;
+  }
+
+  /**
+   * Get historial by empresa
+   */
+  static async getHistorialByEmpresa(idEmpresa, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
+    const query = `
+      SELECT h.*, c.id_servicio, s.nombre as servicio_nombre, u.nombre as usuario_nombre, u.apellido as usuario_apellido
+      FROM historial_estado_contratacion h
+      INNER JOIN contratacion c ON h.id_contratacion = c.id_contratacion
+      INNER JOIN servicio s ON c.id_servicio = s.id_servicio
+      LEFT JOIN usuario u ON h.id_usuario_responsable = u.id_usuario
+      WHERE s.id_empresa = ?
+      ORDER BY h.fecha_cambio DESC
+      LIMIT ? OFFSET ?
+    `;
+    
+    // Count total
+    const countQuery = `
+      SELECT COUNT(*) as total 
+      FROM historial_estado_contratacion h
+      INNER JOIN contratacion c ON h.id_contratacion = c.id_contratacion
+      INNER JOIN servicio s ON c.id_servicio = s.id_servicio
+      WHERE s.id_empresa = ?
+    `;
+
+    const countResult = await executeQuery(countQuery, [idEmpresa]);
+    const total = countResult[0].total;
+
+    const results = await executeQuery(query, [idEmpresa, limit, offset]);
+    return { data: results, total };
   }
 }
 

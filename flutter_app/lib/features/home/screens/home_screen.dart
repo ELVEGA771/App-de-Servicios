@@ -4,10 +4,14 @@ import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/core/providers/servicio_provider.dart';
 import 'package:servicios_app/core/providers/notificacion_provider.dart';
+import 'package:servicios_app/core/providers/direccion_provider.dart';
 import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_dashboard_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_services_screen.dart';
+import 'package:servicios_app/features/empresa/screens/empresa_orders_screen.dart';
+import 'package:servicios_app/features/contratacion/screens/order_history_screen.dart';
 import 'package:servicios_app/features/profile/screens/profile_screen.dart';
+import 'package:servicios_app/features/profile/screens/address_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,11 +40,14 @@ class _HomeScreenState extends State<HomeScreen> {
         Provider.of<ServicioProvider>(context, listen: false);
     final notificacionProvider =
         Provider.of<NotificacionProvider>(context, listen: false);
+    final direccionProvider =
+        Provider.of<DireccionProvider>(context, listen: false);
 
     await Future.wait([
       servicioProvider.loadCategorias(),
       servicioProvider.loadServicios(refresh: true),
       notificacionProvider.refreshUnreadCount(),
+      direccionProvider.loadDirecciones(),
     ]);
   }
 
@@ -129,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return _buildExploreTab();
       case 1:
-        return _buildOrdersTab();
+        return const OrderHistoryScreen();
       case 2:
         return _buildFavoritesTab();
       case 3:
@@ -146,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return _buildServicesTab();
       case 2:
-        return _buildOrdersTab();
+        return const EmpresaOrdersScreen();
       case 3:
         return _buildProfileTab();
       default:
@@ -159,6 +166,63 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, servicioProvider, child) {
         return CustomScrollView(
           slivers: [
+            // Address Selector
+            SliverToBoxAdapter(
+              child: Consumer<DireccionProvider>(
+                builder: (context, provider, _) {
+                  final direccion = provider.selectedDireccion;
+                  return InkWell(
+                    onTap: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AddressListScreen(selectionMode: true),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.location_on, color: AppTheme.primaryColor, size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      direccion?.alias.toUpperCase() ?? 'AGREGAR DIRECCIÓN',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                        color: AppTheme.textSecondaryColor,
+                                      ),
+                                    ),
+                                    const Icon(Icons.keyboard_arrow_down, size: 16, color: AppTheme.textSecondaryColor),
+                                  ],
+                                ),
+                                Text(
+                                  direccion?.direccionCorta ?? 'Selecciona una ubicación de entrega',
+                                  style: const TextStyle(
+                                    color: AppTheme.textPrimaryColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
             // Search Bar
             SliverToBoxAdapter(
               child: Padding(
@@ -466,10 +530,6 @@ class _HomeScreenState extends State<HomeScreen> {
         childCount: sortedKeys.length,
       ),
     );
-  }
-
-  Widget _buildOrdersTab() {
-    return const Center(child: Text('Órdenes - Implementar'));
   }
 
   Widget _buildFavoritesTab() {

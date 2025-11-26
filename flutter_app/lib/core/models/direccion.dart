@@ -2,10 +2,10 @@ class Direccion {
   final int id;
   final int idCliente;
   final String alias;
-  final String calle;
+  final String callePrincipal;
+  final String? calleSecundaria;
   final String? numeroExterior;
   final String? numeroInterior;
-  final String colonia;
   final String ciudad;
   final String estado;
   final String codigoPostal;
@@ -18,10 +18,10 @@ class Direccion {
     required this.id,
     required this.idCliente,
     required this.alias,
-    required this.calle,
+    required this.callePrincipal,
+    this.calleSecundaria,
     this.numeroExterior,
     this.numeroInterior,
-    required this.colonia,
     required this.ciudad,
     required this.estado,
     required this.codigoPostal,
@@ -36,10 +36,10 @@ class Direccion {
       id: json['id'] as int,
       idCliente: json['id_cliente'] as int,
       alias: json['alias'] as String,
-      calle: json['calle'] as String,
+      callePrincipal: json['calle_principal'] as String,
+      calleSecundaria: json['calle_secundaria'] as String?,
       numeroExterior: json['numero_exterior'] as String?,
       numeroInterior: json['numero_interior'] as String?,
-      colonia: json['colonia'] as String,
       ciudad: json['ciudad'] as String,
       estado: json['estado'] as String,
       codigoPostal: json['codigo_postal'] as String,
@@ -59,10 +59,10 @@ class Direccion {
       'id': id,
       'id_cliente': idCliente,
       'alias': alias,
-      'calle': calle,
+      'calle_principal': callePrincipal,
+      'calle_secundaria': calleSecundaria,
       'numero_exterior': numeroExterior,
       'numero_interior': numeroInterior,
-      'colonia': colonia,
       'ciudad': ciudad,
       'estado': estado,
       'codigo_postal': codigoPostal,
@@ -75,10 +75,12 @@ class Direccion {
 
   String get direccionCompleta {
     final parts = <String>[];
-    parts.add(calle);
+    parts.add(callePrincipal);
+    if (calleSecundaria != null && calleSecundaria!.isNotEmpty) {
+      parts.add('y $calleSecundaria');
+    }
     if (numeroExterior != null) parts.add(numeroExterior!);
     if (numeroInterior != null) parts.add('Int. $numeroInterior');
-    parts.add(colonia);
     parts.add('$ciudad, $estado');
     parts.add('C.P. $codigoPostal');
     return parts.join(', ');
@@ -86,9 +88,8 @@ class Direccion {
 
   String get direccionCorta {
     final parts = <String>[];
-    parts.add(calle);
+    parts.add(callePrincipal);
     if (numeroExterior != null) parts.add(numeroExterior!);
-    parts.add(colonia);
     return parts.join(' ');
   }
 
@@ -98,10 +99,10 @@ class Direccion {
     int? id,
     int? idCliente,
     String? alias,
-    String? calle,
+    String? callePrincipal,
+    String? calleSecundaria,
     String? numeroExterior,
     String? numeroInterior,
-    String? colonia,
     String? ciudad,
     String? estado,
     String? codigoPostal,
@@ -114,10 +115,10 @@ class Direccion {
       id: id ?? this.id,
       idCliente: idCliente ?? this.idCliente,
       alias: alias ?? this.alias,
-      calle: calle ?? this.calle,
+      callePrincipal: callePrincipal ?? this.callePrincipal,
+      calleSecundaria: calleSecundaria ?? this.calleSecundaria,
       numeroExterior: numeroExterior ?? this.numeroExterior,
       numeroInterior: numeroInterior ?? this.numeroInterior,
-      colonia: colonia ?? this.colonia,
       ciudad: ciudad ?? this.ciudad,
       estado: estado ?? this.estado,
       codigoPostal: codigoPostal ?? this.codigoPostal,

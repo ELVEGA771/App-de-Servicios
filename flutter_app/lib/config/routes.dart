@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:servicios_app/core/models/sucursal.dart';
+import 'package:servicios_app/core/models/direccion.dart';
 import 'package:servicios_app/features/auth/screens/splash_screen.dart';
 import 'package:servicios_app/features/auth/screens/login_screen.dart';
 import 'package:servicios_app/features/auth/screens/register_screen.dart';
@@ -16,6 +17,8 @@ import 'package:servicios_app/features/chat/screens/conversations_screen.dart';
 import 'package:servicios_app/features/chat/screens/chat_screen.dart';
 import 'package:servicios_app/features/profile/screens/profile_screen.dart';
 import 'package:servicios_app/features/profile/screens/edit_profile_screen.dart';
+import 'package:servicios_app/features/profile/screens/address_list_screen.dart';
+import 'package:servicios_app/features/profile/screens/add_edit_address_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_dashboard_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_services_screen.dart';
 import 'package:servicios_app/features/empresa/screens/create_service_screen.dart';
@@ -53,6 +56,9 @@ class AppRoutes {
   // Profile
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
+  static const String addressList = '/profile/addresses';
+  static const String addAddress = '/profile/addresses/add';
+  static const String editAddress = '/profile/addresses/edit';
 
   // Empresa
   static const String empresaDashboard = '/empresa/dashboard';
@@ -153,6 +159,22 @@ class AppRoutes {
 
       case editProfile:
         return MaterialPageRoute(builder: (_) => const EditProfileScreen());
+
+      case addressList:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final selectionMode = args?['selectionMode'] as bool? ?? false;
+        return MaterialPageRoute(
+          builder: (_) => AddressListScreen(selectionMode: selectionMode),
+        );
+
+      case addAddress:
+        return MaterialPageRoute(builder: (_) => const AddEditAddressScreen());
+
+      case editAddress:
+        final args = settings.arguments as Direccion;
+        return MaterialPageRoute(
+          builder: (_) => AddEditAddressScreen(direccion: args),
+        );
 
       // Empresa routes
       case empresaDashboard:
