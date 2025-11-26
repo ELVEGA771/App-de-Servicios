@@ -16,8 +16,11 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+enum GroupingMode { category, company }
+
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  GroupingMode _groupingMode = GroupingMode.category;
 
   @override
   void initState() {
@@ -193,43 +196,261 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Categories
+            // Grouping Toggle
             SliverToBoxAdapter(
-              child: SizedBox(
-                height: 120,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Text(
+                      'Agrupar por:',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(width: 12),
+                    SegmentedButton<GroupingMode>(
+                      segments: const [
+                        ButtonSegment<GroupingMode>(
+                          value: GroupingMode.category,
+                          label: Text('Categoría'),
+                          icon: Icon(Icons.category_outlined),
+                        ),
+                        ButtonSegment<GroupingMode>(
+                          value: GroupingMode.company,
+                          label: Text('Empresa'),
+                          icon: Icon(Icons.business_outlined),
+                        ),
+                      ],
+                      selected: {_groupingMode},
+                      onSelectionChanged: (Set<GroupingMode> newSelection) {
+                        setState(() {
+                          _groupingMode = newSelection.first;
+                        });
+                      },
+                      style: ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            // Content
+            if (servicioProvider.isLoading)
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (servicioProvider.servicios.isEmpty)
+              const SliverFillRemaining(
+                child: Center(child: Text('No hay servicios disponibles')),
+              )
+            else
+              _buildGroupedServicesList(servicioProvider),
+            
+            const SliverToBoxAdapter(child: SizedBox(height: 80)), // Bottom padding
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGroupedServicesList(ServicioProvider provider) {
+    final groupedServices = <String, List<dynamic>>{};
+    
+    for (var servicio in provider.servicios) {
+      String key;
+      if (_groupingMode == GroupingMode.category) {
+        key = servicio.categoriaNombre ?? 'Sin Categoría';
+      } else {
+        key = servicio.empresaNombre ?? 'Sin Empresa';
+      }
+      
+      if (!groupedServices.containsKey(key)) {
+        groupedServices[key] = [];
+      }
+      groupedServices[key]!.add(servicio);
+    }
+
+    final sortedKeys = groupedServices.keys.toList()..sort();
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final key = sortedKeys[index];
+          final services = groupedServices[key]!;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      key,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // TODO: Navigate to see all in this group
+                      },
+                      child: const Text('Ver todo'),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 280, // Fixed height for the horizontal list
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: servicioProvider.categorias.length,
-                  itemBuilder: (context, index) {
-                    final categoria = servicioProvider.categorias[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: InkWell(
-                        onTap: () {
-                          servicioProvider.setFilters(
-                              categoriaId: categoria.id);
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          width: 100,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.dividerColor),
-                          ),
+                  itemCount: services.length,
+                  itemBuilder: (context, serviceIndex) {
+                    final servicio = services[serviceIndex];
+                    return Container(
+                      width: 200, // Fixed width for each card
+                      margin: const EdgeInsets.only(right: 16),
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            AppRoutes.navigateToServicioDetail(
+                              context,
+                              servicio.id,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.category, size: 32),
-                              const SizedBox(height: 8),
-                              Text(
-                                categoria.nombre,
-                                style: Theme.of(context).textTheme.labelSmall,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                              // Image
+                              Expanded(
+                                flex: 3,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.backgroundColor,
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(12),
+                                    ),
+                                    image: servicio.imagenPrincipal != null
+                                        ? DecorationImage(
+                                            image: NetworkImage(
+                                                servicio.imagenPrincipal!),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                  ),
+                                  child: servicio.imagenPrincipal == null
+                                      ? const Center(
+                                          child: Icon(Icons.image,
+                                              size: 48,
+                                              color: Colors.grey),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              // Info
+                              Expanded(
+                                flex: 4,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            servicio.nombre,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          if (_groupingMode ==
+                                              GroupingMode.category)
+                                            Row(
+                                              children: [
+                                                const Icon(
+                                                    Icons.business,
+                                                    size: 14,
+                                                    color: Colors.grey),
+                                                const SizedBox(width: 4),
+                                                Expanded(
+                                                  child: Text(
+                                                    servicio.empresaNombre ??
+                                                        'Empresa',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '\$${servicio.precio.toStringAsFixed(2)}',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  color:
+                                                      AppTheme.primaryColor,
+                                                  fontWeight:
+                                                      FontWeight.bold,
+                                                ),
+                                          ),
+                                          if (servicio.calificacionPromedio !=
+                                              null)
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.star,
+                                                    size: 16,
+                                                    color: Colors.amber),
+                                                Text(
+                                                  servicio.calificacionPromedio!
+                                                      .toStringAsFixed(1),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -239,91 +460,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
               ),
-            ),
-
-            // Servicios Grid
-            SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: servicioProvider.isLoading
-                  ? const SliverToBoxAdapter(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  : SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final servicio = servicioProvider.servicios[index];
-                          return Card(
-                            child: InkWell(
-                              onTap: () {
-                                AppRoutes.navigateToServicioDetail(
-                                  context,
-                                  servicio.id,
-                                );
-                              },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.backgroundColor,
-                                        borderRadius:
-                                            const BorderRadius.vertical(
-                                          top: Radius.circular(12),
-                                        ),
-                                      ),
-                                      child: const Center(
-                                        child: Icon(Icons.image, size: 48),
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          servicio.nombre,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '\$${servicio.precio.toStringAsFixed(2)}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                color: AppTheme.primaryColor,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        childCount: servicioProvider.servicios.length,
-                      ),
-                    ),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+        childCount: sortedKeys.length,
+      ),
     );
   }
 
