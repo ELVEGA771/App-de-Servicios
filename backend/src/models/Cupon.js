@@ -55,25 +55,18 @@ class Cupon {
    */
   static async create(cuponData) {
     const query = `
-      INSERT INTO cupon (
-        id_empresa, codigo, descripcion, tipo_descuento, valor_descuento,
-        monto_minimo_compra, cantidad_disponible, fecha_inicio, fecha_expiracion,
-        activo, aplicable_a
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      CALL sp_crear_cupon(?, ?, ?, ?, ?, ?, ?, ?, ?, @out_id_cupon, @out_mensaje)
     `;
     const params = [
-      cuponData.id_empresa,
       cuponData.codigo,
-      cuponData.descripcion || null,
+      cuponData.descripcion || '',
       cuponData.tipo_descuento,
       cuponData.valor_descuento,
       cuponData.monto_minimo_compra || 0,
       cuponData.cantidad_disponible || null,
-      cuponData.fecha_inicio || null,
+      cuponData.fecha_inicio || new Date(),
       cuponData.fecha_expiracion || null,
-      cuponData.activo !== undefined ? cuponData.activo : 1,
-      cuponData.aplicable_a || 'todos'
+      cuponData.id_empresa
     ];
     const result = await executeQuery(query, params);
     return result.insertId;
@@ -83,53 +76,33 @@ class Cupon {
    * Update cupon
    */
   static async update(id, cuponData) {
-    const fields = [];
-    const params = [];
+    const query = `
+      CALL sp_editar_cupon(?, ?, ?, ?, ?, ?, ?, ?, ?, @out_mensaje)
+    `;
+    
+    const params = [
+      id,
+      cuponData.codigo,
+      cuponData.descripcion || '',
+      cuponData.tipo_descuento,
+      cuponData.valor_descuento,
+      cuponData.monto_minimo_compra || 0,
+      cuponData.cantidad_disponible || null,
+      cuponData.fecha_inicio,
+      cuponData.fecha_expiracion
+    ];
 
-    if (cuponData.descripcion !== undefined) {
-      fields.push('descripcion = ?');
-      params.push(cuponData.descripcion);
-    }
-    if (cuponData.tipo_descuento !== undefined) {
-      fields.push('tipo_descuento = ?');
-      params.push(cuponData.tipo_descuento);
-    }
-    if (cuponData.valor_descuento !== undefined) {
-      fields.push('valor_descuento = ?');
-      params.push(cuponData.valor_descuento);
-    }
-    if (cuponData.monto_minimo_compra !== undefined) {
-      fields.push('monto_minimo_compra = ?');
-      params.push(cuponData.monto_minimo_compra);
-    }
-    if (cuponData.cantidad_disponible !== undefined) {
-      fields.push('cantidad_disponible = ?');
-      params.push(cuponData.cantidad_disponible);
-    }
-    if (cuponData.fecha_expiracion !== undefined) {
-      fields.push('fecha_expiracion = ?');
-      params.push(cuponData.fecha_expiracion);
-    }
-    if (cuponData.activo !== undefined) {
-      fields.push('activo = ?');
-      params.push(cuponData.activo);
-    }
-
-    if (fields.length === 0) return null;
-
-    params.push(id);
-    const query = `UPDATE cupon SET ${fields.join(', ')} WHERE id_cupon = ?`;
     await executeQuery(query, params);
-    return this.findById(id);
+    const result = await executeQuery('SELECT @out_mensaje as mensaje');
+    return result[0];
   }
 
-  /**
-   * Delete cupon
-   */
+  // Eliminar Cupón
   static async delete(id) {
-    const query = 'DELETE FROM cupon WHERE id_cupon = ?';
+    const query = `CALL sp_eliminar_cupon(?, @out_mensaje)`;
     await executeQuery(query, [id]);
-    return true;
+    const result = await executeQuery('SELECT @out_mensaje as mensaje');
+    return result[0];
   }
 
   /**

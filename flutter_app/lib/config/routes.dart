@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:servicios_app/core/models/sucursal.dart';
 import 'package:servicios_app/core/models/direccion.dart';
-import 'package:servicios_app/features/auth/screens/splash_screen.dart';
 import 'package:servicios_app/features/auth/screens/login_screen.dart';
 import 'package:servicios_app/features/auth/screens/register_screen.dart';
+import 'package:servicios_app/features/auth/screens/splash_screen.dart';
 import 'package:servicios_app/features/home/screens/home_screen.dart';
-import 'package:servicios_app/features/servicio/screens/servicio_detail_screen.dart';
-import 'package:servicios_app/features/servicio/screens/servicio_search_screen.dart';
 import 'package:servicios_app/features/servicio/screens/servicio_list_screen.dart';
-import 'package:servicios_app/features/contratacion/screens/checkout_screen.dart';
+import 'package:servicios_app/features/servicio/screens/servicio_detail_screen.dart';
+import 'package:servicios_app/features/servicio/screens/servicio_search_screen.dart'; // Importante: Nueva importación
+import 'package:servicios_app/features/contratacion/screens/order_history_screen.dart';
 import 'package:servicios_app/features/contratacion/screens/order_detail_screen.dart';
 import 'package:servicios_app/features/contratacion/screens/order_tracking_screen.dart';
-import 'package:servicios_app/features/contratacion/screens/order_history_screen.dart';
-import 'package:servicios_app/features/favoritos/screens/favoritos_screen.dart';
-import 'package:servicios_app/features/chat/screens/conversations_screen.dart';
-import 'package:servicios_app/features/chat/screens/chat_screen.dart';
+import 'package:servicios_app/features/contratacion/screens/checkout_screen.dart';
 import 'package:servicios_app/features/profile/screens/profile_screen.dart';
 import 'package:servicios_app/features/profile/screens/edit_profile_screen.dart';
 import 'package:servicios_app/features/profile/screens/address_list_screen.dart';
 import 'package:servicios_app/features/profile/screens/add_edit_address_screen.dart';
+// import 'package:servicios_app/features/profile/screens/addresses_screen.dart'; // Removed unused import
+// import 'package:servicios_app/features/profile/screens/add_address_screen.dart'; // Removed unused import
 import 'package:servicios_app/features/empresa/screens/empresa_dashboard_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_services_screen.dart';
 import 'package:servicios_app/features/empresa/screens/create_service_screen.dart';
@@ -26,7 +25,12 @@ import 'package:servicios_app/features/empresa/screens/edit_service_screen.dart'
 import 'package:servicios_app/features/empresa/screens/empresa_orders_screen.dart';
 import 'package:servicios_app/features/empresa/screens/manage_sucursales_screen.dart';
 import 'package:servicios_app/features/empresa/screens/create_sucursal_screen.dart';
+import 'package:servicios_app/features/favoritos/screens/favoritos_screen.dart';
+import 'package:servicios_app/features/chat/screens/conversations_screen.dart';
+import 'package:servicios_app/features/chat/screens/chat_screen.dart';
 import 'package:servicios_app/features/notificaciones/screens/notificaciones_screen.dart';
+import 'package:servicios_app/features/empresa/screens/empresa_cupones_screen.dart';
+import 'package:servicios_app/features/empresa/screens/create_cupon_screen.dart';
 
 class AppRoutes {
   // Route Names
@@ -69,9 +73,17 @@ class AppRoutes {
   static const String manageSucursales = '/empresa/sucursales';
   static const String createSucursal = '/empresa/sucursal/create';
   static const String editSucursal = '/empresa/sucursal/edit';
+  static const String empresaCupones = '/empresa/cupones';
 
   // Notificaciones
   static const String notificaciones = '/notificaciones';
+
+  // Direcciones
+  // static const String addresses = '/addresses'; // Removed unused constant
+  //static const String addAddress = '/addresses/add';
+
+  // Cupones
+  static const String createCupon = '/empresa/cupones/create';
 
   // Route Generator
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -178,7 +190,8 @@ class AppRoutes {
 
       // Empresa routes
       case empresaDashboard:
-        return MaterialPageRoute(builder: (_) => const EmpresaDashboardScreen());
+        return MaterialPageRoute(
+            builder: (_) => const EmpresaDashboardScreen());
 
       case empresaServices:
         return MaterialPageRoute(builder: (_) => const EmpresaServicesScreen());
@@ -196,7 +209,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const EmpresaOrdersScreen());
 
       case manageSucursales:
-        return MaterialPageRoute(builder: (_) => const ManageSucursalesScreen());
+        return MaterialPageRoute(
+            builder: (_) => const ManageSucursalesScreen());
 
       case createSucursal:
         return MaterialPageRoute(builder: (_) => const CreateSucursalScreen());
@@ -206,6 +220,12 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => CreateSucursalScreen(sucursal: args),
         );
+
+      case empresaCupones:
+        return MaterialPageRoute(builder: (_) => const EmpresaCuponesScreen());
+
+      case createCupon:
+        return MaterialPageRoute(builder: (_) => const CreateCuponScreen());
 
       // Notificaciones
       case notificaciones:
@@ -222,7 +242,7 @@ class AppRoutes {
     }
   }
 
-  // Navigation Helpers
+// Navigation Helpers
   static void navigateToHome(BuildContext context) {
     Navigator.of(context).pushNamedAndRemoveUntil(home, (route) => false);
   }
@@ -238,7 +258,8 @@ class AppRoutes {
     );
   }
 
-  static void navigateToCheckout(BuildContext context, int servicioId, int sucursalId) {
+  static void navigateToCheckout(
+      BuildContext context, int servicioId, int sucursalId) {
     Navigator.of(context).pushNamed(
       checkout,
       arguments: {'servicioId': servicioId, 'sucursalId': sucursalId},
@@ -252,10 +273,14 @@ class AppRoutes {
     );
   }
 
-  static void navigateToChat(BuildContext context, int conversacionId, String otherUserName) {
+  static void navigateToChat(
+      BuildContext context, int conversacionId, String otherUserName) {
     Navigator.of(context).pushNamed(
       chat,
-      arguments: {'conversacionId': conversacionId, 'otherUserName': otherUserName},
+      arguments: {
+        'conversacionId': conversacionId,
+        'otherUserName': otherUserName
+      },
     );
   }
 }

@@ -33,16 +33,16 @@ class Direccion {
 
   factory Direccion.fromJson(Map<String, dynamic> json) {
     return Direccion(
-      id: json['id'] as int,
-      idCliente: json['id_cliente'] as int,
-      alias: json['alias'] as String,
-      callePrincipal: json['calle_principal'] as String,
+      id: json['id_direccion'] as int? ?? json['id'] as int? ?? 0,
+      idCliente: json['id_cliente'] as int? ?? 0,
+      alias: json['alias'] as String? ?? '',
+      callePrincipal: json['calle_principal'] as String? ?? '',
       calleSecundaria: json['calle_secundaria'] as String?,
-      numeroExterior: json['numero_exterior'] as String?,
+      numeroExterior: json['numero'] as String? ?? json['numero_exterior'] as String?,
       numeroInterior: json['numero_interior'] as String?,
-      ciudad: json['ciudad'] as String,
-      estado: json['estado'] as String,
-      codigoPostal: json['codigo_postal'] as String,
+      ciudad: json['ciudad'] as String? ?? '',
+      estado: json['provincia_estado'] as String? ?? json['estado'] as String? ?? '',
+      codigoPostal: json['codigo_postal'] as String? ?? '',
       referencia: json['referencia'] as String?,
       latitud: json['latitud'] != null
           ? (json['latitud'] as num).toDouble()

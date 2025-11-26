@@ -73,7 +73,8 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: AppTheme.errorColor),
+                      const Icon(Icons.error_outline,
+                          size: 64, color: AppTheme.errorColor),
                       const SizedBox(height: 16),
                       Text(_error!, textAlign: TextAlign.center),
                       const SizedBox(height: 16),
@@ -114,7 +115,8 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         _stats?['razon_social'] ?? 'Mi Empresa',
@@ -126,7 +128,9 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                                       const SizedBox(height: 4),
                                       Row(
                                         children: [
-                                          const Icon(Icons.star, color: AppTheme.warningColor, size: 20),
+                                          const Icon(Icons.star,
+                                              color: AppTheme.warningColor,
+                                              size: 20),
                                           const SizedBox(width: 4),
                                           Text(
                                             '${_stats?['calificacion_promedio'] ?? 0.0}',
@@ -204,7 +208,8 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.successColor.withOpacity(0.1),
+                                        color: AppTheme.successColor
+                                            .withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: const Icon(
@@ -251,6 +256,7 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                         ),
                         const SizedBox(height: 16),
 
+                        // Fila 1: Nuevo Servicio y Sucursales
                         Row(
                           children: [
                             Expanded(
@@ -268,13 +274,16 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                                 label: 'Sucursales',
                                 icon: Icons.store,
                                 onTap: () {
-                                  Navigator.pushNamed(context, '/empresa/sucursales');
+                                  Navigator.pushNamed(
+                                      context, '/empresa/sucursales');
                                 },
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
+
+                        // Fila 2: Cupones (y espacio vacío para mantener tamaño)
                         Row(
                           children: [
                             Expanded(
@@ -282,12 +291,8 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                                 label: 'Cupones',
                                 icon: Icons.local_offer,
                                 onTap: () {
-                                  // TODO: Implement cupones screen
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Funcionalidad de cupones próximamente'),
-                                    ),
-                                  );
+                                  Navigator.pushNamed(
+                                      context, '/empresa/cupones');
                                 },
                               ),
                             ),
@@ -295,6 +300,8 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                             const Expanded(child: SizedBox()),
                           ],
                         ),
+                        // Espacio extra al final para scroll
+                        const SizedBox(height: 32),
                       ],
                     ),
                   ),
