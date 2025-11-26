@@ -71,16 +71,15 @@ class Contratacion {
   }
 
   /**
-   * Create new contratacion
+   * Create new contratacion (using stored procedure)
    */
   static async create(contratacionData) {
+    // Call stored procedure
     const query = `
-      INSERT INTO contratacion (
-        id_cliente, id_servicio, id_sucursal, id_direccion_entrega, id_cupon,
-        fecha_programada, precio_subtotal, descuento_aplicado, precio_total,
-        estado, notas_cliente
+      CALL sp_crear_contratacion(
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        @out_id_contratacion, @out_mensaje
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const params = [
       contratacionData.id_cliente,
@@ -92,32 +91,35 @@ class Contratacion {
       contratacionData.precio_subtotal,
       contratacionData.descuento_aplicado || 0,
       contratacionData.precio_total,
-      contratacionData.estado || 'pendiente',
+      contratacionData.porcentaje_comision || null, // Nuevo campo
       contratacionData.notas_cliente || null
     ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+
+    await executeQuery(query, params);
+
+    // Get output parameters
+    const resultQuery = 'SELECT @out_id_contratacion as id_contratacion, @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
+
+    if (!results[0].id_contratacion) {
+      throw new Error(results[0].mensaje || 'Error al crear contratación');
+    }
+
+    return results[0].id_contratacion;
   }
 
   /**
-   * Update contratacion estado
+   * Update contratacion estado (using stored procedure)
    */
   static async updateEstado(id, estado, notasEmpresa = null) {
-    const fields = ['estado = ?'];
-    const params = [estado];
+    // Call stored procedure
+    const query = 'CALL sp_actualizar_estado_contratacion(?, ?, ?, @out_mensaje)';
+    await executeQuery(query, [id, estado, notasEmpresa]);
 
-    if (notasEmpresa !== null) {
-      fields.push('notas_empresa = ?');
-      params.push(notasEmpresa);
-    }
+    // Get output message
+    const resultQuery = 'SELECT @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
 
-    if (estado === 'completado') {
-      fields.push('fecha_completada = NOW()');
-    }
-
-    params.push(id);
-    const query = `UPDATE contratacion SET ${fields.join(', ')} WHERE id_contratacion = ?`;
-    await executeQuery(query, params);
     return this.findById(id);
   }
 

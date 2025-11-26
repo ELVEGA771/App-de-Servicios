@@ -108,22 +108,17 @@ class Cliente {
   }
 
   /**
-   * Set principal address
+   * Set principal address (using stored procedure)
    */
   static async setPrincipalAddress(idCliente, idDireccion) {
-    // Unset all principal addresses
-    await executeQuery(
-      'UPDATE direcciones_del_cliente SET es_principal = 0 WHERE id_cliente = ?',
-      [idCliente]
-    );
-
-    // Set the new principal address
-    const query = `
-      UPDATE direcciones_del_cliente
-      SET es_principal = 1
-      WHERE id_cliente = ? AND id_direccion = ?
-    `;
+    // Call stored procedure
+    const query = 'CALL sp_establecer_direccion_principal(?, ?, @out_mensaje)';
     await executeQuery(query, [idCliente, idDireccion]);
+
+    // Get output message
+    const resultQuery = 'SELECT @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
+
     return true;
   }
 

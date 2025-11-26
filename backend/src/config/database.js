@@ -32,10 +32,11 @@ const testConnection = async () => {
 };
 
 // Execute query with error handling
-const executeQuery = async (query, params = []) => {
+const executeQuery = async (query, params = [], externalConnection = null) => {
   let connection;
   try {
-    connection = await pool.getConnection();
+    connection = externalConnection || await pool.getConnection();
+    
     // Use query() instead of execute() to avoid prepared statement issues with views
     const [results] = await connection.query(query, params);
     return results;
@@ -43,7 +44,7 @@ const executeQuery = async (query, params = []) => {
     console.error('Database query error:', error);
     throw error;
   } finally {
-    if (connection) connection.release();
+    if (!externalConnection && connection) connection.release();
   }
 };
 

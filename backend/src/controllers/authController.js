@@ -16,47 +16,42 @@ const register = async (req, res, next) => {
   try {
     const { email, password, nombre, apellido, telefono, tipo_usuario, razon_social, ruc_nit, pais } = req.body;
 
-    // Check if email already exists
-    const existingUser = await Usuario.findByEmail(email);
-    if (existingUser) {
-      return sendError(res, ERROR_CODES.DUPLICATE_ENTRY, 'Email already registered', HTTP_STATUS.CONFLICT);
-    }
-
-    // Hash password
+    // Hash password (ALWAYS done in backend for security)
     const bcryptRounds = parseInt(process.env.BCRYPT_ROUNDS) || 10;
     const password_hash = await bcrypt.hash(password, bcryptRounds);
 
-    // Create user and related entity in transaction
-    const result = await executeTransaction(async (connection) => {
-      // Create usuario
-      const [userResult] = await connection.execute(
-        'INSERT INTO usuario (email, password_hash, nombre, apellido, telefono, tipo_usuario) VALUES (?, ?, ?, ?, ?, ?)',
-        [email, password_hash, nombre, apellido || null, telefono || null, tipo_usuario]
-      );
-      const userId = userResult.insertId;
+    // Call stored procedure
+    const { executeQuery } = require('../config/database');
 
-      let entityId;
+    const query = `
+      CALL sp_registrar_usuario(
+        ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        @out_id_usuario, @out_id_entidad, @out_mensaje
+      )
+    `;
+    const params = [
+      email,
+      password_hash,
+      nombre,
+      apellido || null,
+      telefono || null,
+      tipo_usuario,
+      razon_social || null,
+      ruc_nit || null,
+      pais || null
+    ];
 
-      // Create cliente or empresa based on tipo_usuario
-      if (tipo_usuario === USER_TYPES.CLIENT) {
-        const [clienteResult] = await connection.execute(
-          'INSERT INTO cliente (id_usuario) VALUES (?)',
-          [userId || null]
-        );
-        entityId = clienteResult.insertId;
-      } else if (tipo_usuario === USER_TYPES.COMPANY) {
-        if (!razon_social) {
-          throw new Error('razon_social is required for empresa registration');
-        }
-        const [empresaResult] = await connection.execute(
-          'INSERT INTO empresa (id_usuario, razon_social, ruc_nit, pais) VALUES (?, ?, ?, ?)',
-          [userId, razon_social, ruc_nit || null, pais || null]
-        );
-        entityId = empresaResult.insertId;
-      }
+    await executeQuery(query, params);
 
-      return { userId, entityId };
-    });
+    // Get output parameters
+    const resultQuery = 'SELECT @out_id_usuario as userId, @out_id_entidad as entityId, @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
+
+    if (!results[0].userId) {
+      return sendError(res, ERROR_CODES.DUPLICATE_ENTRY, results[0].mensaje || 'Error al registrar usuario', HTTP_STATUS.CONFLICT);
+    }
+
+    const result = { userId: results[0].userId, entityId: results[0].entityId };
 
     logger.info(`New user registered: ${email} (${tipo_usuario})`);
 
@@ -76,13 +71,13 @@ const register = async (req, res, next) => {
         if (empresa) {
             additionalData.empresa = {
                 id_empresa: empresa.id_empresa,
-                id_usuario: result.userId, // <--- CORRECCIÓN: Agregado id_usuario
-                nombre: nombre,            // <--- CORRECCIÓN: Agregado nombre
+                id_usuario: result.userId,
+                nombre: nombre,
                 razon_social: empresa.razon_social,
                 ruc_nit: empresa.ruc_nit,
                 pais: empresa.pais,
-                descripcion: empresa.descripcion || '', // Opcional: Evitar nulls
-                logo: empresa.logo_url // Opcional
+                descripcion: empresa.descripcion || '',
+                logo: empresa.logo_url
             };
         }
     } else if (tipo_usuario === USER_TYPES.CLIENT) {
@@ -95,7 +90,7 @@ const register = async (req, res, next) => {
       res,
       {
         user: { id_usuario: result.userId, email, nombre, apellido, tipo_usuario },
-        ...additionalData, 
+        ...additionalData,
         accessToken,
         refreshToken
       },

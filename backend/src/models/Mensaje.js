@@ -2,23 +2,32 @@ const { executeQuery } = require('../config/database');
 
 class Mensaje {
   /**
-   * Create new mensaje
+   * Create new mensaje (using stored procedure)
    */
   static async create(mensajeData) {
+    // Call stored procedure
     const query = `
-      INSERT INTO mensaje (id_conversacion, id_remitente, contenido, tipo_mensaje, archivo_url)
-      VALUES (?, ?, ?, ?, ?)
+      CALL sp_crear_mensaje(?, ?, ?, ?, ?, @out_id_mensaje, @out_mensaje)
     `;
     const params = [
       mensajeData.id_conversacion,
       mensajeData.id_remitente,
       mensajeData.contenido,
-      mensajeData.tipo_mensaje || 'texto',
+      mensajeData.tipo_mensaje || null,
       mensajeData.archivo_url || null
     ];
-    const result = await executeQuery(query, params);
-    // Note: Trigger will automatically update conversacion.fecha_ultimo_mensaje
-    return result.insertId;
+
+    await executeQuery(query, params);
+
+    // Get output parameters
+    const resultQuery = 'SELECT @out_id_mensaje as id_mensaje, @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
+
+    if (!results[0].id_mensaje) {
+      throw new Error(results[0].mensaje || 'Error al crear mensaje');
+    }
+
+    return results[0].id_mensaje;
   }
 
   /**

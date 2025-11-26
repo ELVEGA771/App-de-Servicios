@@ -52,7 +52,9 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
     if (_isEditing) {
       _loadSucursalData();
     } else {
-      for (int i = 0; i < 5; i++) _selectedDays[i] = true;
+      for (int i = 0; i < 5; i++) {
+        _selectedDays[i] = true;
+      }
     }
   }
 
@@ -67,7 +69,9 @@ class _CreateSucursalScreenState extends State<CreateSucursalScreen> {
       }
     } else {
       // Fallback si viene texto antiguo o nulo
-      for (int i = 0; i < 5; i++) _selectedDays[i] = true;
+      for (int i = 0; i < 5; i++) {
+        _selectedDays[i] = true;
+      }
     }
 
     // Parse times
