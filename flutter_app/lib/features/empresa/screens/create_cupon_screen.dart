@@ -36,12 +36,12 @@ class _CreateCuponScreenState extends State<CreateCuponScreen> {
     if (widget.cuponToEdit != null) {
       final cupon = widget.cuponToEdit!;
       _codigoController.text = cupon.codigo;
-      _descripcionController.text = cupon.descripcion ?? '';
+      _descripcionController.text = cupon.descripcion;
       _tipoDescuento = cupon.tipoDescuento;
       _valorController.text =
           cupon.valorDescuento.toString(); // Asumiendo que es numérico
       _cantidadController.text = cupon.cantidadDisponible.toString();
-      _minCompraController.text = cupon.montoMinimoCompra?.toString() ?? '';
+      _minCompraController.text = cupon.montoMinimoCompra.toString();
 
       // Asignar fechas (asegúrate que tu modelo Cupon tenga estos campos como DateTime)
       // Si vienen como String desde el modelo, usa DateTime.parse()
