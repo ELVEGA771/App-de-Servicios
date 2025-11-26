@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -37,7 +38,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      AppRoutes.navigateToHome(context);
+      // CAMBIO: Usar lógica de GoRouter
+      if (authProvider.isEmpresa) {
+        context.go('/empresa/home');
+      } else {
+        context.go('/cliente/home');
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -179,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text('¿No tienes cuenta?'),
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed(AppRoutes.register);
+                        context.push('/register');
                       },
                       child: const Text('Regístrate'),
                     ),

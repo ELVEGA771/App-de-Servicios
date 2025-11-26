@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,9 +31,13 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (authProvider.isAuthenticated) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+      if (authProvider.isEmpresa) {
+        context.go('/empresa/home');
+      } else {
+        context.go('/cliente/home');
+      }
     } else {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+      context.go('/login');
     }
   }
 

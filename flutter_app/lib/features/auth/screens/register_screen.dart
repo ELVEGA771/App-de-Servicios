@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -86,7 +87,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (success) {
-      AppRoutes.navigateToHome(context);
+      // CAMBIO: Navegación con GoRouter
+      if (_userType == 'empresa') {
+        context.go('/empresa/home');
+      } else {
+        context.go('/cliente/home');
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -418,7 +424,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const Text('¿Ya tienes cuenta?'),
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/login');
+                        }
                       },
                       child: const Text('Inicia Sesión'),
                     ),
