@@ -16,47 +16,42 @@ const register = async (req, res, next) => {
   try {
     const { email, password, nombre, apellido, telefono, tipo_usuario, razon_social, ruc_nit, pais } = req.body;
 
-    // Check if email already exists
-    const existingUser = await Usuario.findByEmail(email);
-    if (existingUser) {
-      return sendError(res, ERROR_CODES.DUPLICATE_ENTRY, 'Email already registered', HTTP_STATUS.CONFLICT);
-    }
-
-    // Hash password
+    // Hash password (ALWAYS done in backend for security)
     const bcryptRounds = parseInt(process.env.BCRYPT_ROUNDS) || 10;
     const password_hash = await bcrypt.hash(password, bcryptRounds);
 
-    // Create user and related entity in transaction
-    const result = await executeTransaction(async (connection) => {
-      // Create usuario
-      const [userResult] = await connection.execute(
-        'INSERT INTO usuario (email, password_hash, nombre, apellido, telefono, tipo_usuario) VALUES (?, ?, ?, ?, ?, ?)',
-        [email, password_hash, nombre, apellido || null, telefono || null, tipo_usuario]
-      );
-      const userId = userResult.insertId;
+    // Call stored procedure
+    const { executeQuery } = require('../config/database');
 
-      let entityId;
+    const query = `
+      CALL sp_registrar_usuario(
+        ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        @out_id_usuario, @out_id_entidad, @out_mensaje
+      )
+    `;
+    const params = [
+      email,
+      password_hash,
+      nombre,
+      apellido || null,
+      telefono || null,
+      tipo_usuario,
+      razon_social || null,
+      ruc_nit || null,
+      pais || null
+    ];
 
-      // Create cliente or empresa based on tipo_usuario
-      if (tipo_usuario === USER_TYPES.CLIENT) {
-        const [clienteResult] = await connection.execute(
-          'INSERT INTO cliente (id_usuario) VALUES (?)',
-          [userId || null]
-        );
-        entityId = clienteResult.insertId;
-      } else if (tipo_usuario === USER_TYPES.COMPANY) {
-        if (!razon_social) {
-          throw new Error('razon_social is required for empresa registration');
-        }
-        const [empresaResult] = await connection.execute(
-          'INSERT INTO empresa (id_usuario, razon_social, ruc_nit, pais) VALUES (?, ?, ?, ?)',
-          [userId, razon_social, ruc_nit || null, pais || null]
-        );
-        entityId = empresaResult.insertId;
-      }
+    await executeQuery(query, params);
 
-      return { userId, entityId };
-    });
+    // Get output parameters
+    const resultQuery = 'SELECT @out_id_usuario as userId, @out_id_entidad as entityId, @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
+
+    if (!results[0].userId) {
+      return sendError(res, ERROR_CODES.DUPLICATE_ENTRY, results[0].mensaje || 'Error al registrar usuario', HTTP_STATUS.CONFLICT);
+    }
+
+    const result = { userId: results[0].userId, entityId: results[0].entityId };
 
     logger.info(`New user registered: ${email} (${tipo_usuario})`);
 
@@ -76,13 +71,13 @@ const register = async (req, res, next) => {
         if (empresa) {
             additionalData.empresa = {
                 id_empresa: empresa.id_empresa,
-                id_usuario: result.userId, // <--- CORRECCIÓN: Agregado id_usuario
-                nombre: nombre,            // <--- CORRECCIÓN: Agregado nombre
+                id_usuario: result.userId,
+                nombre: nombre,
                 razon_social: empresa.razon_social,
                 ruc_nit: empresa.ruc_nit,
                 pais: empresa.pais,
-                descripcion: empresa.descripcion || '', // Opcional: Evitar nulls
-                logo: empresa.logo_url // Opcional
+                descripcion: empresa.descripcion || '',
+                logo: empresa.logo_url
             };
         }
     } else if (tipo_usuario === USER_TYPES.CLIENT) {
@@ -95,7 +90,7 @@ const register = async (req, res, next) => {
       res,
       {
         user: { id_usuario: result.userId, email, nombre, apellido, tipo_usuario },
-        ...additionalData, 
+        ...additionalData,
         accessToken,
         refreshToken
       },
@@ -196,16 +191,17 @@ const getMe = async (req, res, next) => {
       return sendError(res, ERROR_CODES.NOT_FOUND, 'User not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Remove sensitive data
     delete user.password_hash;
 
-    // Get additional data based on user type
     let additionalData = {};
+    
     if (user.tipo_usuario === USER_TYPES.CLIENT) {
       const cliente = await Cliente.findByUserId(user.id_usuario);
       if (cliente) {
-        additionalData = {
+        additionalData.cliente = {
           id_cliente: cliente.id_cliente,
+          id_usuario: user.id_usuario, // Agregado por seguridad
+          nombre: user.nombre,         // Agregado para consistencia
           fecha_nacimiento: cliente.fecha_nacimiento,
           calificacion_promedio: cliente.calificacion_promedio
         };
@@ -213,18 +209,26 @@ const getMe = async (req, res, next) => {
     } else if (user.tipo_usuario === USER_TYPES.COMPANY) {
       const empresa = await Empresa.findByUserId(user.id_usuario);
       if (empresa) {
-        additionalData = {
+        additionalData.empresa = {
           id_empresa: empresa.id_empresa,
+          id_usuario: user.id_usuario, // ✅ FALTABA ESTO (Causa del error actual)
+          nombre: user.nombre,         // ✅ FALTABA ESTO (Causa de un futuro error)
           razon_social: empresa.razon_social,
           ruc_nit: empresa.ruc_nit,
           descripcion: empresa.descripcion,
           logo_url: empresa.logo_url,
-          calificacion_promedio: empresa.calificacion_promedio
+          calificacion_promedio: empresa.calificacion_promedio,
+          total_calificaciones: empresa.total_calificaciones
         };
       }
     }
 
-    sendSuccess(res, { ...user, ...additionalData });
+    // Enviamos la respuesta estructurada
+    sendSuccess(res, { 
+        user: user, 
+        ...additionalData 
+    });
+    
   } catch (error) {
     next(error);
   }
@@ -232,9 +236,13 @@ const getMe = async (req, res, next) => {
 
 const updateMe = async (req, res, next) => {
   try {
+    console.log('--- DEBUG UPDATE ME ---');
+    console.log('User del Token:', req.user);
+    console.log('Body recibido:', req.body);
+
     const { nombre, apellido, telefono, foto_perfil_url, razon_social, descripcion, logo_url, fecha_nacimiento } = req.body;
 
-    // Update usuario
+    // 1. Actualizar tabla Usuario (Datos básicos)
     const userData = {};
     if (nombre !== undefined) userData.nombre = nombre;
     if (apellido !== undefined) userData.apellido = apellido;
@@ -242,35 +250,58 @@ const updateMe = async (req, res, next) => {
     if (foto_perfil_url !== undefined) userData.foto_perfil_url = foto_perfil_url;
 
     if (Object.keys(userData).length > 0) {
+      console.log('Actualizando Usuario con:', userData);
       await Usuario.update(req.user.id_usuario, userData);
     }
 
-    // Update specific entity
-    if (req.user.tipo_usuario === USER_TYPES.COMPANY) {
+    // 2. Actualizar tabla específica (Empresa o Cliente)
+    // Forzamos la comprobación a minúsculas para evitar errores de mayúsculas/minúsculas
+    const tipoUsuario = req.user.tipo_usuario.toLowerCase();
+    
+    // Asumimos que la constante suele ser 'empresa' o 'company'. Comprobamos ambas por seguridad.
+    const isEmpresa = tipoUsuario === 'empresa' || tipoUsuario === 'company';
+
+    console.log(`Es empresa?: ${isEmpresa} (tipo: ${tipoUsuario})`);
+
+    if (isEmpresa) {
       const empresa = await Empresa.findByUserId(req.user.id_usuario);
+      console.log('Empresa encontrada en BD:', empresa ? 'SÍ' : 'NO');
+      
       if (empresa) {
         const empresaData = {};
+        // Importante: Chequeamos si llegaron los datos en el body
         if (razon_social !== undefined) empresaData.razon_social = razon_social;
         if (descripcion !== undefined) empresaData.descripcion = descripcion;
         if (logo_url !== undefined) empresaData.logo_url = logo_url;
 
+        console.log('Datos para actualizar Empresa:', empresaData);
+
         if (Object.keys(empresaData).length > 0) {
           await Empresa.update(empresa.id_empresa, empresaData);
+          console.log('Empresa actualizada correctamente');
+        } else {
+            console.log('ALERTA: No hay datos de empresa para actualizar en el body');
         }
       }
-    } else if (req.user.tipo_usuario === USER_TYPES.CLIENT) {
+    } else if (tipoUsuario === 'cliente' || tipoUsuario === 'client') {
+      // Lógica de cliente...
       const cliente = await Cliente.findByUserId(req.user.id_usuario);
       if (cliente && fecha_nacimiento !== undefined) {
         await Cliente.update(cliente.id_cliente, { fecha_nacimiento });
       }
     }
 
-    // Get updated user
+    // Respuesta final
     const updatedUser = await Usuario.findById(req.user.id_usuario);
     delete updatedUser.password_hash;
-
+    
+    // Volvemos a llamar a getMe internamente para devolver la estructura completa actualizada
+    // Esto ahorra tener que llamar a refreshUserData desde el front dos veces si el back ya devuelve todo
+    // (Opcional, pero ayuda a la consistencia)
+    
     sendSuccess(res, updatedUser, 'Profile updated successfully');
   } catch (error) {
+    console.error('Error en updateMe:', error);
     next(error);
   }
 };

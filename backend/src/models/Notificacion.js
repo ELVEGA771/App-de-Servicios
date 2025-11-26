@@ -55,6 +55,26 @@ class Notificacion {
   }
 
   /**
+   * Toggle read status
+   */
+  static async toggleRead(id) {
+    // First get current status
+    const checkQuery = 'SELECT leida FROM notificacion WHERE id_notificacion = ?';
+    const checkResult = await executeQuery(checkQuery, [id]);
+    
+    if (!checkResult[0]) return null;
+    
+    const currentLeida = checkResult[0].leida;
+    const newLeida = currentLeida ? 0 : 1;
+    const fechaLectura = newLeida ? new Date() : null;
+
+    const updateQuery = 'UPDATE notificacion SET leida = ?, fecha_lectura = ? WHERE id_notificacion = ?';
+    await executeQuery(updateQuery, [newLeida, fechaLectura, id]);
+    
+    return { leida: newLeida === 1 };
+  }
+
+  /**
    * Mark all notificaciones as read for user
    */
   static async markAllAsRead(userId) {

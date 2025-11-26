@@ -153,4 +153,30 @@ router.put('/:id/cancelar',
   asyncHandler(contratacionController.cancelContratacion)
 );
 
+/**
+ * @swagger
+ * /api/contrataciones/empresa/historial:
+ *   get:
+ *     summary: Get historial de contrataciones (empresa only)
+ *     tags: [Contrataciones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Historial retrieved
+ */
+router.get('/empresa/historial',
+  validateRequest,
+  asyncHandler(contratacionController.getHistorialEmpresa)
+);
+
 module.exports = router;

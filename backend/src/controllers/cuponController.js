@@ -43,13 +43,24 @@ const createCupon = async (req, res, next) => {
 const updateCupon = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const empresa = await Empresa.findByUserId(req.user.id_usuario);
-    const cupon = await Cupon.findById(id);
-    if (!cupon || cupon.id_empresa !== empresa.id_empresa) {
-      return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'Unauthorized', HTTP_STATUS.FORBIDDEN);
+    // req.body trae los datos del formulario
+    const result = await Cupon.update(id, req.body);
+    
+    if (result.mensaje.includes('Error') || result.mensaje.includes('uso')) {
+         return res.status(400).json({ success: false, message: result.mensaje });
     }
-    const updated = await Cupon.update(id, req.body);
-    sendSuccess(res, updated, 'Coupon updated successfully');
+    
+    sendSuccess(res, { message: result.mensaje });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteCupon = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await Cupon.delete(id);
+    sendSuccess(res, { message: result.mensaje });
   } catch (error) {
     next(error);
   }
@@ -65,4 +76,4 @@ const validateCupon = async (req, res, next) => {
   }
 };
 
-module.exports = { getCuponesByEmpresa, getActiveCupones, createCupon, updateCupon, validateCupon };
+module.exports = { getCuponesByEmpresa, getActiveCupones, createCupon, updateCupon, deleteCupon, validateCupon };

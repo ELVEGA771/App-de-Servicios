@@ -86,55 +86,47 @@ class Sucursal {
   }
 
   /**
-   * Create new sucursal with direccion
+   * Create new sucursal with direccion (using stored procedure)
    */
   static async create(sucursalData) {
-    return executeTransaction(async (connection) => {
-      // First, create the direccion
-      const direccionQuery = `
-        INSERT INTO direccion (
-          calle_principal, calle_secundaria, numero, ciudad, provincia_estado,
-          codigo_postal, pais, latitud, longitud, referencia
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const direccionParams = [
-        sucursalData.calle_principal,
-        sucursalData.calle_secundaria || null,
-        sucursalData.numero || null,
-        sucursalData.ciudad,
-        sucursalData.provincia_estado,
-        sucursalData.codigo_postal || null,
-        sucursalData.pais || 'Ecuador',
-        sucursalData.latitud || null,
-        sucursalData.longitud || null,
-        sucursalData.referencia || null
-      ];
-      const [direccionResult] = await connection.query(direccionQuery, direccionParams);
-      const idDireccion = direccionResult.insertId;
+    // Call stored procedure
+    const query = `
+      CALL sp_crear_sucursal(
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        @out_id_sucursal, @out_id_direccion, @out_mensaje
+      )
+    `;
+    const params = [
+      sucursalData.id_empresa,
+      sucursalData.nombre_sucursal,
+      sucursalData.telefono || null,
+      sucursalData.horario_apertura || null,
+      sucursalData.horario_cierre || null,
+      sucursalData.dias_laborales || null,
+      sucursalData.estado || null,
+      sucursalData.calle_principal,
+      sucursalData.calle_secundaria || null,
+      sucursalData.numero || null,
+      sucursalData.ciudad,
+      sucursalData.provincia_estado,
+      sucursalData.codigo_postal || null,
+      sucursalData.pais || null,
+      sucursalData.latitud || null,
+      sucursalData.longitud || null,
+      sucursalData.referencia || null
+    ];
 
-      // Then, create the sucursal
-      const sucursalQuery = `
-        INSERT INTO sucursal (
-          id_empresa, id_direccion, nombre_sucursal, telefono, 
-          horario_apertura, horario_cierre, dias_laborales, estado
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const sucursalParams = [
-        sucursalData.id_empresa,
-        idDireccion,
-        sucursalData.nombre_sucursal,
-        sucursalData.telefono || null,
-        sucursalData.horario_apertura || null,
-        sucursalData.horario_cierre || null,
-        sucursalData.dias_laborales || '1111100',
-        sucursalData.estado || 'activa'
-      ];
-      const [sucursalResult] = await connection.query(sucursalQuery, sucursalParams);
+    await executeQuery(query, params);
 
-      return sucursalResult.insertId;
-    });
+    // Get output parameters
+    const resultQuery = 'SELECT @out_id_sucursal as id_sucursal, @out_id_direccion as id_direccion, @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
+
+    if (!results[0].id_sucursal) {
+      throw new Error(results[0].mensaje || 'Error al crear sucursal');
+    }
+
+    return results[0].id_sucursal;
   }
 
   /**

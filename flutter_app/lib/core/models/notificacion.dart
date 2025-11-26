@@ -21,14 +21,16 @@ class Notificacion {
 
   factory Notificacion.fromJson(Map<String, dynamic> json) {
     return Notificacion(
-      id: json['id'] as int,
-      idUsuario: json['id_usuario'] as int,
-      tipo: json['tipo'] as String,
-      titulo: json['titulo'] as String,
-      mensaje: json['mensaje'] as String,
+      id: json['id'] as int? ?? json['id_notificacion'] as int? ?? 0,
+      idUsuario: json['id_usuario'] as int? ?? 0,
+      tipo: json['tipo'] as String? ?? 'sistema',
+      titulo: json['titulo'] as String? ?? 'Notificación',
+      mensaje: json['mensaje'] as String? ?? json['contenido'] as String? ?? '',
       enlace: json['enlace'] as String?,
       leida: json['leida'] == 1 || json['leida'] == true,
-      fechaCreacion: DateTime.parse(json['fecha_creacion'] as String),
+      fechaCreacion: json['fecha_creacion'] != null 
+          ? DateTime.parse(json['fecha_creacion'] as String)
+          : DateTime.now(),
     );
   }
 

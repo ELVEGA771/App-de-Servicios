@@ -129,4 +129,6 @@ router.post('/', roleMiddleware(USER_TYPES.COMPANY), asyncHandler(cuponControlle
  */
 router.put('/:id', authMiddleware, roleMiddleware(USER_TYPES.COMPANY), asyncHandler(cuponController.updateCupon));
 
+router.delete('/:id', authMiddleware, roleMiddleware(USER_TYPES.COMPANY), asyncHandler(cuponController.deleteCupon));
+
 module.exports = router;

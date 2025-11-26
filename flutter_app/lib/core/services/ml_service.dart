@@ -147,7 +147,7 @@ class MLService {
   Map<String, dynamic> _parseJsonResponse(String response) {
     try {
       // Remove markdown code blocks if present
-      var cleaned = response.replaceAll('```json', '').replaceAll('```', '').trim();
+      // var cleaned = response.replaceAll('```json', '').replaceAll('```', '').trim(); // Removed unused variable
       // You'd use dart:convert here in actual implementation
       // For now, return default
       return {};

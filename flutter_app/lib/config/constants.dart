@@ -1,15 +1,19 @@
-import 'dart:io'; // Necesitas importar esto arriba
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AppConstants {
   // API Configuration
   static String get API_BASE_URL {
-    if (Platform.isAndroid) {
-      // 10.0.2.2 es la dirección especial para que el emulador vea tu PC
-      return 'http://10.0.2.2:5001/api';
-    } else {
-      // Para Windows, iOS y Web, localhost funciona bien
-      return 'http://localhost:5001/api';
+    // En web, siempre usar localhost
+    if (kIsWeb) {
+      return 'http://localhost:3000/api';
     }
+    // En Android emulador, usar 10.0.2.2
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:3000/api';
+    }
+    // Para iOS y otras plataformas, usar localhost
+    return 'http://localhost:3000/api';
   }
 
   static const String API_TIMEOUT = '30000'; // 30 seconds
@@ -95,6 +99,9 @@ class AppConstants {
 
   static String fixImageUrl(String url) {
     if (url.isEmpty) return url;
+
+    // En web, no cambiar nada
+    if (kIsWeb) return url;
 
     // Si estamos en Android (Emulador), cambiamos localhost por 10.0.2.2
     if (Platform.isAndroid) {

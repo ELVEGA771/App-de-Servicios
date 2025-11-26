@@ -228,15 +228,17 @@ class Servicio {
   }
 
   /**
-   * Associate servicio with sucursal
+   * Associate servicio with sucursal (using stored procedure)
    */
   static async addToSucursal(idServicio, idSucursal, precioSucursal = null) {
-    const query = `
-      INSERT INTO servicio_sucursal (id_servicio, id_sucursal, disponible, precio_sucursal)
-      VALUES (?, ?, 1, ?)
-      ON DUPLICATE KEY UPDATE disponible = 1, precio_sucursal = ?
-    `;
-    await executeQuery(query, [idServicio, idSucursal, precioSucursal, precioSucursal]);
+    // Call stored procedure
+    const query = 'CALL sp_asociar_servicio_sucursal(?, ?, ?, @out_mensaje)';
+    await executeQuery(query, [idServicio, idSucursal, precioSucursal]);
+
+    // Get output message
+    const resultQuery = 'SELECT @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
+
     return true;
   }
 

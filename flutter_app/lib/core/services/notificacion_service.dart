@@ -20,12 +20,18 @@ class NotificacionService {
 
   // Mark notificacion as read
   Future<void> markAsRead(int id) async {
-    await _dioClient.patch('/notificaciones/$id/marcar-leida');
+    await _dioClient.put('/notificaciones/$id/leer');
+  }
+
+  // Toggle read status
+  Future<bool> toggleRead(int id) async {
+    final response = await _dioClient.put('/notificaciones/$id/toggle');
+    return response.data['data']['leida'] as bool;
   }
 
   // Mark all as read
   Future<void> markAllAsRead() async {
-    await _dioClient.patch('/notificaciones/marcar-todas-leidas');
+    await _dioClient.put('/notificaciones/leer-todas');
   }
 
   // Delete notificacion

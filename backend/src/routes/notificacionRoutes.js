@@ -77,6 +77,26 @@ router.put('/:id/leer', asyncHandler(notificacionController.markAsRead));
 
 /**
  * @swagger
+ * /api/notificaciones/{id}/toggle:
+ *   put:
+ *     summary: Toggle notification read status
+ *     tags: [Notificaciones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Notification read status toggled
+ */
+router.put('/:id/toggle', asyncHandler(notificacionController.toggleRead));
+
+/**
+ * @swagger
  * /api/notificaciones/leer-todas:
  *   put:
  *     summary: Mark all notifications as read

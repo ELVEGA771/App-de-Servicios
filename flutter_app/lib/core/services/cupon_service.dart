@@ -4,68 +4,70 @@ import 'package:servicios_app/core/models/cupon.dart';
 class CuponService {
   final DioClient _dioClient = DioClient();
 
-  // Validate cupon
+  // Validar cupón (Ya lo tenías)
   Future<Map<String, dynamic>> validateCupon({
     required String codigo,
     required int servicioId,
     required double montoCompra,
   }) async {
-    final response = await _dioClient.post(
-      '/cupones/validar',
-      data: {
+    try {
+      final response = await _dioClient.post('/cupones/validar', data: {
         'codigo': codigo,
-        'id_servicio': servicioId,
+        'servicio_id': servicioId,
         'monto_compra': montoCompra,
-      },
-    );
-    return response.data['data'] as Map<String, dynamic>;
+      });
+      return response.data;
+    } catch (e) {
+      return {'valido': false, 'mensaje': 'Error de conexión o cupón inválido'};
+    }
   }
 
-  // Get cupones by empresa (for empresa dashboard)
-  Future<List<Cupon>> getCuponesByEmpresa() async {
-    final response = await _dioClient.get('/cupones/empresa');
-    return (response.data['data'] as List)
-        .map((e) => Cupon.fromJson(e as Map<String, dynamic>))
-        .toList();
+  // Nuevo: Crear cupón
+  Future<bool> createCupon(Map<String, dynamic> cuponData) async {
+    try {
+      await _dioClient.post('/cupones', data: cuponData);
+      return true;
+    } catch (e) {
+      throw e;
+    }
   }
 
-  // Create cupon (empresa only)
-  Future<Cupon> createCupon({
-    required String codigo,
-    String? descripcion,
-    required String tipoDescuento,
-    required double valorDescuento,
-    double? montoMinimo,
-    double? descuentoMaximo,
-    DateTime? fechaInicio,
-    DateTime? fechaExpiracion,
-    int? usosMaximos,
-  }) async {
-    final response = await _dioClient.post(
-      '/cupones',
-      data: {
-        'codigo': codigo,
-        'descripcion': descripcion,
-        'tipo_descuento': tipoDescuento,
-        'valor_descuento': valorDescuento,
-        'monto_minimo': montoMinimo,
-        'descuento_maximo': descuentoMaximo,
-        'fecha_inicio': fechaInicio?.toIso8601String(),
-        'fecha_expiracion': fechaExpiracion?.toIso8601String(),
-        'usos_maximos': usosMaximos,
-      },
-    );
-    return Cupon.fromJson(response.data['data'] as Map<String, dynamic>);
+  // Actualizar
+  Future<bool> updateCupon(int id, Map<String, dynamic> data) async {
+    try {
+      await _dioClient.put('/cupones/$id', data: data);
+      return true;
+    } catch (e) {
+      print('Error actualizando cupón: $e');
+      return false;
+    }
   }
 
-  // Update cupon
-  Future<Cupon> updateCupon(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.put('/cupones/$id', data: data);
-    return Cupon.fromJson(response.data['data'] as Map<String, dynamic>);
+  // Eliminar
+  Future<bool> deleteCupon(int id) async {
+    try {
+      await _dioClient.delete('/cupones/$id');
+      return true;
+    } catch (e) {
+      print('Error eliminando cupón: $e');
+      return false;
+    }
   }
 
-  // Delete cupon
-  Future<void> deleteCupon(int id) async {
-    await _dioClient.delete('/cupones/$id');
+  // Nuevo: Obtener cupones de la empresa
+  Future<List<Cupon>> getEmpresaCupones(int empresaId) async {
+    try {
+      final response = await _dioClient.get('/cupones');
+      final List<dynamic> data = response.data['data'];
+      return data.map((json) => Cupon.fromJson(json)).toList();
+    } catch (e) {
+      print('Error obteniendo cupones: $e');
+      return [];
+    }
+  }
+
+  // Nuevo: Alternar estado (Activar/Desactivar) - Opcional si quieres agregar switch
+  Future<void> toggleEstado(int idCupon, bool activo) async {
+    await _dioClient.put('/cupones/$idCupon/estado', data: {'activo': activo});
   }
 }

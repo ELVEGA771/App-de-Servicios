@@ -80,12 +80,12 @@ class Calificacion {
   }
 
   /**
-   * Create new calificacion
+   * Create new calificacion (using stored procedure)
    */
   static async create(calificacionData) {
+    // Call stored procedure
     const query = `
-      INSERT INTO calificacion (id_contratacion, calificacion, comentario, tipo)
-      VALUES (?, ?, ?, ?)
+      CALL sp_crear_calificacion(?, ?, ?, ?, @out_id_calificacion, @out_mensaje)
     `;
     const params = [
       calificacionData.id_contratacion,
@@ -93,9 +93,18 @@ class Calificacion {
       calificacionData.comentario || null,
       calificacionData.tipo
     ];
-    const result = await executeQuery(query, params);
-    // Note: Trigger will automatically update empresa calificacion_promedio
-    return result.insertId;
+
+    await executeQuery(query, params);
+
+    // Get output parameters
+    const resultQuery = 'SELECT @out_id_calificacion as id_calificacion, @out_mensaje as mensaje';
+    const results = await executeQuery(resultQuery);
+
+    if (!results[0].id_calificacion) {
+      throw new Error(results[0].mensaje || 'Error al crear calificación');
+    }
+
+    return results[0].id_calificacion;
   }
 
   /**

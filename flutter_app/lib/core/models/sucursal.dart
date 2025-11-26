@@ -177,8 +177,9 @@ class Sucursal {
   }
 
   String get diasLaboralesLabel {
-    if (diasLaborales == null || diasLaborales!.length != 7)
+    if (diasLaborales == null || diasLaborales!.length != 7) {
       return 'No definido';
+    }
 
     const dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     List<String> activos = [];

@@ -39,6 +39,55 @@ class AuthProvider with ChangeNotifier {
     return null;
   }
 
+  // Update profile data
+  Future<bool> updateProfile({
+    String? nombre,
+    String? apellido,
+    String? telefono,
+    String? razonSocial,
+    String? descripcion,
+    DateTime? fechaNacimiento,
+    String? fotoUrl, // <--- NUEVO PARÁMETRO
+  }) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      final Map<String, dynamic> data = {};
+      
+      if (nombre != null) data['nombre'] = nombre;
+      if (apellido != null) data['apellido'] = apellido;
+      if (telefono != null) data['telefono'] = telefono;
+      
+      // Lógica para la foto según el tipo de usuario
+      if (fotoUrl != null) {
+        if (isEmpresa) {
+          data['logo_url'] = fotoUrl; // Empresa usa logo_url
+        } else {
+          data['foto_perfil_url'] = fotoUrl; // Usuario normal usa foto_perfil_url
+        }
+      }
+
+      if (isEmpresa) {
+        if (razonSocial != null) data['razon_social'] = razonSocial;
+        if (descripcion != null) data['descripcion'] = descripcion;
+      } else if (isCliente) {
+        if (fechaNacimiento != null) {
+           data['fecha_nacimiento'] = fechaNacimiento.toIso8601String().split('T')[0];
+        }
+      }
+
+      await _authService.updateProfile(data);
+      await refreshUserData(); // Esto guarda en local y actualiza la UI
+      
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // Check if already logged in
   Future<void> checkAuthStatus() async {
     _setLoading(true);
@@ -183,22 +232,37 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Refresh user data
   Future<void> refreshUserData() async {
     try {
-      final userData = await _authService.getMe();
-      _usuario = Usuario.fromJson(userData['usuario'] as Map<String, dynamic>);
-      if (userData['cliente'] != null) {
-        _cliente =
-            Cliente.fromJson(userData['cliente'] as Map<String, dynamic>);
+      final response = await _authService.getMe();
+      
+      // 1. Normalizar data (tu código actual)
+      final Map<String, dynamic> data = 
+          (response.containsKey('data') && response['data'] is Map) 
+              ? response['data'] 
+              : response;
+
+      // --- NUEVO: GUARDAR EN DISCO ---
+      // Esto asegura que si reinicias la app, los datos sigan ahí
+      await _authService.updateLocalUserData(response); 
+      // -------------------------------
+
+      // 2. Actualizar memoria (tu código actual)
+      final userMap = data['user'] ?? data['usuario'];
+      if (userMap != null) {
+        _usuario = Usuario.fromJson(userMap as Map<String, dynamic>);
       }
-      if (userData['empresa'] != null) {
-        _empresa =
-            Empresa.fromJson(userData['empresa'] as Map<String, dynamic>);
+
+      if (data['empresa'] != null) {
+        _empresa = Empresa.fromJson(data['empresa'] as Map<String, dynamic>);
+      } else if (data['cliente'] != null) {
+        _cliente = Cliente.fromJson(data['cliente'] as Map<String, dynamic>);
       }
+
       notifyListeners();
+      
     } catch (e) {
-      _setError(e.toString());
+      print('Error al refrescar datos del usuario: $e');
     }
   }
 

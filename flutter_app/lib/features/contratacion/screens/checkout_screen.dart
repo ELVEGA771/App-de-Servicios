@@ -8,7 +8,11 @@ import 'package:servicios_app/core/models/direccion.dart';
 import 'package:servicios_app/core/models/servicio.dart';
 import 'package:servicios_app/core/providers/contratacion_provider.dart';
 import 'package:servicios_app/core/providers/servicio_provider.dart';
-import 'package:servicios_app/core/api/dio_client.dart'; // Para obtener direcciones
+// import 'package:servicios_app/core/api/dio_client.dart'; // Removed unused import
+// Importar CuponService
+import 'package:servicios_app/core/services/cupon_service.dart';
+import 'package:servicios_app/core/providers/direccion_provider.dart';
+import 'package:servicios_app/features/profile/screens/address_list_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final int servicioId;
@@ -25,15 +29,31 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _notasController = TextEditingController();
+  final _cuponController = TextEditingController(); // Controlador para el cupón
+  final _cuponService = CuponService(); // Instancia del servicio
 
-  // Estado
   bool _isLoading = true;
-  List<Direccion> _direcciones = [];
-  int? _selectedDireccionId;
+  bool _isValidatingCoupon = false;
+  Direccion? _selectedDireccion;
   DateTime? _fechaProgramada;
   Servicio? _servicio;
+
+  // Variables para manejar el estado del cupón
+  String? _appliedCouponCode;
+  double _discountAmount = 0.0;
+  double _finalPrice = 0.0;
+  String? _couponMessage;
+  String _selectedPaymentMethod = 'efectivo';
+
+  List<Map<String, dynamic>> get _paymentMethods => [
+    {'id': 'efectivo', 'name': 'Efectivo', 'icon': Icons.money},
+    {'id': 'tarjeta_credito', 'name': 'Tarjeta de Crédito', 'icon': Icons.credit_card},
+    {'id': 'tarjeta_debito', 'name': 'Tarjeta de Débito', 'icon': Icons.credit_card},
+    {'id': 'transferencia', 'name': 'Transferencia', 'icon': Icons.account_balance},
+    {'id': 'paypal', 'name': 'PayPal', 'icon': Icons.payment},
+    {'id': 'otro', 'name': 'Otro', 'icon': Icons.more_horiz},
+  ];
 
   @override
   void initState() {
@@ -41,12 +61,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _notasController.dispose();
+    _cuponController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      // 1. Cargar detalles del servicio si no están en el provider
       final servicioProvider =
           Provider.of<ServicioProvider>(context, listen: false);
+
       if (servicioProvider.selectedServicio?.id == widget.servicioId) {
         _servicio = servicioProvider.selectedServicio;
       } else {
@@ -54,24 +81,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         _servicio = servicioProvider.selectedServicio;
       }
 
-      // 2. Cargar direcciones del cliente (Directo via DioClient ya que no hay DireccionProvider aun)
-      // Endpoint: GET /api/direcciones
-      final dioClient = DioClient();
-      final response = await dioClient.get('/direcciones');
+      // Inicializar precio final con el precio base
+      if (_servicio != null) {
+        _finalPrice = _servicio!.precio;
+      }
 
+      // 2. Cargar direcciones via Provider
+      final direccionProvider = Provider.of<DireccionProvider>(context, listen: false);
+      if (direccionProvider.direcciones.isEmpty) {
+        await direccionProvider.loadDirecciones();
+      }
+      
       if (mounted) {
-        final List<dynamic> data = response.data['data'];
         setState(() {
-          _direcciones = data.map((json) => Direccion.fromJson(json)).toList();
-          // Seleccionar la dirección principal por defecto
-          if (_direcciones.isNotEmpty) {
-            try {
-              final principal = _direcciones.firstWhere((d) => d.esPrincipal);
-              _selectedDireccionId = principal.id;
-            } catch (e) {
-              _selectedDireccionId = _direcciones.first.id;
-            }
-          }
+          _selectedDireccion = direccionProvider.selectedDireccion;
           _isLoading = false;
         });
       }
@@ -79,12 +102,82 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error al cargar datos: $e'),
-              backgroundColor: AppTheme.errorColor),
+              content: Text('Error: $e'), backgroundColor: AppTheme.errorColor),
         );
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  // Lógica para validar el cupón
+  Future<void> _validateCoupon() async {
+    final code = _cuponController.text.trim();
+    if (code.isEmpty) return;
+
+    setState(() {
+      _isValidatingCoupon = true;
+      _couponMessage = null;
+    });
+
+    try {
+      // Llamada al backend
+      final result = await _cuponService.validateCupon(
+        codigo: code,
+        servicioId: widget.servicioId,
+        montoCompra: _servicio!.precio,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isValidatingCoupon = false;
+
+          if (result['valido'] == true) {
+            _appliedCouponCode = code;
+            // Asegurarnos de convertir num a double
+            _discountAmount = (result['descuento'] as num).toDouble();
+            _finalPrice = (result['precio_final'] as num).toDouble();
+            _couponMessage = "¡Cupón aplicado!";
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(result['mensaje'] ?? 'Cupón válido'),
+                  backgroundColor: AppTheme.successColor),
+            );
+          } else {
+            _appliedCouponCode = null;
+            _discountAmount = 0.0;
+            _finalPrice = _servicio!.precio;
+            _couponMessage = result['mensaje'];
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(result['mensaje'] ?? 'Cupón inválido'),
+                  backgroundColor: AppTheme.errorColor),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isValidatingCoupon = false;
+          _appliedCouponCode = null;
+          _discountAmount = 0.0;
+          _finalPrice = _servicio!.precio;
+          _couponMessage = "Error al validar";
+        });
+      }
+    }
+  }
+
+  void _removeCoupon() {
+    setState(() {
+      _cuponController.clear();
+      _appliedCouponCode = null;
+      _discountAmount = 0.0;
+      _finalPrice = _servicio!.precio;
+      _couponMessage = null;
+    });
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -102,7 +195,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _submitOrder() async {
-    if (_selectedDireccionId == null) {
+    if (_selectedDireccion == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Por favor selecciona una dirección de entrega')),
@@ -112,19 +205,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     final provider = Provider.of<ContratacionProvider>(context, listen: false);
 
-    // Llamada al backend POST /api/contrataciones
     final result = await provider.createContratacion(
       servicioId: widget.servicioId,
       sucursalId: widget.sucursalId,
-      direccionId: _selectedDireccionId,
+      direccionId: _selectedDireccion!.id,
       fechaProgramada: _fechaProgramada,
+      codigoCupon: _appliedCouponCode, // Enviamos el cupón validado
       notas: _notasController.text.isEmpty ? null : _notasController.text,
-      metodoPago: 'efectivo', // Por defecto o implementar selector
+      metodoPago: _selectedPaymentMethod,
     );
 
     if (mounted) {
       if (result != null) {
-        // Éxito
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -135,8 +227,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(ctx).pop(); // Cerrar diálogo
-                  // Ir al historial o detalle
+                  Navigator.of(ctx).pop();
                   Navigator.of(context)
                       .pushReplacementNamed(AppRoutes.orderHistory);
                 },
@@ -146,7 +237,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         );
       } else {
-        // Error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(provider.error ?? 'Error al crear la contratación'),
@@ -159,14 +249,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_isLoading)
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    if (_servicio == null) {
+    if (_servicio == null)
       return const Scaffold(
           body: Center(child: Text('Error al cargar servicio')));
-    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Confirmar Contratación')),
@@ -175,7 +262,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Resumen del Servicio
+            // --- DETALLE SERVICIO ---
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -209,7 +296,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   fontWeight: FontWeight.bold, fontSize: 16)),
                           Text(_servicio!.empresaNombre ?? 'Empresa',
                               style: const TextStyle(color: Colors.grey)),
-                          const SizedBox(height: 4),
+                            const SizedBox(height: 4),
                           Text('\$${_servicio!.precio.toStringAsFixed(2)}',
                               style: const TextStyle(
                                   color: AppTheme.primaryColor,
@@ -223,62 +310,62 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Selección de Dirección
+            // --- DIRECCION ---
             const Text('Dirección de Entrega',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            if (_direcciones.isEmpty)
-              Card(
-                color: Colors.orange[50],
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      const Text('No tienes direcciones registradas.',
-                          textAlign: TextAlign.center),
-                      TextButton(
-                        onPressed: () {
-                          // Navegar a crear dirección (necesita implementarse esa pantalla)
-                          // Por ahora un placeholder
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'Funcionalidad de crear dirección pendiente de implementar en UI')),
-                          );
-                        },
-                        child: const Text('Agregar Dirección'),
-                      ),
-                    ],
+            InkWell(
+              onTap: () async {
+                final selected = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AddressListScreen(selectionMode: true),
                   ),
+                );
+                if (selected != null && selected is Direccion) {
+                  setState(() {
+                    _selectedDireccion = selected;
+                  });
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              )
-            else
-              DropdownButtonFormField<int>(
-                initialValue: _selectedDireccionId,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                items: _direcciones.map((d) {
-                  return DropdownMenuItem(
-                    value: d.id,
-                    child: SizedBox(
-                      width: 200,
-                      child: Text(
-                        d.alias.isNotEmpty
-                            ? '${d.alias} - ${d.direccionCorta}'
-                            : d.direccionCorta,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on, color: AppTheme.primaryColor),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _selectedDireccion == null
+                          ? const Text('Seleccionar dirección de entrega',
+                              style: TextStyle(color: Colors.grey))
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _selectedDireccion!.alias,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  _selectedDireccion!.direccionCorta,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                     ),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedDireccionId = val),
+                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                  ],
+                ),
               ),
+            ),
 
             const SizedBox(height: 24),
 
-            // Fecha Programada
+            // --- FECHA ---
             const Text('Fecha del Servicio',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -299,7 +386,101 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
             const SizedBox(height: 24),
 
-            // Notas
+            // Método de Pago
+            const Text('Método de Pago',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: _paymentMethods.map((method) {
+                  final isSelected = _selectedPaymentMethod == method['id'];
+                  return RadioListTile<String>(
+                    value: method['id'],
+                    groupValue: _selectedPaymentMethod,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedPaymentMethod = value);
+                      }
+                    },
+                    title: Row(
+                      children: [
+                        Icon(method['icon'],
+                            color: isSelected ? AppTheme.primaryColor : Colors.grey),
+                        const SizedBox(width: 12),
+                        Text(method['name']),
+                      ],
+                    ),
+                    activeColor: AppTheme.primaryColor,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  );
+                }).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // --- CUPÓN DE DESCUENTO (NUEVO) ---
+            const Text('Cupón de Descuento',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _cuponController,
+                    enabled: _appliedCouponCode ==
+                        null, // Deshabilitar si ya está aplicado
+                    decoration: InputDecoration(
+                      hintText: 'Ingresa código',
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 0),
+                      errorText:
+                          _couponMessage != null && _appliedCouponCode == null
+                              ? _couponMessage
+                              : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                if (_appliedCouponCode == null)
+                  ElevatedButton(
+                    onPressed: _isValidatingCoupon ? null : _validateCoupon,
+                    child: _isValidatingCoupon
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('Aplicar'),
+                  )
+                else
+                  OutlinedButton.icon(
+                    onPressed: _removeCoupon,
+                    icon: const Icon(Icons.close, size: 18),
+                    label: const Text('Quitar'),
+                    style:
+                        OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                  ),
+              ],
+            ),
+            if (_appliedCouponCode != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  _couponMessage ?? '',
+                  style: const TextStyle(
+                      color: AppTheme.successColor,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+
+            const SizedBox(height: 24),
+
+            // --- NOTAS ---
             const Text('Notas Adicionales',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -307,14 +488,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               controller: _notasController,
               maxLines: 3,
               decoration: const InputDecoration(
-                hintText: 'Instrucciones especiales para el proveedor...',
+                hintText: 'Instrucciones especiales...',
                 border: OutlineInputBorder(),
               ),
             ),
 
             const SizedBox(height: 32),
 
-            // Botón de Acción (Consumer para loading state)
+            // --- RESUMEN DE PAGO (CON DESCUENTOS) ---
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Column(
+                children: [
+                  _buildPriceRow('Subtotal', _servicio!.precio),
+                  if (_discountAmount > 0)
+                    _buildPriceRow('Descuento', -_discountAmount,
+                        isDiscount: true),
+                  const Divider(),
+                  _buildPriceRow('Total a Pagar', _finalPrice, isTotal: true),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // --- BOTÓN CONFIRMAR ---
             Consumer<ContratacionProvider>(
               builder: (context, provider, _) {
                 return SizedBox(
@@ -328,19 +531,45 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                     child: provider.isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            'CONFIRMAR PEDIDO',
+                        : const Text('CONFIRMAR PEDIDO',
                             style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
+                                color: Colors.white)),
                   ),
                 );
               },
             ),
+            const SizedBox(height: 30),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPriceRow(String label, double amount,
+      {bool isTotal = false, bool isDiscount = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: TextStyle(
+                fontSize: isTotal ? 18 : 16,
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+                color: isDiscount ? AppTheme.successColor : Colors.black87,
+              )),
+          Text(
+              '\$${amount.abs().toStringAsFixed(2)}', // abs() para mostrar el número positivo aunque sea resta visual
+              style: TextStyle(
+                fontSize: isTotal ? 18 : 16,
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+                color: isDiscount
+                    ? AppTheme.successColor
+                    : (isTotal ? AppTheme.primaryColor : Colors.black87),
+              )),
+        ],
       ),
     );
   }

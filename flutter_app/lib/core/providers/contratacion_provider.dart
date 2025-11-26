@@ -14,6 +14,9 @@ class ContratacionProvider with ChangeNotifier {
   final bool _isLoadingMore = false;
   String? _error;
 
+  // Historial
+  List<HistorialContratacion> _historial = [];
+
   // Getters
   List<Contratacion> get contrataciones => _contrataciones;
   Contratacion? get selectedContratacion => _selectedContratacion;
@@ -23,6 +26,7 @@ class ContratacionProvider with ChangeNotifier {
   bool get isLoadingMore => _isLoadingMore;
   String? get error => _error;
   bool get hasMore => _pagination?.hasNextPage ?? false;
+  List<HistorialContratacion> get historial => _historial;
 
   // Filter contrataciones by status
   List<Contratacion> getContratacionesByEstado(String estado) {
@@ -146,12 +150,14 @@ class ContratacionProvider with ChangeNotifier {
   Future<bool> updateEstado({
     required int id,
     required String nuevoEstado,
+    String? notas,
   }) async {
     _setLoading(true);
     try {
       final updated = await _contratacionService.updateEstado(
         id: id,
         nuevoEstado: nuevoEstado,
+        notas: notas,
       );
 
       // Update in list
@@ -215,6 +221,25 @@ class ContratacionProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _setError(e.toString());
+    }
+  }
+
+  // Load historial (empresa)
+  Future<void> loadHistorialEmpresa({bool refresh = false}) async {
+    if (refresh) {
+      _setLoading(true);
+      _historial = [];
+    }
+
+    try {
+      final response = await _contratacionService.getHistorialEmpresa(
+        page: refresh ? 1 : 1, // Simple pagination for now
+      );
+      _historial = response.data ?? [];
+    } catch (e) {
+      _setError(e.toString());
+    } finally {
+      _setLoading(false);
     }
   }
 

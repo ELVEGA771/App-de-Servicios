@@ -8,6 +8,7 @@ class Usuario {
   final String? nombre;
   final String? apellido;
   final String? fotoPerfilUrl;
+  final String? telefono; // ✅ Campo agregado
 
   Usuario({
     required this.id,
@@ -19,6 +20,7 @@ class Usuario {
     this.nombre,
     this.apellido,
     this.fotoPerfilUrl,
+    this.telefono, // ✅ Inicializado
   });
 
   factory Usuario.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class Usuario {
       nombre: json['nombre'] as String?,
       apellido: json['apellido'] as String?,
       fotoPerfilUrl: json['foto_perfil_url'] as String?,
+      telefono: json['telefono'] as String?, // ✅ Mapeo del JSON
     );
   }
 
@@ -50,6 +53,7 @@ class Usuario {
       'nombre': nombre,
       'apellido': apellido,
       'foto_perfil_url': fotoPerfilUrl,
+      'telefono': telefono, // ✅ Serialización
     };
   }
 
@@ -63,6 +67,7 @@ class Usuario {
     String? nombre,
     String? apellido,
     String? fotoPerfilUrl,
+    String? telefono, // ✅ Soporte en copyWith
   }) {
     return Usuario(
       id: id ?? this.id,
@@ -74,6 +79,7 @@ class Usuario {
       nombre: nombre ?? this.nombre,
       apellido: apellido ?? this.apellido,
       fotoPerfilUrl: fotoPerfilUrl ?? this.fotoPerfilUrl,
+      telefono: telefono ?? this.telefono, // ✅ Copia
     );
   }
 }

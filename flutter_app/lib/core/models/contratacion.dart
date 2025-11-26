@@ -12,6 +12,7 @@ class Contratacion {
   final double precioFinal;
   final String? metodoPago;
   final String? notas;
+  final String? notasEmpresa;
   final DateTime? fechaCompletado;
   final String? motivoCancelacion;
 
@@ -37,6 +38,7 @@ class Contratacion {
     required this.precioFinal,
     this.metodoPago,
     this.notas,
+    this.notasEmpresa,
     this.fechaCompletado,
     this.motivoCancelacion,
     this.servicioNombre,
@@ -48,24 +50,43 @@ class Contratacion {
   });
 
   factory Contratacion.fromJson(Map<String, dynamic> json) {
+    // Helper to safely parse double from String or num
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    // Helper to safely parse int from String or num
+    int? parseInt(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+
     return Contratacion(
-      id: json['id'] as int,
-      idCliente: json['id_cliente'] as int,
-      idServicio: json['id_servicio'] as int,
-      idSucursal: json['id_sucursal'] as int,
-      idDireccion: json['id_direccion'] as int?,
-      fechaContratacion: DateTime.parse(json['fecha_contratacion'] as String),
+      id: parseInt(json['id_contratacion']) ?? parseInt(json['id']) ?? 0,
+      idCliente: parseInt(json['id_cliente']) ?? 0,
+      idServicio: parseInt(json['id_servicio']) ?? 0,
+      idSucursal: parseInt(json['id_sucursal']) ?? 0,
+      idDireccion: parseInt(json['id_direccion']) ?? parseInt(json['id_direccion_entrega']),
+      fechaContratacion: json['fecha_solicitud'] != null 
+          ? DateTime.parse(json['fecha_solicitud'] as String)
+          : (json['fecha_contratacion'] != null 
+              ? DateTime.parse(json['fecha_contratacion'] as String) 
+              : DateTime.now()),
       fechaProgramada: json['fecha_programada'] != null
           ? DateTime.parse(json['fecha_programada'] as String)
           : null,
-      estado: json['estado'] as String,
-      precioBase: (json['precio_base'] as num).toDouble(),
-      descuento: json['descuento'] != null
-          ? (json['descuento'] as num).toDouble()
-          : null,
-      precioFinal: (json['precio_final'] as num).toDouble(),
+      estado: json['estado_contratacion'] as String? ?? json['estado'] as String? ?? 'pendiente',
+      precioBase: parseDouble(json['precio_subtotal'] ?? json['precio_base']),
+      descuento: parseDouble(json['descuento_aplicado'] ?? json['descuento']),
+      precioFinal: parseDouble(json['precio_total'] ?? json['precio_final']),
       metodoPago: json['metodo_pago'] as String?,
-      notas: json['notas'] as String?,
+      notas: json['notas_cliente'] as String? ?? json['notas'] as String?,
+      notasEmpresa: json['notas_empresa'] as String?,
       fechaCompletado: json['fecha_completado'] != null
           ? DateTime.parse(json['fecha_completado'] as String)
           : null,
@@ -74,7 +95,7 @@ class Contratacion {
       servicioImagen: json['servicio_imagen'] as String?,
       empresaNombre: json['empresa_nombre'] as String?,
       clienteNombre: json['cliente_nombre'] as String?,
-      sucursalNombre: json['sucursal_nombre'] as String?,
+      sucursalNombre: json['nombre_sucursal'] as String? ?? json['sucursal_nombre'] as String?,
       sucursalDireccion: json['sucursal_direccion'] as String?,
     );
   }
@@ -94,6 +115,7 @@ class Contratacion {
       'precio_final': precioFinal,
       'metodo_pago': metodoPago,
       'notas': notas,
+      'notas_empresa': notasEmpresa,
       'fecha_completado': fechaCompletado?.toIso8601String(),
       'motivo_cancelacion': motivoCancelacion,
       'servicio_nombre': servicioNombre,
@@ -148,6 +170,7 @@ class Contratacion {
     double? precioFinal,
     String? metodoPago,
     String? notas,
+    String? notasEmpresa,
     DateTime? fechaCompletado,
     String? motivoCancelacion,
     String? servicioNombre,
@@ -171,6 +194,7 @@ class Contratacion {
       precioFinal: precioFinal ?? this.precioFinal,
       metodoPago: metodoPago ?? this.metodoPago,
       notas: notas ?? this.notas,
+      notasEmpresa: notasEmpresa ?? this.notasEmpresa,
       fechaCompletado: fechaCompletado ?? this.fechaCompletado,
       motivoCancelacion: motivoCancelacion ?? this.motivoCancelacion,
       servicioNombre: servicioNombre ?? this.servicioNombre,
@@ -179,6 +203,47 @@ class Contratacion {
       clienteNombre: clienteNombre ?? this.clienteNombre,
       sucursalNombre: sucursalNombre ?? this.sucursalNombre,
       sucursalDireccion: sucursalDireccion ?? this.sucursalDireccion,
+    );
+  }
+}
+
+class HistorialContratacion {
+  final int idHistorial;
+  final int idContratacion;
+  final String? estadoAnterior;
+  final String estadoNuevo;
+  final DateTime fechaCambio;
+  final String? notas;
+  final int? idUsuarioResponsable;
+  final String? usuarioNombre;
+  final String? usuarioApellido;
+  final String? servicioNombre;
+
+  HistorialContratacion({
+    required this.idHistorial,
+    required this.idContratacion,
+    this.estadoAnterior,
+    required this.estadoNuevo,
+    required this.fechaCambio,
+    this.notas,
+    this.idUsuarioResponsable,
+    this.usuarioNombre,
+    this.usuarioApellido,
+    this.servicioNombre,
+  });
+
+  factory HistorialContratacion.fromJson(Map<String, dynamic> json) {
+    return HistorialContratacion(
+      idHistorial: json['id_historial'] as int,
+      idContratacion: json['id_contratacion'] as int,
+      estadoAnterior: json['estado_anterior'] as String?,
+      estadoNuevo: json['estado_nuevo'] as String,
+      fechaCambio: DateTime.parse(json['fecha_cambio'] as String),
+      notas: json['notas'] as String?,
+      idUsuarioResponsable: json['id_usuario_responsable'] as int?,
+      usuarioNombre: json['usuario_nombre'] as String?,
+      usuarioApellido: json['usuario_apellido'] as String?,
+      servicioNombre: json['servicio_nombre'] as String?,
     );
   }
 }
