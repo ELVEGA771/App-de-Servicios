@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:servicios_app/core/models/sucursal.dart';
-import 'package:servicios_app/features/auth/screens/splash_screen.dart';
 import 'package:servicios_app/features/auth/screens/login_screen.dart';
 import 'package:servicios_app/features/auth/screens/register_screen.dart';
+import 'package:servicios_app/features/auth/screens/splash_screen.dart';
 import 'package:servicios_app/features/home/screens/home_screen.dart';
-import 'package:servicios_app/features/servicio/screens/servicio_detail_screen.dart';
-import 'package:servicios_app/features/servicio/screens/servicio_search_screen.dart';
 import 'package:servicios_app/features/servicio/screens/servicio_list_screen.dart';
-import 'package:servicios_app/features/contratacion/screens/checkout_screen.dart';
+import 'package:servicios_app/features/servicio/screens/servicio_detail_screen.dart';
+import 'package:servicios_app/features/servicio/screens/servicio_search_screen.dart'; // Importante: Nueva importación
+import 'package:servicios_app/features/contratacion/screens/order_history_screen.dart';
 import 'package:servicios_app/features/contratacion/screens/order_detail_screen.dart';
 import 'package:servicios_app/features/contratacion/screens/order_tracking_screen.dart';
-import 'package:servicios_app/features/contratacion/screens/order_history_screen.dart';
-import 'package:servicios_app/features/favoritos/screens/favoritos_screen.dart';
-import 'package:servicios_app/features/chat/screens/conversations_screen.dart';
-import 'package:servicios_app/features/chat/screens/chat_screen.dart';
+import 'package:servicios_app/features/contratacion/screens/checkout_screen.dart';
 import 'package:servicios_app/features/profile/screens/profile_screen.dart';
 import 'package:servicios_app/features/profile/screens/edit_profile_screen.dart';
+import 'package:servicios_app/features/profile/screens/addresses_screen.dart';
+import 'package:servicios_app/features/profile/screens/add_address_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_dashboard_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_services_screen.dart';
 import 'package:servicios_app/features/empresa/screens/create_service_screen.dart';
@@ -23,217 +21,163 @@ import 'package:servicios_app/features/empresa/screens/edit_service_screen.dart'
 import 'package:servicios_app/features/empresa/screens/empresa_orders_screen.dart';
 import 'package:servicios_app/features/empresa/screens/manage_sucursales_screen.dart';
 import 'package:servicios_app/features/empresa/screens/create_sucursal_screen.dart';
+import 'package:servicios_app/features/favoritos/screens/favoritos_screen.dart';
+import 'package:servicios_app/features/chat/screens/conversations_screen.dart';
+import 'package:servicios_app/features/chat/screens/chat_screen.dart';
 import 'package:servicios_app/features/notificaciones/screens/notificaciones_screen.dart';
+import 'package:servicios_app/features/empresa/screens/empresa_cupones_screen.dart';
+import 'package:servicios_app/features/empresa/screens/create_cupon_screen.dart';
 
 class AppRoutes {
-  // Route Names
+  // Constantes de Rutas
   static const String splash = '/';
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
-
-  // Servicios
-  static const String servicioDetail = '/servicio/detail';
-  static const String servicioSearch = '/servicio/search';
-  static const String servicioList = '/servicio/list';
-
-  // Contrataciones
-  static const String checkout = '/contratacion/checkout';
-  static const String orderDetail = '/contratacion/detail';
-  static const String orderTracking = '/contratacion/tracking';
-  static const String orderHistory = '/contratacion/history';
-
-  // Favoritos
-  static const String favoritos = '/favoritos';
-
-  // Chat
-  static const String conversations = '/chat/conversations';
-  static const String chat = '/chat';
-
-  // Profile
+  static const String servicios = '/servicios';
+  static const String servicioDetail = '/servicio-detail';
+  static const String servicioSearch = '/servicio-search'; // Restaurado
+  static const String checkout = '/checkout';
+  static const String orderHistory = '/orders';
+  static const String orderDetail = '/order-detail';
+  static const String orderTracking = '/order-tracking';
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
+  static const String addresses = '/addresses';
+  static const String addAddress = '/addresses/add';
+  static const String favoritos = '/favoritos';
+  static const String conversations = '/conversations';
+  static const String chat = '/chat';
+  static const String notificaciones = '/notificaciones';
 
-  // Empresa
+  // Rutas de Empresa
   static const String empresaDashboard = '/empresa/dashboard';
   static const String empresaServices = '/empresa/services';
   static const String createService = '/empresa/service/create';
   static const String editService = '/empresa/service/edit';
   static const String empresaOrders = '/empresa/orders';
-  static const String manageSucursales = '/empresa/sucursales';
-  static const String createSucursal = '/empresa/sucursal/create';
-  static const String editSucursal = '/empresa/sucursal/edit';
+  static const String empresaSucursales = '/empresa/sucursales';
+  static const String createSucursal = '/empresa/sucursales/create';
+  static const String empresaCupones = '/empresa/cupones';
+  static const String createCupon = '/empresa/cupones/create';
 
-  // Notificaciones
-  static const String notificaciones = '/notificaciones';
+  // Mapa de Rutas
+  static Map<String, WidgetBuilder> getRoutes() {
+    return {
+      splash: (context) => const SplashScreen(),
+      login: (context) => const LoginScreen(),
+      register: (context) => const RegisterScreen(),
+      home: (context) => const HomeScreen(),
+      servicios: (context) => const ServicioListScreen(),
+      servicioSearch: (context) => const ServicioSearchScreen(), // Restaurado
+      orderHistory: (context) => const OrderHistoryScreen(),
+      profile: (context) => const ProfileScreen(),
+      editProfile: (context) => const EditProfileScreen(),
+      addresses: (context) => const AddressesScreen(),
+      addAddress: (context) => const AddAddressScreen(),
+      empresaDashboard: (context) => const EmpresaDashboardScreen(),
+      empresaServices: (context) => const EmpresaServicesScreen(),
+      createService: (context) => const CreateServiceScreen(),
+      empresaOrders: (context) => const EmpresaOrdersScreen(),
+      empresaSucursales: (context) => const ManageSucursalesScreen(),
+      createSucursal: (context) => const CreateSucursalScreen(),
+      favoritos: (context) => const FavoritosScreen(),
+      conversations: (context) => const ConversationsScreen(),
+      notificaciones: (context) => const NotificacionesScreen(),
+      empresaCupones: (context) => const EmpresaCuponesScreen(),
+      createCupon: (context) => const CreateCuponScreen(),
+    };
+  }
 
-  // Route Generator
-  static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case splash:
-        return MaterialPageRoute(builder: (_) => const SplashScreen());
+  // Generador de Rutas Dinámicas (con argumentos)
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    // 1. SERVICIO DETAIL
+    if (settings.name == servicioDetail) {
+      final args = settings.arguments;
+      // Maneja si viene como Map (ej: {'id': 1}) o como int directo (ej: 1)
+      final int id = (args is Map) ? args['id'] : args as int;
 
-      case login:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
-
-      case register:
-        return MaterialPageRoute(builder: (_) => const RegisterScreen());
-
-      case home:
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
-
-      // Servicio routes
-      case servicioDetail:
-        final args = settings.arguments as Map<String, dynamic>?;
-        final servicioId = args?['id'] as int;
-        return MaterialPageRoute(
-          builder: (_) => ServicioDetailScreen(servicioId: servicioId),
-        );
-
-      case servicioSearch:
-        return MaterialPageRoute(builder: (_) => const ServicioSearchScreen());
-
-      case servicioList:
-        final args = settings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (_) => ServicioListScreen(
-            categoriaId: args?['categoriaId'] as int?,
-            ciudad: args?['ciudad'] as String?,
-            titulo: args?['titulo'] as String?,
-          ),
-        );
-
-      // Contratacion routes
-      case checkout:
-        final args = settings.arguments as Map<String, dynamic>;
-        return MaterialPageRoute(
-          builder: (_) => CheckoutScreen(
-            servicioId: args['servicioId'] as int,
-            sucursalId: args['sucursalId'] as int,
-          ),
-        );
-
-      case orderDetail:
-        final args = settings.arguments as Map<String, dynamic>;
-        final orderId = args['id'] as int;
-        return MaterialPageRoute(
-          builder: (_) => OrderDetailScreen(orderId: orderId),
-        );
-
-      case orderTracking:
-        final args = settings.arguments as Map<String, dynamic>;
-        final orderId = args['id'] as int;
-        return MaterialPageRoute(
-          builder: (_) => OrderTrackingScreen(orderId: orderId),
-        );
-
-      case orderHistory:
-        return MaterialPageRoute(builder: (_) => const OrderHistoryScreen());
-
-      // Favoritos
-      case favoritos:
-        return MaterialPageRoute(builder: (_) => const FavoritosScreen());
-
-      // Chat routes
-      case conversations:
-        return MaterialPageRoute(builder: (_) => const ConversationsScreen());
-
-      case chat:
-        final args = settings.arguments as Map<String, dynamic>;
-        return MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            conversacionId: args['conversacionId'] as int,
-            otherUserName: args['otherUserName'] as String,
-          ),
-        );
-
-      // Profile routes
-      case profile:
-        return MaterialPageRoute(builder: (_) => const ProfileScreen());
-
-      case editProfile:
-        return MaterialPageRoute(builder: (_) => const EditProfileScreen());
-
-      // Empresa routes
-      case empresaDashboard:
-        return MaterialPageRoute(builder: (_) => const EmpresaDashboardScreen());
-
-      case empresaServices:
-        return MaterialPageRoute(builder: (_) => const EmpresaServicesScreen());
-
-      case createService:
-        return MaterialPageRoute(builder: (_) => const CreateServiceScreen());
-
-      case editService:
-        final args = settings.arguments as Map<String, dynamic>;
-        return MaterialPageRoute(
-          builder: (_) => EditServiceScreen(servicioId: args['id'] as int),
-        );
-
-      case empresaOrders:
-        return MaterialPageRoute(builder: (_) => const EmpresaOrdersScreen());
-
-      case manageSucursales:
-        return MaterialPageRoute(builder: (_) => const ManageSucursalesScreen());
-
-      case createSucursal:
-        return MaterialPageRoute(builder: (_) => const CreateSucursalScreen());
-
-      case editSucursal:
-        final args = settings.arguments as Sucursal;
-        return MaterialPageRoute(
-          builder: (_) => CreateSucursalScreen(sucursal: args),
-        );
-
-      // Notificaciones
-      case notificaciones:
-        return MaterialPageRoute(builder: (_) => const NotificacionesScreen());
-
-      default:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(
-              child: Text('Ruta no encontrada: ${settings.name}'),
-            ),
-          ),
-        );
+      return MaterialPageRoute(
+        builder: (context) => ServicioDetailScreen(servicioId: id),
+      );
     }
+
+    // 2. CHECKOUT
+    if (settings.name == checkout) {
+      final args = settings.arguments as Map<String, dynamic>;
+      return MaterialPageRoute(
+        builder: (context) => CheckoutScreen(
+          servicioId: args['servicioId'],
+          sucursalId: args['sucursalId'],
+        ),
+      );
+    }
+
+    // 3. EDIT SERVICE
+    if (settings.name == editService) {
+      final args = settings.arguments as int;
+      return MaterialPageRoute(
+        builder: (context) => EditServiceScreen(servicioId: args),
+      );
+    }
+
+    // 4. ORDER DETAIL
+    if (settings.name == orderDetail) {
+      final args = settings.arguments as int;
+      return MaterialPageRoute(
+        builder: (context) => OrderDetailScreen(orderId: args),
+      );
+    }
+
+    // 5. ORDER TRACKING
+    if (settings.name == orderTracking) {
+      final args = settings.arguments as int;
+      return MaterialPageRoute(
+        builder: (context) => OrderTrackingScreen(orderId: args),
+      );
+    }
+
+    // 6. CHAT
+    if (settings.name == chat) {
+      final args = settings.arguments as Map<String, dynamic>;
+      return MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          conversacionId: args['conversationId'],
+          otherUserName: args['otherUserName'],
+        ),
+      );
+    }
+
+    return null;
   }
 
-  // Navigation Helpers
+  // --- MÉTODOS ESTÁTICOS DE NAVEGACIÓN (Restaurados) ---
+
+  // Navegar al Home (Login/Register)
   static void navigateToHome(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(home, (route) => false);
+    Navigator.pushReplacementNamed(context, home);
   }
 
+  // Navegar al Login (Logout)
   static void navigateToLogin(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(login, (route) => false);
+    Navigator.pushReplacementNamed(context, login);
   }
 
+  // Navegar al Detalle de Servicio
   static void navigateToServicioDetail(BuildContext context, int servicioId) {
-    Navigator.of(context).pushNamed(
+    Navigator.pushNamed(
+      context,
       servicioDetail,
-      arguments: {'id': servicioId},
+      arguments: {'id': servicioId}, // Enviamos como Map para ser consistentes
     );
   }
 
-  static void navigateToCheckout(BuildContext context, int servicioId, int sucursalId) {
-    Navigator.of(context).pushNamed(
-      checkout,
-      arguments: {'servicioId': servicioId, 'sucursalId': sucursalId},
-    );
-  }
-
-  static void navigateToOrderDetail(BuildContext context, int orderId) {
-    Navigator.of(context).pushNamed(
-      orderDetail,
-      arguments: {'id': orderId},
-    );
-  }
-
-  static void navigateToChat(BuildContext context, int conversacionId, String otherUserName) {
-    Navigator.of(context).pushNamed(
-      chat,
-      arguments: {'conversacionId': conversacionId, 'otherUserName': otherUserName},
-    );
+  // Navegar al Checkout
+  static void navigateToCheckout(
+      BuildContext context, int servicioId, int sucursalId) {
+    Navigator.pushNamed(context, checkout, arguments: {
+      'servicioId': servicioId,
+      'sucursalId': sucursalId,
+    });
   }
 }

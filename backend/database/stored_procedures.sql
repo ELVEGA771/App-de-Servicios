@@ -597,6 +597,174 @@ END$$
 
 DELIMITER ;
 
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_validar_cupon$$
+
+CREATE PROCEDURE sp_validar_cupon(
+    IN p_codigo VARCHAR(50),
+    IN p_id_servicio INT,
+    IN p_monto_compra DECIMAL(10,2),
+    OUT p_valido TINYINT, -- 1 = true, 0 = false
+    OUT p_descuento DECIMAL(10,2),
+    OUT p_precio_final DECIMAL(10,2),
+    OUT p_mensaje VARCHAR(255)
+)
+BEGIN
+    DECLARE v_id_cupon INT;
+    DECLARE v_tipo_descuento ENUM('porcentaje', 'monto_fijo');
+    DECLARE v_valor_descuento DECIMAL(10,2);
+    DECLARE v_monto_minimo DECIMAL(10,2);
+    DECLARE v_cantidad_disponible INT;
+    DECLARE v_cantidad_usada INT;
+    DECLARE v_fecha_expiracion DATETIME;
+    DECLARE v_activo TINYINT;
+    DECLARE v_aplicable_a VARCHAR(50);
+    DECLARE v_empresa_cupon INT;
+    DECLARE v_empresa_servicio INT;
+
+    -- Inicializar valores por defecto
+    SET p_valido = 0;
+    SET p_descuento = 0.00;
+    SET p_precio_final = p_monto_compra;
+    SET p_mensaje = '';
+
+    -- 1. Buscar el cupón
+    SELECT 
+        id_cupon, tipo_descuento, valor_descuento, monto_minimo_compra,
+        cantidad_disponible, cantidad_usada, fecha_expiracion, activo,
+        aplicable_a, id_empresa
+    INTO 
+        v_id_cupon, v_tipo_descuento, v_valor_descuento, v_monto_minimo,
+        v_cantidad_disponible, v_cantidad_usada, v_fecha_expiracion, v_activo,
+        v_aplicable_a, v_empresa_cupon
+    FROM cupon 
+    WHERE codigo = p_codigo;
+
+    -- 2. Validaciones
+    IF v_id_cupon IS NULL THEN
+        SET p_mensaje = 'Cupón no encontrado';
+    ELSEIF v_activo = 0 THEN
+        SET p_mensaje = 'El cupón está inactivo';
+    ELSEIF v_fecha_expiracion IS NOT NULL AND v_fecha_expiracion < NOW() THEN
+        SET p_mensaje = 'El cupón ha expirado';
+    ELSEIF v_cantidad_disponible IS NOT NULL AND v_cantidad_usada >= v_cantidad_disponible THEN
+        SET p_mensaje = 'El cupón se ha agotado';
+    ELSEIF p_monto_compra < v_monto_minimo THEN
+        SET p_mensaje = CONCAT('El monto mínimo de compra es $', v_monto_minimo);
+    ELSE
+        -- Validar que el cupón pertenezca a la misma empresa del servicio
+        SELECT id_empresa INTO v_empresa_servicio FROM servicio WHERE id_servicio = p_id_servicio;
+        
+        IF v_empresa_cupon != v_empresa_servicio THEN
+            SET p_mensaje = 'Este cupón no es válido para este servicio (diferente empresa)';
+        ELSE
+            -- 3. Calcular Descuento
+            IF v_tipo_descuento = 'porcentaje' THEN
+                SET p_descuento = (p_monto_compra * v_valor_descuento) / 100;
+            ELSE
+                SET p_descuento = v_valor_descuento;
+            END IF;
+
+            -- Ajustar si el descuento es mayor al total (no dar dinero, solo gratis)
+            IF p_descuento > p_monto_compra THEN
+                SET p_descuento = p_monto_compra;
+            END IF;
+
+            SET p_precio_final = p_monto_compra - p_descuento;
+            SET p_valido = 1;
+            SET p_mensaje = 'Cupón aplicado correctamente';
+        END IF;
+    END IF;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+-- 1. Procedimiento para CREAR cupón
+DROP PROCEDURE IF EXISTS sp_crear_cupon$$
+CREATE PROCEDURE sp_crear_cupon(
+    IN p_codigo VARCHAR(50),
+    IN p_tipo_descuento ENUM('porcentaje', 'monto_fijo'),
+    IN p_valor_descuento DECIMAL(10,2),
+    IN p_monto_minimo DECIMAL(10,2),
+    IN p_cantidad_disponible INT,
+    IN p_fecha_expiracion DATETIME,
+    IN p_id_empresa INT,
+    OUT p_id_cupon INT,
+    OUT p_mensaje VARCHAR(255)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_id_cupon = NULL;
+        SET p_mensaje = 'Error al crear el cupón. El código podría estar duplicado.';
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    -- Verificar si el código ya existe
+    IF EXISTS (SELECT 1 FROM cupon WHERE codigo = p_codigo) THEN
+        SET p_id_cupon = NULL;
+        SET p_mensaje = 'El código del cupón ya existe.';
+    ELSE
+        INSERT INTO cupon (
+            codigo, 
+            tipo_descuento, 
+            valor_descuento, 
+            monto_minimo_compra, 
+            cantidad_disponible, 
+            cantidad_usada, 
+            fecha_expiracion, 
+            activo, 
+            aplicable_a, -- Por defecto 'todos' los servicios de la empresa para simplificar
+            id_empresa
+        ) VALUES (
+            UPPER(p_codigo), 
+            p_tipo_descuento, 
+            p_valor_descuento, 
+            p_monto_minimo, 
+            p_cantidad_disponible, 
+            0, -- Cantidad usada inicia en 0
+            p_fecha_expiracion, 
+            1, -- Activo por defecto
+            'todos', 
+            p_id_empresa
+        );
+        
+        SET p_id_cupon = LAST_INSERT_ID();
+        SET p_mensaje = 'Cupón creado exitosamente.';
+    END IF;
+
+    COMMIT;
+END$$
+
+-- 2. Procedimiento para LISTAR cupones de una empresa
+DROP PROCEDURE IF EXISTS sp_obtener_cupones_empresa$$
+CREATE PROCEDURE sp_obtener_cupones_empresa(
+    IN p_id_empresa INT
+)
+BEGIN
+    SELECT 
+        id_cupon, 
+        codigo, 
+        tipo_descuento, 
+        valor_descuento, 
+        monto_minimo_compra, 
+        cantidad_disponible, 
+        cantidad_usada, 
+        fecha_expiracion, 
+        activo
+    FROM cupon
+    WHERE id_empresa = p_id_empresa
+    ORDER BY fecha_expiracion DESC;
+END$$
+
+DELIMITER ;
+
 -- ============================================================================
 -- FIN DE STORED PROCEDURES
 -- ============================================================================
