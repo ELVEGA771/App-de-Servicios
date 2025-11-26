@@ -265,30 +265,6 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                             const SizedBox(width: 16),
                             Expanded(
                               child: _buildActionButton(
-                                label: 'Mis Servicios',
-                                icon: Icons.list,
-                                onTap: () {
-                                  Navigator.pushNamed(context, '/empresa/services');
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildActionButton(
-                                label: 'Órdenes',
-                                icon: Icons.receipt_long,
-                                onTap: () {
-                                  Navigator.pushNamed(context, '/empresa/orders');
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildActionButton(
                                 label: 'Sucursales',
                                 icon: Icons.store,
                                 onTap: () {
