@@ -31,6 +31,7 @@ import 'package:servicios_app/features/chat/screens/chat_screen.dart';
 import 'package:servicios_app/features/notificaciones/screens/notificaciones_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_cupones_screen.dart';
 import 'package:servicios_app/features/empresa/screens/create_cupon_screen.dart';
+import 'package:servicios_app/features/cupones/screens/cupones_disponibles_screen.dart';
 
 class AppRoutes {
   // Route Names
@@ -84,6 +85,7 @@ class AppRoutes {
 
   // Cupones
   static const String createCupon = '/empresa/cupones/create';
+  static const String cuponesDisponibles = '/cupones/disponibles';
 
   // Route Generator
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -227,6 +229,9 @@ class AppRoutes {
       case createCupon:
         return MaterialPageRoute(builder: (_) => const CreateCuponScreen());
 
+      case cuponesDisponibles:
+        return MaterialPageRoute(builder: (_) => const CuponesDisponiblesScreen());
+
       // Notificaciones
       case notificaciones:
         return MaterialPageRoute(builder: (_) => const NotificacionesScreen());
@@ -282,5 +287,9 @@ class AppRoutes {
         'otherUserName': otherUserName
       },
     );
+  }
+
+  static void navigateToCuponesDisponibles(BuildContext context) {
+    Navigator.of(context).pushNamed(cuponesDisponibles);
   }
 }

@@ -12,6 +12,7 @@ class Cupon {
   final bool activo;
   final String aplicableA;
   final int idEmpresa;
+  final String? empresaNombre; // Nombre de la empresa (opcional, viene de algunas queries)
 
   Cupon({
     required this.id,
@@ -27,6 +28,7 @@ class Cupon {
     this.activo = true,
     this.aplicableA = 'todos',
     required this.idEmpresa,
+    this.empresaNombre,
   });
 
   factory Cupon.fromJson(Map<String, dynamic> json) {
@@ -59,6 +61,7 @@ class Cupon {
 
       aplicableA: json['aplicable_a'] ?? 'todos',
       idEmpresa: int.tryParse(json['id_empresa'].toString()) ?? 0,
+      empresaNombre: json['razon_social'] as String?,
     );
   }
 

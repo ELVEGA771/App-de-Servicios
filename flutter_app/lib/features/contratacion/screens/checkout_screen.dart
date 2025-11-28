@@ -424,8 +424,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 24),
 
             // --- CUPÓN DE DESCUENTO (NUEVO) ---
-            const Text('Cupón de Descuento',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Cupón de Descuento',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.cuponesDisponibles);
+                  },
+                  icon: const Icon(Icons.local_offer, size: 16),
+                  label: const Text('Ver disponibles'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.primaryColor,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Row(
               children: [

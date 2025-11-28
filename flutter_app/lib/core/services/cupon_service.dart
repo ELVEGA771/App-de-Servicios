@@ -54,7 +54,7 @@ class CuponService {
     }
   }
 
-  // Nuevo: Obtener cupones de la empresa
+  // Obtener cupones de la empresa
   Future<List<Cupon>> getEmpresaCupones(int empresaId) async {
     try {
       final response = await _dioClient.get('/cupones');
@@ -62,6 +62,18 @@ class CuponService {
       return data.map((json) => Cupon.fromJson(json)).toList();
     } catch (e) {
       print('Error obteniendo cupones: $e');
+      return [];
+    }
+  }
+
+  // Obtener cupones activos disponibles (para clientes)
+  Future<List<Cupon>> getActiveCupones() async {
+    try {
+      final response = await _dioClient.get('/cupones/activos');
+      final List<dynamic> data = response.data['data'];
+      return data.map((json) => Cupon.fromJson(json)).toList();
+    } catch (e) {
+      print('Error obteniendo cupones activos: $e');
       return [];
     }
   }
