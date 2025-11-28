@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:servicios_app/config/constants.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/models/categoria.dart';
 import 'package:servicios_app/core/models/sucursal.dart';
@@ -510,7 +511,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
                                 child: Image.network(
-                                  _imagenUrlController.text,
+                                  AppConstants.fixImageUrl(_imagenUrlController.text),
                                   width: double.infinity,
                                   height: double.infinity,
                                   fit: BoxFit.cover,

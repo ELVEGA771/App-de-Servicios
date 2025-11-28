@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:servicios_app/config/constants.dart';
 import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/favorito_provider.dart';
@@ -75,7 +76,8 @@ class FavoritosScreen extends StatelessWidget {
                           ),
                           image: favorito.servicioImagen != null
                               ? DecorationImage(
-                                  image: NetworkImage(favorito.servicioImagen!),
+                                  image: NetworkImage(
+                                      AppConstants.fixImageUrl(favorito.servicioImagen!)),
                                   fit: BoxFit.cover,
                                 )
                               : null,

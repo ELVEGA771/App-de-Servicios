@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:servicios_app/config/constants.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/models/servicio.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
@@ -17,6 +18,7 @@ class _EmpresaServicesScreenState extends State<EmpresaServicesScreen> {
   List<Servicio> _servicios = [];
   bool _isLoading = true;
   String? _error;
+  Map<String, Map<String, List<Map<String, dynamic>>>> _groupedServices = {};
 
   @override
   void initState() {
@@ -40,6 +42,7 @@ class _EmpresaServicesScreenState extends State<EmpresaServicesScreen> {
         if (mounted) {
           setState(() {
             _servicios = servicios;
+            _groupedServices = _groupServicesBySucursalAndCategoria(servicios);
             _isLoading = false;
           });
         }
@@ -59,6 +62,70 @@ class _EmpresaServicesScreenState extends State<EmpresaServicesScreen> {
         });
       }
     }
+  }
+
+  Map<String, Map<String, List<Map<String, dynamic>>>> _groupServicesBySucursalAndCategoria(
+      List<Servicio> servicios) {
+    Map<String, Map<String, List<Map<String, dynamic>>>> grouped = {};
+
+    for (var servicio in servicios) {
+      // Si el servicio tiene sucursales disponibles
+      if (servicio.sucursalesDisponibles != null &&
+          servicio.sucursalesDisponibles!.isNotEmpty) {
+        for (var sucursalData in servicio.sucursalesDisponibles!) {
+          String sucursalNombre;
+          int? sucursalId;
+          bool disponible = true;
+
+          // Manejar diferentes formatos de datos de sucursal
+          if (sucursalData is Map<String, dynamic>) {
+            sucursalNombre = sucursalData['nombre_sucursal'] as String? ??
+                            sucursalData['nombreSucursal'] as String? ??
+                            'Sucursal sin nombre';
+            sucursalId = sucursalData['id_sucursal'] as int?;
+            disponible = (sucursalData['disponible'] == 1 || sucursalData['disponible'] == true);
+          } else {
+            sucursalNombre = sucursalData.toString();
+          }
+
+          // Agrupar por sucursal
+          if (!grouped.containsKey(sucursalNombre)) {
+            grouped[sucursalNombre] = {};
+          }
+
+          // Agrupar por categoría dentro de la sucursal
+          String categoriaNombre = servicio.categoriaNombre ?? 'Sin categoría';
+          if (!grouped[sucursalNombre]!.containsKey(categoriaNombre)) {
+            grouped[sucursalNombre]![categoriaNombre] = [];
+          }
+
+          grouped[sucursalNombre]![categoriaNombre]!.add({
+            'servicio': servicio,
+            'sucursalId': sucursalId,
+            'disponible': disponible,
+          });
+        }
+      } else {
+        // Servicios sin sucursal asignada
+        String sucursalNombre = 'Sin sucursal asignada';
+        if (!grouped.containsKey(sucursalNombre)) {
+          grouped[sucursalNombre] = {};
+        }
+
+        String categoriaNombre = servicio.categoriaNombre ?? 'Sin categoría';
+        if (!grouped[sucursalNombre]!.containsKey(categoriaNombre)) {
+          grouped[sucursalNombre]![categoriaNombre] = [];
+        }
+
+        grouped[sucursalNombre]![categoriaNombre]!.add({
+          'servicio': servicio,
+          'sucursalId': null,
+          'disponible': false,
+        });
+      }
+    }
+
+    return grouped;
   }
 
   Future<void> _deleteServicio(Servicio servicio) async {
@@ -154,134 +221,288 @@ class _EmpresaServicesScreenState extends State<EmpresaServicesScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadServices,
-      child: ListView.builder(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        itemCount: _servicios.length + 1, // +1 para el espacio final o botón flotante
-        itemBuilder: (context, index) {
-          if (index == _servicios.length) {
-            // Botón al final de la lista para agregar más
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Center(
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final result = await Navigator.pushNamed(
-                      context, 
-                      '/empresa/service/create'
-                    );
-                    if (result == true) _loadServices();
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Agregar Nuevo Servicio'),
-                ),
-              ),
-            );
-          }
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Botón para agregar nuevo servicio
+            OutlinedButton.icon(
+              onPressed: () async {
+                final result = await Navigator.pushNamed(
+                  context,
+                  '/empresa/service/create',
+                );
+                if (result == true) _loadServices();
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Agregar Nuevo Servicio'),
+            ),
+            const SizedBox(height: 16),
 
-          final servicio = _servicios[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(12),
-              leading: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
-                  image: servicio.imagenPrincipal != null
-                      ? DecorationImage(
-                          image: NetworkImage(servicio.imagenPrincipal!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: servicio.imagenPrincipal == null
-                    ? const Icon(Icons.image, color: Colors.grey)
-                    : null,
-              ),
+            // Servicios agrupados por sucursal y categoría
+            ..._buildGroupedServicesList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildGroupedServicesList() {
+    List<Widget> widgets = [];
+
+    // Ordenar sucursales alfabéticamente
+    final sortedSucursales = _groupedServices.keys.toList()..sort();
+
+    for (var sucursalNombre in sortedSucursales) {
+      final categorias = _groupedServices[sucursalNombre]!;
+
+      // Contar total de servicios en esta sucursal
+      int totalServicios = 0;
+      categorias.forEach((_, servicios) {
+        totalServicios += servicios.length;
+      });
+
+      widgets.add(
+        Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: true,
+              leading: const Icon(Icons.store, color: AppTheme.primaryColor),
               title: Text(
-                servicio.nombre,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                sucursalNombre,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Text(
-                    '\$${servicio.precio.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.w600,
+              subtitle: Text(
+                '$totalServicios servicio${totalServicios != 1 ? 's' : ''}',
+                style: const TextStyle(fontSize: 12),
+              ),
+              children: _buildCategoriasForSucursal(categorias),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+  List<Widget> _buildCategoriasForSucursal(
+      Map<String, List<Map<String, dynamic>>> categorias) {
+    List<Widget> widgets = [];
+
+    // Ordenar categorías alfabéticamente
+    final sortedCategorias = categorias.keys.toList()..sort();
+
+    for (var categoriaNombre in sortedCategorias) {
+      final serviciosData = categorias[categoriaNombre]!;
+
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Card(
+            color: Colors.grey[50],
+            child: ExpansionTile(
+              initiallyExpanded: true,
+              leading: const Icon(Icons.category, size: 20, color: AppTheme.secondaryColor),
+              title: Text(
+                categoriaNombre,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              subtitle: Text(
+                '${serviciosData.length} servicio${serviciosData.length != 1 ? 's' : ''}',
+                style: const TextStyle(fontSize: 11),
+              ),
+              children: serviciosData.map((data) => _buildServicioItem(
+                data['servicio'] as Servicio,
+                data['sucursalId'] as int?,
+                data['disponible'] as bool,
+              )).toList(),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+  Future<void> _toggleDisponibilidad(Servicio servicio, int? sucursalId, bool currentValue) async {
+    if (sucursalId == null) return;
+
+    try {
+      await _servicioService.toggleDisponibilidadSucursal(
+        servicioId: servicio.id,
+        sucursalId: sucursalId,
+        disponible: !currentValue,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              !currentValue
+                  ? 'Servicio activado en esta sucursal'
+                  : 'Servicio desactivado en esta sucursal',
+            ),
+          ),
+        );
+        _loadServices(); // Recargar lista
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al actualizar disponibilidad: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildServicioItem(Servicio servicio, int? sucursalId, bool disponible) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(12),
+        leading: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(8),
+            image: servicio.imagenPrincipal != null
+                ? DecorationImage(
+                    image: NetworkImage(
+                        AppConstants.fixImageUrl(servicio.imagenPrincipal!)),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          child: servicio.imagenPrincipal == null
+              ? const Icon(Icons.image, color: Colors.grey)
+              : null,
+        ),
+        title: Text(
+          servicio.nombre,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text(
+              '\$${servicio.precio.toStringAsFixed(2)}',
+              style: const TextStyle(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: servicio.estado == 'disponible'
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    servicio.estado.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: servicio.estado == 'disponible'
+                          ? Colors.green
+                          : Colors.grey,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                ),
+                const SizedBox(width: 8),
+                // Badge de disponibilidad en sucursal
+                if (sucursalId != null)
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: servicio.estado == 'disponible' 
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.grey.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          servicio.estado.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: servicio.estado == 'disponible' 
-                                ? Colors.green 
-                                : Colors.grey,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      Icon(
+                        disponible ? Icons.check_circle : Icons.cancel,
+                        size: 16,
+                        color: disponible ? Colors.green : Colors.red,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        disponible ? 'Activo' : 'Inactivo',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: disponible ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-              trailing: PopupMenuButton<String>(
-                onSelected: (value) async {
-                  if (value == 'edit') {
-                    final result = await Navigator.pushNamed(
-                      context,
-                      '/empresa/service/edit',
-                      arguments: {'id': servicio.id}, // Pasamos el ID en un mapa
-                    );
-                    if (result == true) _loadServices();
-                  } else if (value == 'delete') {
-                    _deleteServicio(servicio);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, size: 20),
-                        SizedBox(width: 8),
-                        Text('Editar'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 20, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Eliminar', style: TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
-          );
-        },
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Switch de disponibilidad
+            if (sucursalId != null)
+              Switch(
+                value: disponible,
+                onChanged: (value) {
+                  _toggleDisponibilidad(servicio, sucursalId, disponible);
+                },
+                activeTrackColor: AppTheme.primaryColor,
+              ),
+            PopupMenuButton<String>(
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  final result = await Navigator.pushNamed(
+                    context,
+                    '/empresa/service/edit',
+                    arguments: {'id': servicio.id},
+                  );
+                  if (result == true) _loadServices();
+                } else if (value == 'delete') {
+                  _deleteServicio(servicio);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 20),
+                      SizedBox(width: 8),
+                      Text('Editar'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 20, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Eliminar', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

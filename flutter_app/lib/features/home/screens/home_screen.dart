@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:servicios_app/config/constants.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/core/providers/servicio_provider.dart';
@@ -415,7 +416,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         image: servicio.imagenPrincipal != null
                                             ? DecorationImage(
                                                 image: NetworkImage(
-                                                    servicio.imagenPrincipal!),
+                                                    AppConstants.fixImageUrl(
+                                                        servicio.imagenPrincipal!)),
                                                 fit: BoxFit.cover,
                                               )
                                             : null,

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:servicios_app/config/constants.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/models/categoria.dart';
 import 'package:servicios_app/core/models/servicio.dart';
+import 'package:servicios_app/core/models/sucursal.dart';
+import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/core/services/categoria_service.dart';
 import 'package:servicios_app/core/services/servicio_service.dart';
+import 'package:servicios_app/core/services/sucursal_service.dart';
 import 'dart:typed_data'; // Para Uint8List
 import 'package:image_picker/image_picker.dart';
 
@@ -20,6 +25,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
   final _formKey = GlobalKey<FormState>();
   final CategoriaService _categoriaService = CategoriaService();
   final ServicioService _servicioService = ServicioService();
+  final SucursalService _sucursalService = SucursalService();
 
   // Form controllers
   final _nombreController = TextEditingController();
@@ -30,6 +36,8 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
 
   // State variables
   List<Categoria> _categorias = [];
+  List<Sucursal> _sucursales = [];
+  List<int> _selectedSucursalIds = [];
   int? _selectedCategoriaId;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -57,14 +65,23 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
 
   Future<void> _loadData() async {
     try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final empresaId = authProvider.empresa?.id;
+
+      if (empresaId == null) {
+        throw Exception('No se pudo identificar la empresa');
+      }
+
       final categorias = await _categoriaService.getAllCategorias();
       final servicio = await _servicioService.getServicioById(widget.servicioId);
+      final sucursales = await _sucursalService.getSucursalesByEmpresa(empresaId);
 
       if (mounted) {
         setState(() {
           _categorias = categorias;
+          _sucursales = sucursales;
           _servicio = servicio;
-          
+
           // Pre-fill form
           _nombreController.text = servicio.nombre;
           _descripcionController.text = servicio.descripcion;
@@ -76,7 +93,20 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
             _imagenUrlController.text = servicio.imagenPrincipal!;
           }
           _selectedCategoriaId = servicio.idCategoria;
-          
+
+          // Load selected sucursales
+          if (servicio.sucursalesDisponibles != null) {
+            _selectedSucursalIds = servicio.sucursalesDisponibles!
+                .map((s) {
+                  if (s is Map<String, dynamic>) {
+                    return s['id_sucursal'] as int;
+                  }
+                  return null;
+                })
+                .whereType<int>()
+                .toList();
+          }
+
           _isLoading = false;
         });
       }
@@ -104,11 +134,19 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
       return;
     }
 
+    if (_selectedSucursalIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor selecciona al menos una sucursal')),
+      );
+      return;
+    }
+
     setState(() {
       _isSaving = true;
     });
 
     try {
+      // Update servicio basic info
       await _servicioService.updateServicio(
         id: widget.servicioId,
         categoriaId: _selectedCategoriaId,
@@ -121,6 +159,12 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
         imagenPrincipal: _imagenUrlController.text.trim().isEmpty
             ? null
             : _imagenUrlController.text.trim(),
+      );
+
+      // Update sucursales
+      await _servicioService.updateServicioSucursales(
+        servicioId: widget.servicioId,
+        sucursalIds: _selectedSucursalIds,
       );
 
       if (mounted) {
@@ -243,6 +287,50 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
                     ),
                     const SizedBox(height: 16),
 
+                    // Sucursales
+                    const Text(
+                      'Sucursales Disponibles',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _sucursales.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Text(
+                                'No hay sucursales disponibles',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : Column(
+                              children: _sucursales.map((sucursal) {
+                                final isSelected = _selectedSucursalIds.contains(sucursal.idSucursal);
+                                return CheckboxListTile(
+                                  title: Text(sucursal.nombreSucursal),
+                                  subtitle: Text(sucursal.direccionCorta),
+                                  value: isSelected,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (value == true) {
+                                        _selectedSucursalIds.add(sucursal.idSucursal);
+                                      } else {
+                                        _selectedSucursalIds.remove(sucursal.idSucursal);
+                                      }
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+
                     // Descripción
                     TextFormField(
                       controller: _descripcionController,
@@ -340,7 +428,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
                                 child: Image.network(
-                                  _imagenUrlController.text,
+                                  AppConstants.fixImageUrl(_imagenUrlController.text),
                                   width: double.infinity,
                                   height: double.infinity,
                                   fit: BoxFit.cover,
