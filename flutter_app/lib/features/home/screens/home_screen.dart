@@ -12,6 +12,8 @@ import 'package:servicios_app/features/empresa/screens/empresa_orders_screen.dar
 import 'package:servicios_app/features/contratacion/screens/order_history_screen.dart';
 import 'package:servicios_app/features/profile/screens/profile_screen.dart';
 import 'package:servicios_app/features/profile/screens/address_list_screen.dart';
+import 'package:servicios_app/features/favoritos/screens/favoritos_screen.dart';
+import 'package:servicios_app/core/providers/favorito_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -42,12 +44,15 @@ class _HomeScreenState extends State<HomeScreen> {
         Provider.of<NotificacionProvider>(context, listen: false);
     final direccionProvider =
         Provider.of<DireccionProvider>(context, listen: false);
+    final favoritoProvider =
+        Provider.of<FavoritoProvider>(context, listen: false);
 
     await Future.wait([
       servicioProvider.loadCategorias(),
       servicioProvider.loadServicios(refresh: true),
       notificacionProvider.refreshUnreadCount(),
       direccionProvider.loadDirecciones(),
+      favoritoProvider.loadFavoritos(),
     ]);
   }
 
@@ -399,27 +404,64 @@ class _HomeScreenState extends State<HomeScreen> {
                               // Image
                               Expanded(
                                 flex: 3,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.backgroundColor,
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(12),
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.backgroundColor,
+                                        borderRadius: const BorderRadius.vertical(
+                                          top: Radius.circular(12),
+                                        ),
+                                        image: servicio.imagenPrincipal != null
+                                            ? DecorationImage(
+                                                image: NetworkImage(
+                                                    servicio.imagenPrincipal!),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
+                                      ),
+                                      child: servicio.imagenPrincipal == null
+                                          ? const Center(
+                                              child: Icon(Icons.image,
+                                                  size: 48,
+                                                  color: Colors.grey),
+                                            )
+                                          : null,
                                     ),
-                                    image: servicio.imagenPrincipal != null
-                                        ? DecorationImage(
-                                            image: NetworkImage(
-                                                servicio.imagenPrincipal!),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : null,
-                                  ),
-                                  child: servicio.imagenPrincipal == null
-                                      ? const Center(
-                                          child: Icon(Icons.image,
-                                              size: 48,
-                                              color: Colors.grey),
-                                        )
-                                      : null,
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Consumer<FavoritoProvider>(
+                                        builder: (context, favProvider, _) {
+                                          final isFav = favProvider
+                                              .isFavorito(servicio.id);
+                                          return GestureDetector(
+                                            onTap: () {
+                                              favProvider.toggleFavorito(
+                                                  servicio.id);
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white
+                                                    .withOpacity(0.8),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                isFav
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                size: 20,
+                                                color: isFav
+                                                    ? Colors.red
+                                                    : Colors.grey,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               // Info
@@ -533,7 +575,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFavoritesTab() {
-    return const Center(child: Text('Favoritos - Implementar'));
+    return const FavoritosScreen();
   }
 
   Widget _buildDashboardTab() {

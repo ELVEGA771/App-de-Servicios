@@ -2,6 +2,9 @@ import 'package:servicios_app/core/api/dio_client.dart';
 import 'package:servicios_app/core/models/servicio.dart';
 import 'package:servicios_app/core/models/api_response.dart';
 import 'package:servicios_app/config/constants.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class ServicioService {
   final DioClient _dioClient = DioClient();
@@ -170,9 +173,9 @@ class ServicioService {
     if (categoriaId != null) data['id_categoria'] = categoriaId;
     if (nombre != null) data['nombre'] = nombre;
     if (descripcion != null) data['descripcion'] = descripcion;
-    if (precio != null) data['precio'] = precio;
+    if (precio != null) data['precio_base'] = precio;
     if (duracionEstimada != null) data['duracion_estimada'] = duracionEstimada;
-    if (imagenPrincipal != null) data['imagen_principal'] = imagenPrincipal;
+    if (imagenPrincipal != null) data['imagen_url'] = imagenPrincipal;
     if (imagenesAdicionales != null) {
       data['imagenes_adicionales'] = imagenesAdicionales;
     }
@@ -189,14 +192,41 @@ class ServicioService {
   }
 
   // Upload servicio image
-  Future<String> uploadServicioImage(String filePath) async {
-    // Nota: Cambiamos la ruta a '/upload' que es la que creaste en el backend
-    final response = await _dioClient.uploadFile(
+  Future<String> uploadServicioImage(XFile file) async {
+    String fileName = file.name;
+    FormData formData;
+
+    if (kIsWeb) {
+      final bytes = await file.readAsBytes();
+      formData = FormData.fromMap({
+        'imagen': MultipartFile.fromBytes(
+          bytes,
+          filename: fileName,
+        ),
+      });
+    } else {
+      formData = FormData.fromMap({
+        'imagen': await MultipartFile.fromFile(
+          file.path,
+          filename: fileName,
+        ),
+      });
+    }
+
+    final response = await _dioClient.post(
       '/upload',
-      filePath,
-      'imagen',
+      data: formData,
     );
-    return response.data['data']['url'] as String;
+
+    // Manejo robusto de la respuesta para obtener la URL
+    final data = response.data;
+    if (data['data'] != null && data['data']['url'] != null) {
+      return data['data']['url'].toString();
+    } else if (data['url'] != null) {
+      return data['url'].toString();
+    } else {
+      throw Exception('No se pudo obtener la URL de la imagen en la respuesta');
+    }
   }
 
   // Add servicio to sucursal

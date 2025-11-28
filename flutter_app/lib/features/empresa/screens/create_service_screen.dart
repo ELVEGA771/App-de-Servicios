@@ -5,7 +5,7 @@ import 'package:servicios_app/core/models/sucursal.dart';
 import 'package:servicios_app/core/services/categoria_service.dart';
 import 'package:servicios_app/core/services/servicio_service.dart';
 import 'package:servicios_app/core/services/sucursal_service.dart';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 
 class CreateServiceScreen extends StatefulWidget {
@@ -37,7 +37,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
   bool _isLoadingCategorias = true;
   bool _isLoadingSucursales = true;
 
-  File? _imageFile;
+  Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
 
@@ -468,70 +468,100 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // URL de imagen (opcional)
-                    Row(
-                      children: [
-                        // El campo de texto se expande
-                        Expanded(
-                          child: TextFormField(
-                            controller: _imagenUrlController,
-                            decoration: InputDecoration(
-                              labelText: 'URL de Imagen (opcional)',
-                              hintText: 'https://...',
-                              prefixIcon: const Icon(Icons.image),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            keyboardType: TextInputType.url,
-                          ),
-                        ),
-                        const SizedBox(
-                            width: 12), // Espacio entre campo y botón
-
-                        // Botón de subida
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.primaryColor),
-                          ),
-                          child: IconButton(
-                            // Si se está subiendo, deshabilita el botón. Si no, llama a _pickImage
-                            onPressed: _isUploading ? null : _pickImage,
-                            icon: _isUploading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2))
-                                : const Icon(Icons.add_photo_alternate,
-                                    color: AppTheme.primaryColor),
-                            tooltip: 'Subir imagen de galería',
-                          ),
-                        ),
-                      ],
+                    // Imagen
+                    const Text(
+                      'Imagen del Servicio',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-
-// Muestra una vista previa pequeña si ya se eligió una foto
-                    if (_imageFile != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _imageFile!,
-                              height: 150,
-                              fit: BoxFit.cover,
-                            ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: _isUploading ? null : _pickImage,
+                      child: Container(
+                        height: 200,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _imagenUrlController.text.isNotEmpty ||
+                                    _imageBytes != null
+                                ? AppTheme.primaryColor
+                                : Colors.grey[400]!,
+                            width: 2,
                           ),
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (_imageBytes != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.memory(
+                                  _imageBytes!,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            else if (_imagenUrlController.text.isNotEmpty)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  _imagenUrlController.text,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(Icons.error,
+                                          size: 50, color: Colors.red),
+                                    );
+                                  },
+                                ),
+                              )
+                            else
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_photo_alternate_outlined,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Toca para seleccionar una imagen',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            if (_isUploading)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor:
+                                        AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
+                    ),
 
                     // Botón de crear
                     ElevatedButton(
-                      onPressed: _isLoading ? null : _submitForm,
+                      onPressed: (_isLoading || _isUploading) ? null : _submitForm,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -594,15 +624,16 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
       );
 
       if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
         setState(() {
-          _imageFile = File(pickedFile.path);
+          _imageBytes = bytes;
           _isUploading = true;
         });
 
         // Subir inmediatamente para obtener URL
         try {
           final url =
-              await _servicioService.uploadServicioImage(pickedFile.path);
+              await _servicioService.uploadServicioImage(pickedFile);
 
           if (mounted) {
             setState(() {
@@ -618,7 +649,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
           if (mounted) {
             setState(() {
               _isUploading = false;
-              _imageFile = null; // Revertir si falló
+              _imageBytes = null; // Revertir si falló
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Error al subir imagen: $e')),

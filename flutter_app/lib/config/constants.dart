@@ -1,5 +1,4 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 
 class AppConstants {
   // API Configuration
@@ -9,7 +8,7 @@ class AppConstants {
       return 'http://localhost:3000/api';
     }
     // En Android emulador, usar 10.0.2.2
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:3000/api';
     }
     // Para iOS y otras plataformas, usar localhost
@@ -104,7 +103,7 @@ class AppConstants {
     if (kIsWeb) return url;
 
     // Si estamos en Android (Emulador), cambiamos localhost por 10.0.2.2
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       return url
           .replaceFirst('localhost', '10.0.2.2')
           .replaceFirst('127.0.0.1', '10.0.2.2');

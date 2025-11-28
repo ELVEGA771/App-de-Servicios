@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:servicios_app/config/routes.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
-import 'package:servicios_app/features/profile/screens/addresses_screen.dart'; // Importar la pantalla creada
-import 'package:servicios_app/features/profile/screens/change_password_screen.dart'; // <--- Agregar importación
+import 'package:servicios_app/features/profile/screens/addresses_screen.dart';
+import 'package:servicios_app/features/profile/screens/change_password_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -34,19 +34,23 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                    backgroundImage: authProvider.profileImage != null
-                        ? NetworkImage(authProvider.profileImage!)
-                        : null,
-                    child: authProvider.profileImage == null
-                        ? Text(
-                            authProvider.displayName?[0].toUpperCase() ?? 'U',
-                            style: const TextStyle(
-                                fontSize: 40, color: AppTheme.primaryColor),
-                          )
-                        : null,
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        backgroundImage: authProvider.profileImage != null
+                            ? NetworkImage(authProvider.profileImage!)
+                            : null,
+                        child: authProvider.profileImage == null
+                            ? Text(
+                                authProvider.displayName?[0].toUpperCase() ?? 'U',
+                                style: const TextStyle(
+                                    fontSize: 40, color: AppTheme.primaryColor),
+                              )
+                            : null,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Text(

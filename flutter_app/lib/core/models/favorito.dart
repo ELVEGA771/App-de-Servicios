@@ -25,18 +25,26 @@ class Favorito {
 
   factory Favorito.fromJson(Map<String, dynamic> json) {
     return Favorito(
-      id: json['id'] as int,
-      idCliente: json['id_cliente'] as int,
-      idServicio: json['id_servicio'] as int,
+      id: json['id'] != null
+          ? int.parse(json['id'].toString())
+          : (json['id_servicio'] != null
+              ? int.parse(json['id_servicio'].toString())
+              : 0),
+      idCliente: int.parse(json['id_cliente'].toString()),
+      idServicio: int.parse(json['id_servicio'].toString()),
       fechaAgregado: DateTime.parse(json['fecha_agregado'] as String),
-      servicioNombre: json['servicio_nombre'] as String?,
-      servicioImagen: json['servicio_imagen'] as String?,
+      servicioNombre: json['servicio_nombre'] as String? ?? json['nombre'] as String?,
+      servicioImagen: json['servicio_imagen'] as String? ?? json['imagen_url'] as String?,
       servicioPrecio: json['servicio_precio'] != null
-          ? (json['servicio_precio'] as num).toDouble()
-          : null,
+          ? double.tryParse(json['servicio_precio'].toString())
+          : (json['precio_base'] != null
+              ? double.tryParse(json['precio_base'].toString())
+              : null),
       servicioCalificacion: json['servicio_calificacion'] != null
-          ? (json['servicio_calificacion'] as num).toDouble()
-          : null,
+          ? double.tryParse(json['servicio_calificacion'].toString())
+          : (json['calificacion_promedio'] != null
+              ? double.tryParse(json['calificacion_promedio'].toString())
+              : null),
       empresaNombre: json['empresa_nombre'] as String?,
     );
   }

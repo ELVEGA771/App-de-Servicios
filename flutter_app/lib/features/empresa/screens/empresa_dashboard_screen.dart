@@ -105,12 +105,20 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                                   decoration: BoxDecoration(
                                     gradient: AppTheme.primaryGradient,
                                     borderRadius: BorderRadius.circular(12),
+                                    image: _stats?['logo_url'] != null
+                                        ? DecorationImage(
+                                            image: NetworkImage(_stats!['logo_url']),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
                                   ),
-                                  child: const Icon(
-                                    Icons.business,
-                                    color: Colors.white,
-                                    size: 32,
-                                  ),
+                                  child: _stats?['logo_url'] == null
+                                      ? const Icon(
+                                          Icons.business,
+                                          color: Colors.white,
+                                          size: 32,
+                                        )
+                                      : null,
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
@@ -143,6 +151,13 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                                       ),
                                     ],
                                   ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: AppTheme.primaryColor),
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/profile/edit')
+                                        .then((_) => _loadStatistics());
+                                  },
                                 ),
                               ],
                             ),

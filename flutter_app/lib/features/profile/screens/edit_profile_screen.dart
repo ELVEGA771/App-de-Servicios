@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data'; // Para Uint8List
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // <--- Importante
 import 'package:provider/provider.dart';
@@ -18,7 +18,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _picker = ImagePicker();
   
   // Archivo de imagen seleccionado
-  File? _selectedImage;
+  XFile? _selectedImage;
+  Uint8List? _selectedImageBytes;
   bool _isUploadingImage = false;
 
   late TextEditingController _nombreController;
@@ -55,8 +56,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
+      final bytes = await image.readAsBytes();
       setState(() {
-        _selectedImage = File(image.path);
+        _selectedImage = image;
+        _selectedImageBytes = bytes;
       });
     }
   }
@@ -153,12 +156,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             child: CircleAvatar(
                               radius: 60,
                               backgroundColor: Colors.grey.shade200,
-                              backgroundImage: _selectedImage != null
-                                  ? FileImage(_selectedImage!) as ImageProvider
+                              backgroundImage: _selectedImageBytes != null
+                                  ? MemoryImage(_selectedImageBytes!) as ImageProvider
                                   : (currentPhotoUrl != null 
                                       ? NetworkImage(currentPhotoUrl) 
                                       : null),
-                              child: (_selectedImage == null && currentPhotoUrl == null)
+                              child: (_selectedImageBytes == null && currentPhotoUrl == null)
                                   ? const Icon(Icons.person, size: 60, color: Colors.grey)
                                   : null,
                             ),

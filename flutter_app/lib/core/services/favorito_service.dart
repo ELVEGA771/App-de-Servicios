@@ -13,12 +13,11 @@ class FavoritoService {
   }
 
   // Add favorito
-  Future<Favorito> addFavorito(int servicioId) async {
-    final response = await _dioClient.post(
+  Future<void> addFavorito(int servicioId) async {
+    await _dioClient.post(
       '/favoritos',
       data: {'id_servicio': servicioId},
     );
-    return Favorito.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 
   // Remove favorito

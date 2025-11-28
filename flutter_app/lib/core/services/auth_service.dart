@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:servicios_app/config/constants.dart';
 import 'package:servicios_app/core/api/dio_client.dart';
 import 'package:servicios_app/core/models/auth_response.dart';
-import 'dart:io'; // <--- Agrega este import arriba
-import 'package:dio/dio.dart'; // <--- Asegúrate de tener este import
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart';
+
 class AuthService {
   final DioClient _dioClient = DioClient();
 
@@ -54,15 +56,21 @@ class AuthService {
   }
 
   // Subir imagen al servidor
-  Future<String?> uploadImage(File file) async {
+  Future<String?> uploadImage(XFile file) async {
     try {
-      String fileName = file.path.split('/').last;
-      
-      // Preparamos el archivo para envío (FormData)
-      FormData formData = FormData.fromMap({
-        // CORRECCIÓN: Cambiamos "file" por "imagen" para coincidir con el backend
-        "imagen": await MultipartFile.fromFile(file.path, filename: fileName),
-      });
+      String fileName = file.name;
+      FormData formData;
+
+      if (kIsWeb) {
+        final bytes = await file.readAsBytes();
+        formData = FormData.fromMap({
+          "imagen": MultipartFile.fromBytes(bytes, filename: fileName),
+        });
+      } else {
+        formData = FormData.fromMap({
+          "imagen": await MultipartFile.fromFile(file.path, filename: fileName),
+        });
+      }
 
       // Hacemos el POST sobreescribiendo el Content-Type
       final response = await _dioClient.post(

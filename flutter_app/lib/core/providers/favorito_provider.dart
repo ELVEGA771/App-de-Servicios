@@ -37,9 +37,8 @@ class FavoritoProvider with ChangeNotifier {
   // Add favorito
   Future<bool> addFavorito(int servicioId) async {
     try {
-      final favorito = await _favoritoService.addFavorito(servicioId);
-      _favoritos.insert(0, favorito);
-      _favoritoIds.add(servicioId);
+      await _favoritoService.addFavorito(servicioId);
+      await loadFavoritos(); // Reload to get the new favorite with full details
       notifyListeners();
       return true;
     } catch (e) {
@@ -52,8 +51,7 @@ class FavoritoProvider with ChangeNotifier {
   Future<bool> removeFavorito(int servicioId) async {
     try {
       await _favoritoService.removeFavorito(servicioId);
-      _favoritos.removeWhere((f) => f.idServicio == servicioId);
-      _favoritoIds.remove(servicioId);
+      await loadFavoritos(); // Reload to ensure sync
       notifyListeners();
       return true;
     } catch (e) {

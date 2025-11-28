@@ -4,9 +4,13 @@ import 'package:servicios_app/core/models/usuario.dart';
 import 'package:servicios_app/core/models/cliente.dart';
 import 'package:servicios_app/core/models/empresa.dart';
 import 'package:servicios_app/core/services/auth_service.dart';
+import 'package:servicios_app/core/services/upload_service.dart';
+import 'package:image_picker/image_picker.dart';
+
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
+  final UploadService _uploadService = UploadService();
 
   Usuario? _usuario;
   Cliente? _cliente;
@@ -37,6 +41,27 @@ class AuthProvider with ChangeNotifier {
     if (isCliente && _usuario != null) return _usuario!.fotoPerfilUrl;
     if (_empresa != null) return _empresa!.logo;
     return null;
+  }
+
+  // Upload profile image
+  Future<bool> uploadProfileImage(XFile imageFile) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      final url = await _uploadService.uploadImage(imageFile);
+      if (url != null) {
+        await updateProfile(fotoUrl: url);
+        return true;
+      } else {
+        _setError('Error al subir la imagen');
+        return false;
+      }
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    } finally {
+      _setLoading(false);
+    }
   }
 
   // Update profile data
