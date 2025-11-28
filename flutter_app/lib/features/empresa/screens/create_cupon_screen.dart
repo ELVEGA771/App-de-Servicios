@@ -252,8 +252,9 @@ class _CreateCuponScreenState extends State<CreateCuponScreen> {
                   if (v == null || v.isEmpty) return 'Requerido';
                   final num = double.tryParse(v);
                   if (num == null || num <= 0) return 'Inválido';
-                  if (_tipoDescuento == 'porcentaje' && num > 100)
+                  if (_tipoDescuento == 'porcentaje' && num > 100) {
                     return 'Máximo 100%';
+                  }
                   return null;
                 },
               ),

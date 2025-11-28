@@ -5,14 +5,14 @@ class AppConstants {
   static String get API_BASE_URL {
     // En web, siempre usar localhost
     if (kIsWeb) {
-      return 'http://localhost:5001/api';
+      return 'http://localhost:3000/api';
     }
     // En Android emulador, usar 10.0.2.2
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5001/api';
+      return 'http://10.0.2.2:3000/api';
     }
     // Para iOS y otras plataformas, usar localhost
-    return 'http://localhost:5001/api';
+    return 'http://localhost:3000/api';
   }
 
   static const String API_TIMEOUT = '30000'; // 30 seconds

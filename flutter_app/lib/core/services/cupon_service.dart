@@ -16,7 +16,12 @@ class CuponService {
         'servicio_id': servicioId,
         'monto_compra': montoCompra,
       });
-      return response.data;
+      
+      if (response.data['success'] == true && response.data['data'] != null) {
+        return response.data['data'];
+      }
+      
+      return {'valido': false, 'mensaje': response.data['message'] ?? 'Cupón inválido'};
     } catch (e) {
       return {'valido': false, 'mensaje': 'Error de conexión o cupón inválido'};
     }

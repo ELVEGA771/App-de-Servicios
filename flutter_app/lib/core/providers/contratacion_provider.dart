@@ -145,6 +145,9 @@ class ContratacionProvider with ChangeNotifier {
     String? codigoCupon,
     String? metodoPago,
     String? notas,
+    double? precioSubtotal,
+    double? descuentoAplicado,
+    double? precioTotal,
   }) async {
     _setLoading(true);
     try {
@@ -156,6 +159,9 @@ class ContratacionProvider with ChangeNotifier {
         codigoCupon: codigoCupon,
         metodoPago: metodoPago,
         notas: notas,
+        precioSubtotal: precioSubtotal,
+        descuentoAplicado: descuentoAplicado,
+        precioTotal: precioTotal,
       );
       _contrataciones.insert(0, contratacion);
       _safeNotify();

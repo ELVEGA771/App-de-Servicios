@@ -105,47 +105,60 @@ class Contratacion {
    * Create new contratacion (using stored procedure)
    */
   static async create(contratacionData) {
-    // Call stored procedure
     const query = `
       CALL sp_crear_contratacion(
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
         @out_id_contratacion, @out_mensaje
       )
     `;
+
     const params = [
       contratacionData.id_cliente,
       contratacionData.id_servicio,
       contratacionData.id_sucursal,
-      contratacionData.id_direccion_entrega,
+      contratacionData.id_direccion_entrega || null,
       contratacionData.id_cupon || null,
-      contratacionData.fecha_programada || null,
+      contratacionData.fecha_programada,
       contratacionData.precio_subtotal,
-      contratacionData.descuento_aplicado || 0,
+      contratacionData.descuento_aplicado,
       contratacionData.precio_total,
       contratacionData.porcentaje_comision || null, // Nuevo campo
       contratacionData.notas_cliente || null
     ];
 
-    await executeQuery(query, params);
+    try {
+      await executeQuery(query, params);
+      
+      // Obtener resultados del procedimiento
+      const output = await executeQuery('SELECT @out_id_contratacion as id, @out_mensaje as mensaje');
+      
+      if (!output[0].id) {
+        throw new Error(output[0].mensaje || 'Error al crear la contratación');
+      }
 
-    // Get output parameters
-    const resultQuery = 'SELECT @out_id_contratacion as id_contratacion, @out_mensaje as mensaje';
-    const results = await executeQuery(resultQuery);
-
-    if (!results[0].id_contratacion) {
-      throw new Error(results[0].mensaje || 'Error al crear contratación');
+      return output[0].id;
+    } catch (error) {
+      throw error;
     }
+  }
 
-    return results[0].id_contratacion;
+  static async updateFinancials(id, comisionPlataforma, gananciaEmpresa) {
+    const query = `
+      UPDATE contratacion 
+      SET comision_plataforma = ?, 
+          ganancia_empresa = ? 
+      WHERE id_contratacion = ?
+    `;
+    await executeQuery(query, [comisionPlataforma, gananciaEmpresa, id]);
   }
 
   /**
    * Update contratacion estado (using stored procedure)
    */
-  static async updateEstado(id, estado, notasEmpresa = null) {
+  static async updateEstado(id, estado, notas = null) {
     // Call stored procedure
     const query = 'CALL sp_actualizar_estado_contratacion(?, ?, ?, @out_mensaje)';
-    await executeQuery(query, [id, estado, notasEmpresa]);
+    await executeQuery(query, [id, estado, notas]);
 
     // Get output message
     const resultQuery = 'SELECT @out_mensaje as mensaje';

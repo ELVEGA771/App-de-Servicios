@@ -213,6 +213,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       codigoCupon: _appliedCouponCode, // Enviamos el cupón validado
       notas: _notasController.text.isEmpty ? null : _notasController.text,
       metodoPago: _selectedPaymentMethod,
+      precioSubtotal: _servicio!.precio,
+      descuentoAplicado: _discountAmount,
+      precioTotal: _finalPrice,
     );
 
     if (mounted) {
@@ -249,11 +252,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading)
+    if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_servicio == null)
+    }
+    if (_servicio == null) {
       return const Scaffold(
           body: Center(child: Text('Error al cargar servicio')));
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Confirmar Contratación')),
@@ -424,23 +429,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 24),
 
             // --- CUPÓN DE DESCUENTO (NUEVO) ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Cupón de Descuento',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.cuponesDisponibles);
-                  },
-                  icon: const Icon(Icons.local_offer, size: 16),
-                  label: const Text('Ver disponibles'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.primaryColor,
-                  ),
-                ),
-              ],
-            ),
+            const Text('Cupón de Descuento',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Row(
               children: [

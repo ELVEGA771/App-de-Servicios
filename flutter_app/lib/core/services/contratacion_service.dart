@@ -83,21 +83,25 @@ class ContratacionService {
     String? codigoCupon,
     String? metodoPago,
     String? notas,
+    double? precioSubtotal,
+    double? descuentoAplicado,
+    double? precioTotal,
   }) async {
-    final response = await _dioClient.post(
-      '/contrataciones',
-      data: {
-        'id_servicio': servicioId,
-        'id_sucursal': sucursalId,
-        if (direccionId != null) 'id_direccion_entrega': direccionId,
-        if (fechaProgramada != null)
-          'fecha_programada': fechaProgramada.toIso8601String(),
-        if (codigoCupon != null) 'codigo_cupon': codigoCupon,
-        if (metodoPago != null) 'metodo_pago': metodoPago,
-        if (notas != null) 'notas_cliente': notas,
-      },
-    );
-    return Contratacion.fromJson(response.data['data'] as Map<String, dynamic>);
+    final body = {
+      'id_servicio': servicioId,
+      'id_sucursal': sucursalId,
+      'id_direccion_entrega': direccionId,
+      'fecha_programada': fechaProgramada?.toIso8601String(),
+      'codigo_cupon': codigoCupon,
+      'metodo_pago': metodoPago,
+      'notas': notas,
+      'precio_subtotal': precioSubtotal,
+      'descuento_aplicado': descuentoAplicado,
+      'precio_total': precioTotal,
+    };
+
+    final response = await _dioClient.post('/contrataciones', data: body);
+    return Contratacion.fromJson(response.data['data'] ?? {});
   }
 
   // Update contratacion status

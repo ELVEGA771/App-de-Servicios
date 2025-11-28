@@ -111,39 +111,43 @@ const createContratacion = async (req, res, next) => {
     const precio_base = servicio.precio_base;
     let precio_subtotal = precio_base;
     let descuento_aplicado = 0;
-    let id_cupon = null;
+    let cuponId = null;
 
-    // Validate and apply coupon if provided
     if (codigo_cupon) {
-      const validacion = await Cupon.validate(codigo_cupon, id_servicio, precio_subtotal);
-
-      if (!validacion.valido) {
-        return sendError(res, ERROR_CODES.INVALID_COUPON, validacion.mensaje, HTTP_STATUS.BAD_REQUEST);
-      }
-
-      descuento_aplicado = validacion.descuento;
       const cupon = await Cupon.findByCodigo(codigo_cupon);
-      id_cupon = cupon.id_cupon;
+      if (cupon) {
+        // Validate coupon
+        const isValid = await Cupon.validate(codigo_cupon, id_servicio, precio_subtotal);
+        if (isValid.valido) {
+          cuponId = cupon.id_cupon;
+          descuento_aplicado = isValid.descuento;
+        }
+      }
     }
 
     const precio_total = precio_subtotal - descuento_aplicado;
 
-    // Create contratacion
-    const contratacionData = {
+    // Calcular comisiones (15% plataforma, 85% empresa)
+    const PORCENTAJE_COMISION = 0.15;
+    const comision_plataforma = precio_total * PORCENTAJE_COMISION;
+    const ganancia_empresa = precio_total * (1 - PORCENTAJE_COMISION);
+
+    const contratacionId = await Contratacion.create({
       id_cliente: cliente.id_cliente,
       id_servicio,
       id_sucursal,
-      id_direccion_entrega,
-      id_cupon,
-      fecha_programada: fecha_programada || null,
+      id_direccion_entrega: id_direccion_entrega || null,
+      id_cupon: cuponId,
+      fecha_programada: fecha_programada,
       precio_subtotal,
       descuento_aplicado,
       precio_total,
-      estado: CONTRACT_STATUS.PENDING,
+      porcentaje_comision: 15.00,
       notas_cliente: notas_cliente || null
-    };
+    });
 
-    const contratacionId = await Contratacion.create(contratacionData);
+    // Actualizar los valores financieros calculados
+    await Contratacion.updateFinancials(contratacionId, comision_plataforma, ganancia_empresa);
 
     // Create Payment Record
     if (metodo_pago) {
