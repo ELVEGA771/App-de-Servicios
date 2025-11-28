@@ -1,11 +1,11 @@
 class Calificacion {
-  final int id;
-  final int idContratacion;
-  final int idCliente;
-  final int idEmpresa;
+  final int? id;
+  final int? idContratacion;
+  final int? idCliente;
+  final int? idEmpresa;
   final int calificacion;
   final String? comentario;
-  final DateTime fechaCalificacion;
+  final DateTime? fechaCalificacion;
 
   // Datos adicionales
   final String? clienteNombre;
@@ -13,13 +13,13 @@ class Calificacion {
   final String? servicioNombre;
 
   Calificacion({
-    required this.id,
-    required this.idContratacion,
-    required this.idCliente,
-    required this.idEmpresa,
+    this.id,
+    this.idContratacion,
+    this.idCliente,
+    this.idEmpresa,
     required this.calificacion,
     this.comentario,
-    required this.fechaCalificacion,
+    this.fechaCalificacion,
     this.clienteNombre,
     this.clienteFoto,
     this.servicioNombre,
@@ -27,15 +27,17 @@ class Calificacion {
 
   factory Calificacion.fromJson(Map<String, dynamic> json) {
     return Calificacion(
-      id: json['id'] as int,
-      idContratacion: json['id_contratacion'] as int,
-      idCliente: json['id_cliente'] as int,
-      idEmpresa: json['id_empresa'] as int,
-      calificacion: json['calificacion'] as int,
+      id: json['id_calificacion'] as int? ?? json['id'] as int?,
+      idContratacion: json['id_contratacion'] as int?,
+      idCliente: json['id_cliente'] as int?,
+      idEmpresa: json['id_empresa'] as int?,
+      calificacion: json['calificacion'] as int? ?? 0,
       comentario: json['comentario'] as String?,
-      fechaCalificacion: DateTime.parse(json['fecha_calificacion'] as String),
+      fechaCalificacion: json['fecha_calificacion'] != null 
+          ? DateTime.parse(json['fecha_calificacion'] as String)
+          : null,
       clienteNombre: json['cliente_nombre'] as String?,
-      clienteFoto: json['cliente_foto'] as String?,
+      clienteFoto: json['cliente_foto'] as String? ?? json['foto_perfil_url'] as String?,
       servicioNombre: json['servicio_nombre'] as String?,
     );
   }
@@ -48,7 +50,7 @@ class Calificacion {
       'id_empresa': idEmpresa,
       'calificacion': calificacion,
       'comentario': comentario,
-      'fecha_calificacion': fechaCalificacion.toIso8601String(),
+      'fecha_calificacion': fechaCalificacion?.toIso8601String(),
       'cliente_nombre': clienteNombre,
       'cliente_foto': clienteFoto,
       'servicio_nombre': servicioNombre,

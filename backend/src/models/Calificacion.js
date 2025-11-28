@@ -84,27 +84,20 @@ class Calificacion {
    */
   static async create(calificacionData) {
     // Call stored procedure
+    // sp_crear_calificacion(p_id_contratacion, p_calificacion, p_comentario, p_id_usuario)
     const query = `
-      CALL sp_crear_calificacion(?, ?, ?, ?, @out_id_calificacion, @out_mensaje)
+      CALL sp_crear_calificacion(?, ?, ?, ?)
     `;
     const params = [
       calificacionData.id_contratacion,
       calificacionData.calificacion,
-      calificacionData.comentario || null,
-      calificacionData.tipo
+      calificacionData.comentario || null
     ];
 
     await executeQuery(query, params);
-
-    // Get output parameters
-    const resultQuery = 'SELECT @out_id_calificacion as id_calificacion, @out_mensaje as mensaje';
-    const results = await executeQuery(resultQuery);
-
-    if (!results[0].id_calificacion) {
-      throw new Error(results[0].mensaje || 'Error al crear calificación');
-    }
-
-    return results[0].id_calificacion;
+    
+    // Since the new SP doesn't return the ID via OUT param, we return a success indicator
+    return true;
   }
 
   /**
@@ -114,7 +107,7 @@ class Calificacion {
     const query = `
       SELECT COUNT(*) as count
       FROM calificacion
-      WHERE id_contratacion = ? AND tipo = ?
+      WHERE id_contratacion = ?
     `;
     const results = await executeQuery(query, [idContratacion, tipo]);
     return results[0].count > 0;
@@ -129,10 +122,35 @@ class Calificacion {
       FROM calificacion cal
       INNER JOIN contratacion con ON cal.id_contratacion = con.id_contratacion
       INNER JOIN servicio s ON con.id_servicio = s.id_servicio
-      WHERE s.id_empresa = ? AND cal.tipo = 'cliente_a_empresa'
+      WHERE s.id_empresa = ?'
     `;
     const results = await executeQuery(query, [idEmpresa]);
     return parseFloat(results[0].promedio) || 0;
+  }
+
+  /**
+   * Get pending ratings for a user (cliente)
+   */
+  static async getPendingByUsuario(idUsuario) {
+    const query = `
+      SELECT
+        c.id_contratacion,
+        c.fecha_completada,
+        s.nombre as servicio_nombre,
+        e.razon_social as empresa_nombre,
+        s.imagen_url as imagen_principal
+      FROM contratacion c
+      INNER JOIN cliente cli ON c.id_cliente = cli.id_cliente
+      INNER JOIN servicio s ON c.id_servicio = s.id_servicio
+      INNER JOIN empresa e ON s.id_empresa = e.id_empresa
+      LEFT JOIN calificacion cal ON c.id_contratacion = cal.id_contratacion AND cal.tipo = 'cliente_a_empresa'
+      WHERE cli.id_usuario = ?
+        AND c.estado = 'completado'
+        AND cal.id_calificacion IS NULL
+      ORDER BY c.fecha_completada DESC
+    `;
+    const results = await executeQuery(query, [idUsuario]);
+    return results;
   }
 }
 

@@ -19,9 +19,32 @@ const createCalificacion = async (req, res, next) => {
     if (alreadyRated) {
       return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Already rated', HTTP_STATUS.BAD_REQUEST);
     }
-    const id = await Calificacion.create({ id_contratacion, calificacion, comentario, tipo });
-    sendSuccess(res, { id_calificacion: id }, 'Rating created', 201);
+    
+    await Calificacion.create({ 
+      id_contratacion, 
+      calificacion, 
+      comentario, 
+      tipo,
+      id_usuario: req.user.id_usuario 
+    });
+    
+    sendSuccess(res, { success: true }, 'Rating created', 201);
   } catch (error) { next(error); }
+};
+
+const getPendingCalificaciones = async (req, res, next) => {
+  try {
+    if (req.user.tipo_usuario !== 'cliente') {
+      return sendSuccess(res, []); // Only clients rate companies for now
+    }
+    console.log(`Checking pending ratings for user ${req.user.id_usuario}`);
+    const pending = await Calificacion.getPendingByUsuario(req.user.id_usuario);
+    console.log(`Found ${pending.length} pending ratings`);
+    sendSuccess(res, pending);
+  } catch (error) { 
+    console.error('Error getting pending ratings:', error);
+    next(error); 
+  }
 };
 
 const getCalificacionesByServicio = async (req, res, next) => {
@@ -33,4 +56,4 @@ const getCalificacionesByServicio = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { createCalificacion, getCalificacionesByServicio };
+module.exports = { createCalificacion, getCalificacionesByServicio, getPendingCalificaciones };

@@ -13,12 +13,12 @@ class CalificacionService {
   }
 
   // Create calificacion
-  Future<Calificacion> createCalificacion({
+  Future<void> createCalificacion({
     required int contratacionId,
     required int calificacion,
     String? comentario,
   }) async {
-    final response = await _dioClient.post(
+    await _dioClient.post(
       '/calificaciones',
       data: {
         'id_contratacion': contratacionId,
@@ -26,7 +26,6 @@ class CalificacionService {
         if (comentario != null) 'comentario': comentario,
       },
     );
-    return Calificacion.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 
   // Check if contratacion can be rated
@@ -36,6 +35,41 @@ class CalificacionService {
       return response.data['data']['can_rate'] as bool;
     } catch (e) {
       return false;
+    }
+  }
+
+  Future<List<dynamic>> getPendingRatings() async {
+    try {
+      final response = await _dioClient.get('/calificaciones/pendientes');
+      print('DEBUG: getPendingRatings raw response: ${response.data}');
+
+      if (response.data == null) {
+        print('DEBUG: Response data is null');
+        return [];
+      }
+
+      // Caso 1: Respuesta estándar { success: true, data: [...] }
+      if (response.data is Map<String, dynamic>) {
+        if (response.data.containsKey('data')) {
+          final data = response.data['data'];
+          if (data is List) {
+            return data;
+          } else if (data == null) {
+            return [];
+          }
+        }
+      }
+
+      // Caso 2: Respuesta directa es una lista [...]
+      if (response.data is List) {
+        return response.data;
+      }
+
+      print('DEBUG: Unexpected response format');
+      return [];
+    } catch (e) {
+      print('DEBUG: Exception in getPendingRatings service: $e');
+      rethrow;
     }
   }
 }

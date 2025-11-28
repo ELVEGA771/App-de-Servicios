@@ -40,6 +40,20 @@ router.get('/servicio/:id', asyncHandler(calificacionController.getCalificacione
 
 /**
  * @swagger
+ * /api/calificaciones/pendientes:
+ *   get:
+ *     summary: Get pending ratings for the current user
+ *     tags: [Calificaciones]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of pending ratings
+ */
+router.get('/pendientes', authMiddleware, asyncHandler(calificacionController.getPendingCalificaciones));
+
+/**
+ * @swagger
  * /api/calificaciones:
  *   post:
  *     summary: Create a rating (requires completed contratacion)

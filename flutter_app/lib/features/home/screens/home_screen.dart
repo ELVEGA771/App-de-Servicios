@@ -15,6 +15,8 @@ import 'package:servicios_app/features/profile/screens/profile_screen.dart';
 import 'package:servicios_app/features/profile/screens/address_list_screen.dart';
 import 'package:servicios_app/features/favoritos/screens/favoritos_screen.dart';
 import 'package:servicios_app/core/providers/favorito_provider.dart';
+import 'package:servicios_app/core/providers/calificacion_provider.dart';
+import 'package:servicios_app/features/calificacion/widgets/calificacion_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,6 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
         Provider.of<DireccionProvider>(context, listen: false);
     final favoritoProvider =
         Provider.of<FavoritoProvider>(context, listen: false);
+    final calificacionProvider =
+        Provider.of<CalificacionProvider>(context, listen: false);
 
     await Future.wait([
       servicioProvider.loadCategorias(),
@@ -54,7 +58,19 @@ class _HomeScreenState extends State<HomeScreen> {
       notificacionProvider.refreshUnreadCount(),
       direccionProvider.loadDirecciones(),
       favoritoProvider.loadFavoritos(),
+      calificacionProvider.checkPendingRatings(),
     ]);
+
+    if (mounted && calificacionProvider.pendingRatings.isNotEmpty) {
+      for (var rating in calificacionProvider.pendingRatings) {
+        if (!mounted) break;
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => CalificacionDialog(contratacion: rating),
+        );
+      }
+    }
   }
 
   @override
