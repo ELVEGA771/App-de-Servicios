@@ -50,13 +50,19 @@ class Servicio {
     print('DEBUG Servicio.fromJson: json = $json');
 
     List<String>? parseImagenes(dynamic imagenes) {
-      if (imagenes == null) return null;
+      if (imagenes == null) {
+        print('DEBUG Servicio.fromJson: imagenes es nulo');
+        return null;
+      }
       if (imagenes is List) {
+        print('DEBUG Servicio.fromJson: imagenes como List = $imagenes');
         return imagenes.map((e) => e.toString()).toList();
       }
       if (imagenes is String) {
+        print('DEBUG Servicio.fromJson: imagenes como String = $imagenes');
         return imagenes.split(',').map((e) => e.trim()).toList();
       }
+      print('DEBUG Servicio.fromJson: imagenes tipo desconocido = ${imagenes.runtimeType}');
       return null;
     }
 

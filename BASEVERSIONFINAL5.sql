@@ -748,12 +748,13 @@ DROP TABLE IF EXISTS `vista_servicios_completos`;
 /*!50001 DROP VIEW IF EXISTS `vista_servicios_completos`*/;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
-/*!50001 CREATE VIEW `vista_servicios_completos` AS SELECT 
+/*!50001 CREATE VIEW `vista_servicios_completos` AS SELECT
  1 AS `id_servicio`,
  1 AS `servicio_nombre`,
  1 AS `descripcion`,
  1 AS `precio_base`,
  1 AS `duracion_estimada`,
+ 1 AS `imagen_url`,
  1 AS `servicio_estado`,
  1 AS `categoria_nombre`,
  1 AS `empresa_nombre`,
@@ -1822,7 +1823,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `vista_servicios_completos` AS select `s`.`id_servicio` AS `id_servicio`,`s`.`nombre` AS `servicio_nombre`,`s`.`descripcion` AS `descripcion`,`s`.`precio_base` AS `precio_base`,`s`.`duracion_estimada` AS `duracion_estimada`,`s`.`estado` AS `servicio_estado`,`c`.`nombre` AS `categoria_nombre`,`e`.`razon_social` AS `empresa_nombre`,`e`.`calificacion_promedio` AS `empresa_calificacion`,`u`.`email` AS `empresa_email`,`u`.`telefono` AS `empresa_telefono` from (((`servicio` `s` join `categoria_servicio` `c` on((`s`.`id_categoria` = `c`.`id_categoria`))) join `empresa` `e` on((`s`.`id_empresa` = `e`.`id_empresa`))) join `usuario` `u` on((`e`.`id_usuario` = `u`.`id_usuario`))) where (`s`.`estado` = 'disponible') */;
+/*!50001 VIEW `vista_servicios_completos` AS select `s`.`id_servicio` AS `id_servicio`,`s`.`nombre` AS `servicio_nombre`,`s`.`descripcion` AS `descripcion`,`s`.`precio_base` AS `precio_base`,`s`.`duracion_estimada` AS `duracion_estimada`,`s`.`imagen_url` AS `imagen_url`,`s`.`estado` AS `servicio_estado`,`c`.`nombre` AS `categoria_nombre`,`e`.`razon_social` AS `empresa_nombre`,`e`.`calificacion_promedio` AS `empresa_calificacion`,`u`.`email` AS `empresa_email`,`u`.`telefono` AS `empresa_telefono` from (((`servicio` `s` join `categoria_servicio` `c` on((`s`.`id_categoria` = `c`.`id_categoria`))) join `empresa` `e` on((`s`.`id_empresa` = `e`.`id_empresa`))) join `usuario` `u` on((`e`.`id_usuario` = `u`.`id_usuario`))) where (`s`.`estado` = 'disponible') */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
