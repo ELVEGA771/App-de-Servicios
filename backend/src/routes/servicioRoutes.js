@@ -154,6 +154,111 @@ router.get('/empresa/:id',
 
 /**
  * @swagger
+ * /api/servicios/{id}/sucursales/{idSucursal}/disponibilidad:
+ *   patch:
+ *     summary: Toggle service availability in sucursal
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *       - in: path
+ *         name: idSucursal
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               disponible:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Service availability updated
+ */
+router.patch('/:id/sucursales/:idSucursal/disponibilidad',
+  authMiddleware,
+  roleMiddleware(USER_TYPES.COMPANY),
+  asyncHandler(servicioController.toggleDisponibilidadSucursal)
+);
+
+/**
+ * @swagger
+ * /api/servicios/{id}/sucursales/{idSucursal}:
+ *   delete:
+ *     summary: Remove service from sucursal
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *       - in: path
+ *         name: idSucursal
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Service removed from sucursal
+ */
+router.delete('/:id/sucursales/:idSucursal',
+  authMiddleware,
+  roleMiddleware(USER_TYPES.COMPANY),
+  asyncHandler(servicioController.removeServicioFromSucursal)
+);
+
+/**
+ * @swagger
+ * /api/servicios/{id}/sucursales:
+ *   post:
+ *     summary: Add service to sucursal
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Service added to sucursal
+ */
+router.post('/:id/sucursales',
+  authMiddleware,
+  roleMiddleware(USER_TYPES.COMPANY),
+  addToSucursalValidator,
+  validateRequest,
+  asyncHandler(servicioController.addServicioToSucursal)
+);
+
+/**
+ * @swagger
+ * /api/servicios/{id}/sucursales:
+ *   put:
+ *     summary: Update service sucursales
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Service sucursales updated
+ */
+router.put('/:id/sucursales',
+  authMiddleware,
+  roleMiddleware(USER_TYPES.COMPANY),
+  asyncHandler(servicioController.updateServicioSucursales)
+);
+
+/**
+ * @swagger
  * /api/servicios/{id}:
  *   get:
  *     summary: Get service by ID
@@ -219,30 +324,6 @@ router.delete('/:id',
   servicioIdValidator,
   validateRequest,
   asyncHandler(servicioController.deleteServicio)
-);
-
-/**
- * @swagger
- * /api/servicios/{id}/sucursales:
- *   post:
- *     summary: Add service to sucursal
- *     tags: [Servicios]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *     responses:
- *       200:
- *         description: Service added to sucursal
- */
-router.post('/:id/sucursales',
-  authMiddleware,
-  roleMiddleware(USER_TYPES.COMPANY),
-  addToSucursalValidator,
-  validateRequest,
-  asyncHandler(servicioController.addServicioToSucursal)
 );
 
 module.exports = router;

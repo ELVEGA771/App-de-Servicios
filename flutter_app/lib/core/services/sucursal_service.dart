@@ -155,4 +155,13 @@ class SucursalService {
     final response = await _dioClient.get('/sucursales/$id/servicios');
     return response.data['data'] as List;
   }
+
+  // Get sucursales by empresa (authenticated)
+  Future<List<Sucursal>> getSucursalesByEmpresa(int empresaId) async {
+    // Use the authenticated endpoint that returns sucursales for the logged-in empresa
+    final response = await _dioClient.get('/sucursales', queryParameters: {'limit': 100});
+    return (response.data['data'] as List)
+        .map((e) => Sucursal.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
 }

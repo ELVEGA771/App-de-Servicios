@@ -124,6 +124,26 @@ class Servicio {
     `;
     const results = await executeQuery(query, [idEmpresa, limit, offset]);
 
+    // Get sucursales for each servicio
+    for (let servicio of results) {
+      const sucursalesQuery = `
+        SELECT
+          ss.id_sucursal,
+          ss.disponible,
+          s.nombre_sucursal,
+          s.telefono,
+          s.estado,
+          d.ciudad,
+          d.calle_principal
+        FROM servicio_sucursal ss
+        INNER JOIN sucursal s ON ss.id_sucursal = s.id_sucursal
+        INNER JOIN direccion d ON s.id_direccion = d.id_direccion
+        WHERE ss.id_servicio = ?
+      `;
+      const sucursales = await executeQuery(sucursalesQuery, [servicio.id_servicio]);
+      servicio.sucursales = sucursales;
+    }
+
     // Count total
     const countQuery = 'SELECT COUNT(*) as total FROM servicio WHERE id_empresa = ?';
     const countResult = await executeQuery(countQuery, [idEmpresa]);
@@ -248,6 +268,19 @@ class Servicio {
   static async removeFromSucursal(idServicio, idSucursal) {
     const query = 'DELETE FROM servicio_sucursal WHERE id_servicio = ? AND id_sucursal = ?';
     await executeQuery(query, [idServicio, idSucursal]);
+    return true;
+  }
+
+  /**
+   * Toggle servicio disponibilidad in sucursal
+   */
+  static async toggleDisponibilidad(idServicio, idSucursal, disponible) {
+    const query = `
+      UPDATE servicio_sucursal
+      SET disponible = ?
+      WHERE id_servicio = ? AND id_sucursal = ?
+    `;
+    await executeQuery(query, [disponible ? 1 : 0, idServicio, idSucursal]);
     return true;
   }
 }

@@ -23,7 +23,9 @@
       "Bash(/dev/tcp/localhost/57362)",
       "Bash(python3:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(node -c:*)"
     ],
     "deny": [],
     "ask": []

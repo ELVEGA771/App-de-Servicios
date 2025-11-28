@@ -270,6 +270,114 @@ const searchServicios = async (req, res, next) => {
   }
 };
 
+/**
+ * Update servicio sucursales
+ * PUT /api/servicios/:id/sucursales
+ */
+const updateServicioSucursales = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { sucursales } = req.body;
+
+    if (req.user.tipo_usuario !== USER_TYPES.COMPANY) {
+      return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'Only empresas can update service locations', HTTP_STATUS.FORBIDDEN);
+    }
+
+    const empresa = await Empresa.findByUserId(req.user.id_usuario);
+    if (!empresa) {
+      return sendError(res, ERROR_CODES.NOT_FOUND, 'Empresa not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Verify servicio ownership
+    const { executeQuery } = require('../config/database');
+    const [rawServicio] = await executeQuery('SELECT id_empresa FROM servicio WHERE id_servicio = ?', [id]);
+
+    if (!rawServicio || rawServicio.id_empresa !== empresa.id_empresa) {
+      return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'You can only manage your own services', HTTP_STATUS.FORBIDDEN);
+    }
+
+    // Delete all existing associations
+    await executeQuery('DELETE FROM servicio_sucursal WHERE id_servicio = ?', [id]);
+
+    // Add new associations
+    if (sucursales && sucursales.length > 0) {
+      for (const idSucursal of sucursales) {
+        await Servicio.addToSucursal(id, idSucursal, null);
+      }
+    }
+
+    sendSuccess(res, null, 'Service locations updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Remove servicio from sucursal
+ * DELETE /api/servicios/:id/sucursales/:idSucursal
+ */
+const removeServicioFromSucursal = async (req, res, next) => {
+  try {
+    const { id, idSucursal } = req.params;
+
+    if (req.user.tipo_usuario !== USER_TYPES.COMPANY) {
+      return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'Only empresas can manage service locations', HTTP_STATUS.FORBIDDEN);
+    }
+
+    const empresa = await Empresa.findByUserId(req.user.id_usuario);
+    if (!empresa) {
+      return sendError(res, ERROR_CODES.NOT_FOUND, 'Empresa not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Verify servicio ownership
+    const { executeQuery } = require('../config/database');
+    const [rawServicio] = await executeQuery('SELECT id_empresa FROM servicio WHERE id_servicio = ?', [id]);
+
+    if (!rawServicio || rawServicio.id_empresa !== empresa.id_empresa) {
+      return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'You can only manage your own services', HTTP_STATUS.FORBIDDEN);
+    }
+
+    await Servicio.removeFromSucursal(id, idSucursal);
+    sendSuccess(res, null, 'Service removed from sucursal successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Toggle servicio disponibilidad in sucursal
+ * PATCH /api/servicios/:id/sucursales/:idSucursal/disponibilidad
+ */
+const toggleDisponibilidadSucursal = async (req, res, next) => {
+  try {
+    const { id, idSucursal } = req.params;
+    const { disponible } = req.body;
+
+    if (req.user.tipo_usuario !== USER_TYPES.COMPANY) {
+      return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'Only empresas can manage service availability', HTTP_STATUS.FORBIDDEN);
+    }
+
+    const empresa = await Empresa.findByUserId(req.user.id_usuario);
+    if (!empresa) {
+      return sendError(res, ERROR_CODES.NOT_FOUND, 'Empresa not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Verify servicio ownership
+    const { executeQuery } = require('../config/database');
+    const [rawServicio] = await executeQuery('SELECT id_empresa FROM servicio WHERE id_servicio = ?', [id]);
+
+    if (!rawServicio || rawServicio.id_empresa !== empresa.id_empresa) {
+      return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'You can only manage your own services', HTTP_STATUS.FORBIDDEN);
+    }
+
+    await Servicio.toggleDisponibilidad(id, idSucursal, disponible);
+    logger.info(`Service ${id} availability toggled in sucursal ${idSucursal}: ${disponible}`);
+    sendSuccess(res, { disponible }, 'Service availability updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllServicios,
   getServicioById,
@@ -279,5 +387,8 @@ module.exports = {
   updateServicio,
   deleteServicio,
   addServicioToSucursal,
-  searchServicios
+  searchServicios,
+  updateServicioSucursales,
+  removeServicioFromSucursal,
+  toggleDisponibilidadSucursal
 };

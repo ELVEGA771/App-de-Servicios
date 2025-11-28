@@ -243,4 +243,39 @@ class ServicioService {
       },
     );
   }
+
+  // Remove servicio from sucursal
+  Future<void> removeServicioFromSucursal({
+    required int servicioId,
+    required int sucursalId,
+  }) async {
+    await _dioClient.delete('/servicios/$servicioId/sucursales/$sucursalId');
+  }
+
+  // Update sucursales for a servicio
+  Future<void> updateServicioSucursales({
+    required int servicioId,
+    required List<int> sucursalIds,
+  }) async {
+    await _dioClient.put(
+      '/servicios/$servicioId/sucursales',
+      data: {
+        'sucursales': sucursalIds,
+      },
+    );
+  }
+
+  // Toggle servicio disponibilidad in sucursal
+  Future<void> toggleDisponibilidadSucursal({
+    required int servicioId,
+    required int sucursalId,
+    required bool disponible,
+  }) async {
+    await _dioClient.patch(
+      '/servicios/$servicioId/sucursales/$sucursalId/disponibilidad',
+      data: {
+        'disponible': disponible,
+      },
+    );
+  }
 }
