@@ -254,7 +254,6 @@ class Sucursal {
       SELECT
         s.*,
         ss.disponible,
-        ss.precio_sucursal,
         c.nombre as categoria_nombre
       FROM servicio_sucursal ss
       INNER JOIN servicio s ON ss.id_servicio = s.id_servicio

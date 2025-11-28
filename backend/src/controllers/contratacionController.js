@@ -98,7 +98,7 @@ const createContratacion = async (req, res, next) => {
 
     // Check if sucursal offers this service
     const [servicioSucursal] = await executeQuery(
-      'SELECT precio_sucursal, disponible FROM servicio_sucursal WHERE id_servicio = ? AND id_sucursal = ?',
+      'SELECT disponible FROM servicio_sucursal WHERE id_servicio = ? AND id_sucursal = ?',
       [id_servicio, id_sucursal]
     );
 
@@ -108,7 +108,7 @@ const createContratacion = async (req, res, next) => {
     // }
 
     // Calculate price
-    const precio_base = (servicioSucursal && servicioSucursal.precio_sucursal) ? servicioSucursal.precio_sucursal : servicio.precio_base;
+    const precio_base = servicio.precio_base;
     let precio_subtotal = precio_base;
     let descuento_aplicado = 0;
     let id_cupon = null;

@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:servicios_app/core/models/contratacion.dart';
 import 'package:servicios_app/core/models/api_response.dart';
 import 'package:servicios_app/core/services/contratacion_service.dart';
@@ -27,6 +29,26 @@ class ContratacionProvider with ChangeNotifier {
   String? get error => _error;
   bool get hasMore => _pagination?.hasNextPage ?? false;
   List<HistorialContratacion> get historial => _historial;
+
+  // Helper: notify safely (immediately when safe, otherwise post-frame)
+  void _safeNotify() {
+    if (!hasListeners) return;
+    final binding = WidgetsBinding.instance;
+    if (binding == null) {
+      notifyListeners();
+      return;
+    }
+
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.idle ||
+        phase == SchedulerPhase.postFrameCallbacks) {
+      notifyListeners();
+    } else {
+      binding.addPostFrameCallback((_) {
+        if (hasListeners) notifyListeners();
+      });
+    }
+  }
 
   // Filter contrataciones by status
   List<Contratacion> getContratacionesByEstado(String estado) {
@@ -136,7 +158,7 @@ class ContratacionProvider with ChangeNotifier {
         notas: notas,
       );
       _contrataciones.insert(0, contratacion);
-      notifyListeners();
+      _safeNotify();
       return contratacion;
     } catch (e) {
       _setError(e.toString());
@@ -171,7 +193,7 @@ class ContratacionProvider with ChangeNotifier {
         _selectedContratacion = updated;
       }
 
-      notifyListeners();
+      _safeNotify();
       return true;
     } catch (e) {
       _setError(e.toString());
@@ -204,7 +226,7 @@ class ContratacionProvider with ChangeNotifier {
         _selectedContratacion = updated;
       }
 
-      notifyListeners();
+      _safeNotify();
       return true;
     } catch (e) {
       _setError(e.toString());
@@ -218,7 +240,7 @@ class ContratacionProvider with ChangeNotifier {
   Future<void> loadEstadisticas() async {
     try {
       _estadisticas = await _contratacionService.getEstadisticas();
-      notifyListeners();
+      _safeNotify();
     } catch (e) {
       _setError(e.toString());
     }
@@ -246,16 +268,16 @@ class ContratacionProvider with ChangeNotifier {
   // Private helpers
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
+    _safeNotify();
   }
 
   void _setError(String message) {
     _error = message;
-    notifyListeners();
+    _safeNotify();
   }
 
   void clearError() {
     _error = null;
-    notifyListeners();
+    _safeNotify();
   }
 }
