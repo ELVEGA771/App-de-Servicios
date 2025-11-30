@@ -2,6 +2,19 @@ const { executeQuery } = require('../config/database');
 
 class Cliente {
   /**
+   * Find all clients
+   */
+  static async findAll() {
+    const query = `
+      SELECT c.*, u.email, u.nombre, u.apellido, u.telefono, u.foto_perfil_url, u.estado, u.fecha_registro
+      FROM cliente c
+      INNER JOIN usuario u ON c.id_usuario = u.id_usuario
+      ORDER BY u.fecha_registro DESC
+    `;
+    return executeQuery(query);
+  }
+
+  /**
    * Find cliente by ID
    */
   static async findById(id) {

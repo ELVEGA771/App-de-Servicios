@@ -72,6 +72,8 @@ const empresaRoutes = require('./routes/empresaRoutes');
 const categoriaRoutes = require('./routes/categoriaRoutes');
 const notificacionRoutes = require('./routes/notificacionRoutes');
 const sucursalRoutes = require('./routes/sucursalRoutes');
+const clienteRoutes = require('./routes/clienteRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/servicios', servicioRoutes);
@@ -85,6 +87,8 @@ app.use('/api/empresas', empresaRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/notificaciones', notificacionRoutes);
 app.use('/api/sucursales', sucursalRoutes);
+app.use('/api/clientes', clienteRoutes);
+app.use('/api/admin', adminRoutes);
 
 const uploadRoutes = require('./routes/uploadRoutes'); // Importar
 app.use('/api/upload', uploadRoutes);

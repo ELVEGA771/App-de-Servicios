@@ -78,4 +78,37 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+/**
+ * Middleware to authorize based on user roles
+ * @param {Array} roles - Array of allowed roles
+ */
+const authorize = (roles = []) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return sendError(
+        res,
+        ERROR_CODES.AUTHENTICATION_ERROR,
+        'User not authenticated',
+        HTTP_STATUS.UNAUTHORIZED
+      );
+    }
+
+    if (roles.length && !roles.includes(req.user.tipo_usuario)) {
+      return sendError(
+        res,
+        ERROR_CODES.AUTHORIZATION_ERROR,
+        'Insufficient permissions',
+        HTTP_STATUS.FORBIDDEN
+      );
+    }
+
+    next();
+  };
+};
+
+// Allow direct usage as function (backward compatibility)
+// AND destructuring { authenticateToken, authorize }
+authMiddleware.authenticateToken = authMiddleware;
+authMiddleware.authorize = authorize;
+
 module.exports = authMiddleware;
