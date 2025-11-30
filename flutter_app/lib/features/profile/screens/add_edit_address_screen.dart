@@ -19,8 +19,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
   late TextEditingController _aliasController;
   late TextEditingController _callePrincipalController;
   late TextEditingController _calleSecundariaController;
-  late TextEditingController _numeroExteriorController;
-  late TextEditingController _numeroInteriorController;
+  late TextEditingController _numeroController;
   late TextEditingController _ciudadController;
   late TextEditingController _estadoController;
   late TextEditingController _codigoPostalController;
@@ -36,8 +35,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     _aliasController = TextEditingController(text: d?.alias ?? '');
     _callePrincipalController = TextEditingController(text: d?.callePrincipal ?? '');
     _calleSecundariaController = TextEditingController(text: d?.calleSecundaria ?? '');
-    _numeroExteriorController = TextEditingController(text: d?.numeroExterior ?? '');
-    _numeroInteriorController = TextEditingController(text: d?.numeroInterior ?? '');
+    _numeroController = TextEditingController(text: d?.numero ?? '');
     _ciudadController = TextEditingController(text: d?.ciudad ?? '');
     _estadoController = TextEditingController(text: d?.estado ?? '');
     _codigoPostalController = TextEditingController(text: d?.codigoPostal ?? '');
@@ -50,8 +48,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     _aliasController.dispose();
     _callePrincipalController.dispose();
     _calleSecundariaController.dispose();
-    _numeroExteriorController.dispose();
-    _numeroInteriorController.dispose();
+    _numeroController.dispose();
     _ciudadController.dispose();
     _estadoController.dispose();
     _codigoPostalController.dispose();
@@ -72,15 +69,14 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
       alias: _aliasController.text,
       callePrincipal: _callePrincipalController.text,
       calleSecundaria: _calleSecundariaController.text.isEmpty ? null : _calleSecundariaController.text,
-      numeroExterior: _numeroExteriorController.text.isEmpty ? null : _numeroExteriorController.text,
-      numeroInterior: _numeroInteriorController.text.isEmpty ? null : _numeroInteriorController.text,
+      numero: _numeroController.text.isEmpty ? null : _numeroController.text,
       ciudad: _ciudadController.text,
       estado: _estadoController.text,
       codigoPostal: _codigoPostalController.text,
       referencia: _referenciaController.text.isEmpty ? null : _referenciaController.text,
       esPrincipal: _esPrincipal,
-      latitud: widget.direccion?.latitud,
-      longitud: widget.direccion?.longitud,
+      latitud: null,
+      longitud: null,
     );
 
     bool success;
@@ -140,8 +136,8 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextFormField(
-                      controller: _numeroExteriorController,
-                      decoration: const InputDecoration(labelText: 'No. Ext'),
+                      controller: _numeroController,
+                      decoration: const InputDecoration(labelText: 'Número'),
                       validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
                     ),
                   ),
@@ -149,23 +145,9 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
               ),
               const SizedBox(height: 16),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _numeroInteriorController,
-                      decoration: const InputDecoration(labelText: 'No. Int (Opcional)'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _calleSecundariaController,
-                      decoration: const InputDecoration(labelText: 'Calle Secundaria (Opcional)'),
-                    ),
-                  ),
-                ],
+              TextFormField(
+                controller: _calleSecundariaController,
+                decoration: const InputDecoration(labelText: 'Calle Secundaria (Opcional)'),
               ),
               const SizedBox(height: 16),
 

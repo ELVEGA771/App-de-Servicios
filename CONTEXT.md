@@ -1,4 +1,6 @@
 # Contexto del Proyecto - Sistema de Servicios
+ahora necesito que hagamos un front end especifico para el administrador del sistema, este front end se accederia con el usuario admin@app.com y su clave seria Admin1234. Evidentemente no habria opcion de registrar este tipo de usuario. por ende quiero que me ayudes a poner este usuario en la base de datos con su hash adecuadamente sin interactuar con la app. Este usuario tendria acceso a las vistas, a una lista de todos los clientes y de todas las empresas.
+
 
 ## Información General del Proyecto
 

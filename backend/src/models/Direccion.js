@@ -14,6 +14,12 @@ class Direccion {
    * Create new direccion
    */
   static async create(direccionData) {
+    // Construct numero from exterior/interior
+    const numero = direccionData.numero || 
+      (direccionData.numero_interior 
+        ? `${direccionData.numero_exterior} Int. ${direccionData.numero_interior}`
+        : direccionData.numero_exterior);
+
     const query = `
       INSERT INTO direccion (
         calle_principal, calle_secundaria, numero, ciudad, provincia_estado,
@@ -24,9 +30,9 @@ class Direccion {
     const params = [
       direccionData.calle_principal,
       direccionData.calle_secundaria || null,
-      direccionData.numero || null,
+      numero || null,
       direccionData.ciudad,
-      direccionData.provincia_estado,
+      direccionData.provincia_estado || direccionData.estado,
       direccionData.codigo_postal || null,
       direccionData.pais || 'Ecuador',
       direccionData.latitud || null,

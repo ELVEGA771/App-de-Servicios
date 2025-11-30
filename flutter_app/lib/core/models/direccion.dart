@@ -4,8 +4,7 @@ class Direccion {
   final String alias;
   final String callePrincipal;
   final String? calleSecundaria;
-  final String? numeroExterior;
-  final String? numeroInterior;
+  final String? numero;
   final String ciudad;
   final String estado;
   final String codigoPostal;
@@ -20,8 +19,7 @@ class Direccion {
     required this.alias,
     required this.callePrincipal,
     this.calleSecundaria,
-    this.numeroExterior,
-    this.numeroInterior,
+    this.numero,
     required this.ciudad,
     required this.estado,
     required this.codigoPostal,
@@ -38,8 +36,7 @@ class Direccion {
       alias: json['alias'] as String? ?? '',
       callePrincipal: json['calle_principal'] as String? ?? '',
       calleSecundaria: json['calle_secundaria'] as String?,
-      numeroExterior: json['numero'] as String? ?? json['numero_exterior'] as String?,
-      numeroInterior: json['numero_interior'] as String?,
+      numero: json['numero'] as String? ?? json['numero_exterior'] as String?,
       ciudad: json['ciudad'] as String? ?? '',
       estado: json['provincia_estado'] as String? ?? json['estado'] as String? ?? '',
       codigoPostal: json['codigo_postal'] as String? ?? '',
@@ -61,8 +58,7 @@ class Direccion {
       'alias': alias,
       'calle_principal': callePrincipal,
       'calle_secundaria': calleSecundaria,
-      'numero_exterior': numeroExterior,
-      'numero_interior': numeroInterior,
+      'numero': numero,
       'ciudad': ciudad,
       'estado': estado,
       'codigo_postal': codigoPostal,
@@ -79,8 +75,7 @@ class Direccion {
     if (calleSecundaria != null && calleSecundaria!.isNotEmpty) {
       parts.add('y $calleSecundaria');
     }
-    if (numeroExterior != null) parts.add(numeroExterior!);
-    if (numeroInterior != null) parts.add('Int. $numeroInterior');
+    if (numero != null) parts.add(numero!);
     parts.add('$ciudad, $estado');
     parts.add('C.P. $codigoPostal');
     return parts.join(', ');
@@ -89,7 +84,7 @@ class Direccion {
   String get direccionCorta {
     final parts = <String>[];
     parts.add(callePrincipal);
-    if (numeroExterior != null) parts.add(numeroExterior!);
+    if (numero != null) parts.add(numero!);
     return parts.join(' ');
   }
 
@@ -101,8 +96,7 @@ class Direccion {
     String? alias,
     String? callePrincipal,
     String? calleSecundaria,
-    String? numeroExterior,
-    String? numeroInterior,
+    String? numero,
     String? ciudad,
     String? estado,
     String? codigoPostal,
@@ -117,8 +111,7 @@ class Direccion {
       alias: alias ?? this.alias,
       callePrincipal: callePrincipal ?? this.callePrincipal,
       calleSecundaria: calleSecundaria ?? this.calleSecundaria,
-      numeroExterior: numeroExterior ?? this.numeroExterior,
-      numeroInterior: numeroInterior ?? this.numeroInterior,
+      numero: numero ?? this.numero,
       ciudad: ciudad ?? this.ciudad,
       estado: estado ?? this.estado,
       codigoPostal: codigoPostal ?? this.codigoPostal,
