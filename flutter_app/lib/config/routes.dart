@@ -32,6 +32,7 @@ import 'package:servicios_app/features/notificaciones/screens/notificaciones_scr
 import 'package:servicios_app/features/empresa/screens/empresa_cupones_screen.dart';
 import 'package:servicios_app/features/empresa/screens/create_cupon_screen.dart';
 import 'package:servicios_app/features/cupones/screens/cupones_disponibles_screen.dart';
+import 'package:servicios_app/features/admin/screens/admin_dashboard_screen.dart';
 
 class AppRoutes {
   // Route Names
@@ -39,6 +40,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
+  static const String adminDashboard = '/admin/dashboard';
 
   // Servicios
   static const String servicioDetail = '/servicio/detail';
@@ -235,6 +237,9 @@ class AppRoutes {
       // Notificaciones
       case notificaciones:
         return MaterialPageRoute(builder: (_) => const NotificacionesScreen());
+
+      case adminDashboard:
+        return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
 
       default:
         return MaterialPageRoute(

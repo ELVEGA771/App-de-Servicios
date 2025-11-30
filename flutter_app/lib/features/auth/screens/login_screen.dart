@@ -37,7 +37,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      AppRoutes.navigateToHome(context);
+      if (authProvider.usuario?.tipoUsuario == 'admin') {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.adminDashboard, (route) => false);
+      } else {
+        AppRoutes.navigateToHome(context);
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
