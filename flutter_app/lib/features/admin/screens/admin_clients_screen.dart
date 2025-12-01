@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:servicios_app/core/services/admin_service.dart';
-import 'package:servicios_app/core/models/usuario.dart'; // Assuming we map client to user or similar
 
 class AdminClientsScreen extends StatefulWidget {
   const AdminClientsScreen({super.key});

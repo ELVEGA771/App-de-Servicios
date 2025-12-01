@@ -37,7 +37,7 @@ CREATE TABLE `calificacion` (
   KEY `calificacion_ibfk_1_idx` (`id_servicio`),
   CONSTRAINT `calificacion_ibfk_1` FOREIGN KEY (`id_servicio`) REFERENCES `servicio` (`id_servicio`) ON DELETE CASCADE,
   CONSTRAINT `fk_calificacion_contratacion` FOREIGN KEY (`id_contratacion`) REFERENCES `contratacion` (`id_contratacion`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -46,6 +46,7 @@ CREATE TABLE `calificacion` (
 
 LOCK TABLES `calificacion` WRITE;
 /*!40000 ALTER TABLE `calificacion` DISABLE KEYS */;
+INSERT INTO `calificacion` VALUES (3,17,18,5,'Excelente','2025-11-30 19:39:24'),(4,16,26,4,'Excelente','2025-11-30 19:39:51');
 /*!40000 ALTER TABLE `calificacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -64,7 +65,7 @@ CREATE TABLE `categoria_servicio` (
   PRIMARY KEY (`id_categoria`),
   UNIQUE KEY `nombre` (`nombre`),
   KEY `idx_nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -73,6 +74,7 @@ CREATE TABLE `categoria_servicio` (
 
 LOCK TABLES `categoria_servicio` WRITE;
 /*!40000 ALTER TABLE `categoria_servicio` DISABLE KEYS */;
+INSERT INTO `categoria_servicio` VALUES (14,'Hogar','Servicios generales para mantenimiento y mejora del hogar.','https://img.icons8.com/ios-filled/100/home.png'),(15,'Limpieza','Servicios de limpieza residencial, profunda o especializada.','https://img.icons8.com/ios-filled/100/cleaning.png'),(16,'Electricidad','Instalaciones, reparación y mantenimiento eléctrico.','https://img.icons8.com/ios-filled/100/electricity.png'),(17,'Plomería','Reparación de fugas, tuberías y mantenimiento de agua.','https://img.icons8.com/ios-filled/100/plumbing.png'),(18,'Carpintería','Muebles, reparaciones, instalaciones y estructuras de madera.','https://img.icons8.com/ios-filled/100/wood.png'),(19,'Pintura','Pintado interior y exterior, acabados y retoques.','https://img.icons8.com/ios-filled/100/paint.png'),(20,'Jardinería','Cuidado de césped, poda, paisajismo y diseño exterior.','https://img.icons8.com/ios-filled/100/gardener.png'),(21,'Construcción','Obras civiles, remodelaciones y ampliaciones.','https://img.icons8.com/ios-filled/100/brick-wall.png'),(22,'Mudanzas','Servicio de transporte y embalaje para traslado de vivienda.','https://img.icons8.com/ios-filled/100/packing.png'),(23,'Mecánica','Reparación y mantenimiento vehicular a domicilio.','https://img.icons8.com/ios-filled/100/car-service.png'),(24,'Belleza y Cuidado Personal','Servicios de barbería, manicure, masajes y estética.','https://img.icons8.com/ios-filled/100/spa.png'),(25,'Tecnología','Instalación, soporte y configuración de equipos y redes.','https://img.icons8.com/ios-filled/100/computer.png'),(26,'Mascotas','Baño, paseo, cuidado y adiestramiento para animales.','https://img.icons8.com/ios-filled/100/pet.png'),(27,'Climatización','Instalación y mantenimiento de aires acondicionados.','https://img.icons8.com/ios-filled/100/air-conditioner.png'),(28,'Eventos','Montaje, alquiler de equipos, decoración y logística.','https://img.icons8.com/ios-filled/100/event.png'),(29,'Automotriz','Servicios mecánicos y técnicos a domicilio para vehículos.','/assets/icons/automotriz.png');
 /*!40000 ALTER TABLE `categoria_servicio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -144,7 +146,7 @@ CREATE TABLE `contratacion` (
   CONSTRAINT `contratacion_ibfk_3` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursal` (`id_sucursal`) ON DELETE RESTRICT,
   CONSTRAINT `contratacion_ibfk_4` FOREIGN KEY (`id_direccion_entrega`) REFERENCES `direccion` (`id_direccion`) ON DELETE RESTRICT,
   CONSTRAINT `contratacion_ibfk_5` FOREIGN KEY (`id_cupon`) REFERENCES `cupon` (`id_cupon`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,6 +155,7 @@ CREATE TABLE `contratacion` (
 
 LOCK TABLES `contratacion` WRITE;
 /*!40000 ALTER TABLE `contratacion` DISABLE KEYS */;
+INSERT INTO `contratacion` VALUES (14,13,29,17,18,12,'2025-11-30 17:34:38','2025-12-23 00:00:00',NULL,90.00,27.00,63.00,'pendiente',NULL,NULL,15.00,9.45,53.55),(15,13,19,12,18,NULL,'2025-11-30 17:35:58','2025-12-24 00:00:00',NULL,14.00,0.00,14.00,'cancelado',NULL,NULL,15.00,2.10,11.90),(16,13,26,17,18,NULL,'2025-11-30 17:37:02','2025-12-08 00:00:00','2025-11-30 17:45:26',100.00,0.00,100.00,'completado',NULL,'Finaliza traslado en Grua, sin novedad',15.00,15.00,85.00),(17,13,18,12,20,5,'2025-11-30 17:38:22','2025-12-05 00:00:00','2025-11-30 18:38:27',15.00,1.50,13.50,'completado',NULL,'',15.00,2.03,11.48),(18,13,24,12,19,NULL,'2025-11-30 17:38:58','2025-12-07 00:00:00',NULL,25.00,0.00,25.00,'pendiente',NULL,NULL,15.00,3.75,21.25);
 /*!40000 ALTER TABLE `contratacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -179,7 +182,7 @@ CREATE TABLE `conversacion` (
   CONSTRAINT `conversacion_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE,
   CONSTRAINT `conversacion_ibfk_2` FOREIGN KEY (`id_empresa`) REFERENCES `empresa` (`id_empresa`) ON DELETE CASCADE,
   CONSTRAINT `conversacion_ibfk_3` FOREIGN KEY (`id_contratacion`) REFERENCES `contratacion` (`id_contratacion`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -188,6 +191,7 @@ CREATE TABLE `conversacion` (
 
 LOCK TABLES `conversacion` WRITE;
 /*!40000 ALTER TABLE `conversacion` DISABLE KEYS */;
+INSERT INTO `conversacion` VALUES (4,13,10,18,'2025-11-30 18:17:46','2025-11-30 18:35:40','abierta'),(5,13,10,17,'2025-11-30 18:22:54','2025-11-30 18:24:10','abierta');
 /*!40000 ALTER TABLE `conversacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -219,7 +223,7 @@ CREATE TABLE `cupon` (
   KEY `idx_activo` (`activo`),
   KEY `idx_fecha_expiracion` (`fecha_expiracion`),
   CONSTRAINT `cupon_ibfk_1` FOREIGN KEY (`id_empresa`) REFERENCES `empresa` (`id_empresa`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -228,6 +232,7 @@ CREATE TABLE `cupon` (
 
 LOCK TABLES `cupon` WRITE;
 /*!40000 ALTER TABLE `cupon` DISABLE KEYS */;
+INSERT INTO `cupon` VALUES (5,10,'BIENVENIDA10','Descuento para nuevos usuarios en su primer servicio.','porcentaje',10.00,15.00,100,1,'2025-11-30 13:33:40','2025-12-30 00:00:00',1,'todos'),(6,10,'LIMPIEZAPRO20','Ideal para limpieza profunda o mudanza.','porcentaje',20.00,30.00,60,0,'2025-11-30 13:37:38','2026-01-15 00:00:00',1,'todos'),(7,10,'OFICINAFRESH15','Cupón exclusivo para servicios de limpieza de oficina.','porcentaje',15.00,25.00,40,0,'2025-11-30 13:38:14','2026-01-30 00:00:00',1,'todos'),(8,10,'TAPICERIA25','Descuento especial para lavado de muebles, sillas y colchones.','porcentaje',25.00,20.00,30,0,'2025-11-30 13:39:11','2026-01-10 00:00:00',1,'todos'),(9,10,'REYES2026','Promoción por temporada de año nuevo.','porcentaje',18.00,18.00,80,0,'2025-11-30 13:39:45','2026-02-10 00:00:00',1,'todos'),(10,11,'SCANNER10','10% de descuento en diagnóstico OBD-II.','porcentaje',10.00,10.00,50,0,'2025-11-30 14:41:22','2025-12-30 00:00:00',1,'todos'),(11,11,'RESCATE15','15% off en servicios de emergencia (batería/llanta).','porcentaje',15.00,20.00,40,0,'2025-11-30 14:41:54','2025-12-23 00:00:00',1,'todos'),(12,11,'DETAIL30','30% descuento en Detailing Profesional.','porcentaje',30.00,50.00,25,1,'2025-11-30 14:42:25','2025-12-18 00:00:00',1,'todos');
 /*!40000 ALTER TABLE `cupon` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -306,7 +311,7 @@ CREATE TABLE `direccion` (
   PRIMARY KEY (`id_direccion`),
   KEY `idx_ciudad` (`ciudad`),
   KEY `idx_coordenadas` (`latitud`,`longitud`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -315,6 +320,7 @@ CREATE TABLE `direccion` (
 
 LOCK TABLES `direccion` WRITE;
 /*!40000 ALTER TABLE `direccion` DISABLE KEYS */;
+INSERT INTO `direccion` VALUES (18,'Diego de robles','Av. Pampite','0','Quito','Pichincha','170144','Ecuador',NULL,NULL,'Entrada principal USFQ'),(19,'Shyris','Naciones Unidas','M34-34','Quito','Pichincha','173201','Ecuador',NULL,NULL,'Frente al Quicentro Norte'),(20,'Eloy Alfaro','Alamos','O43-21','Quito','Pichincha','160232','Ecuador',NULL,NULL,'Frente a papa johns'),(21,'García Moreno','Sucre','102','Quito','Pichincha','170401','Ecuador',NULL,NULL,'Frente a la Plaza Grande'),(22,'Av. Amazonas','República','355','Quito','Pichincha','170518','Ecuador',NULL,NULL,'Cerca del parque La Carolina'),(23,'Av. Interoceánica','Av. Pampite','28B','Quito','Pichincha','170157','Ecuador',NULL,NULL,'Cerca del Paseo San Francisco'),(24,'Av. Condor Ñan','Av. Quitumbe Ñan','420','Quito','Pichincha','170801','Ecuador',NULL,NULL,'Junto al Quicentro Sur'),(25,'Av. El Inca','6 de Diciembre','221','Quito','Pichincha','170503','Ecuador',NULL,NULL,'Cerca de la estación ECO Via'),(26,'Av. 6 de Diciembre','Portugal','N34-180','Quito','Pichincha','170135','Ecuador',NULL,NULL,'Diagonal al CCI (Centro Comercial Iñaquito)');
 /*!40000 ALTER TABLE `direccion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -344,6 +350,7 @@ CREATE TABLE `direcciones_del_cliente` (
 
 LOCK TABLES `direcciones_del_cliente` WRITE;
 /*!40000 ALTER TABLE `direcciones_del_cliente` DISABLE KEYS */;
+INSERT INTO `direcciones_del_cliente` VALUES (13,18,'Universidad',1),(13,19,'Oficina',0),(13,20,'Casa',0);
 /*!40000 ALTER TABLE `direcciones_del_cliente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -378,7 +385,7 @@ CREATE TABLE `empresa` (
 
 LOCK TABLES `empresa` WRITE;
 /*!40000 ALTER TABLE `empresa` DISABLE KEYS */;
-INSERT INTO `empresa` VALUES (10,44,'Empresa 1',NULL,NULL,NULL,0.00,NULL,'Ecuador'),(11,45,'Empresa 2',NULL,NULL,NULL,0.00,NULL,'Ecuador');
+INSERT INTO `empresa` VALUES (10,44,'CleanHome',NULL,'Somos una empresa de servicios de limpieza a domicilio que transforma la forma en que las personas cuidan sus espacios. A través de nuestra app, los clientes pueden agendar limpiezas profesionales con un solo toque, elegir el tipo de servicio que necesitan y recibir atención confiable, rápida y eficiente sin complicaciones.\n\nNos destacamos por combinar tecnología y talento humano para ofrecer ambientes más limpios, saludables y cómodos. Simplificamos la experiencia, optimizamos el tiempo de nuestros usuarios y brindamos soluciones inteligentes para hogares y negocios. Creemos en la innovación aplicada al bienestar —tú solicitas, nosotros nos encargamos del resto.','https://res.cloudinary.com/dzoptmnx0/image/upload/v1764524571/app_servicios/l8wvwwxzh6zxqvzie8wu.jpg',5.00,NULL,'Ecuador'),(11,45,'MotorGo',NULL,'Somos una empresa especializada en servicios automotrices y técnicos a domicilio, diseñada para brindar soluciones rápidas, confiables y profesionales sin necesidad de que el cliente se traslade. Nuestro objetivo es ofrecer un servicio eficiente, seguro y transparente, llevando atención técnica directamente al lugar donde el vehículo o el equipo lo necesite.\n\nContamos con personal capacitado en mecánica automotriz, mantenimiento preventivo, asistencia en carretera, diagnóstico electrónico, revisión de sistemas eléctricos, así como soporte técnico para equipos y herramientas. Nos enfocamos en comodidad, rapidez y calidad, asegurando una experiencia práctica y sin complicaciones para nuestros usuarios.\n\nLlevamos el taller y el soporte técnico hasta tu puerta. Tú solicitas, nosotros resolvemos.','https://res.cloudinary.com/dzoptmnx0/image/upload/v1764529080/app_servicios/wtef99ixrudw0hjmpmnr.jpg',4.00,NULL,'Ecuador');
 /*!40000 ALTER TABLE `empresa` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -400,7 +407,7 @@ CREATE TABLE `historial_estado_contratacion` (
   PRIMARY KEY (`id_historial`),
   KEY `idx_hist_contratacion` (`id_contratacion`),
   CONSTRAINT `fk_historial_contratacion` FOREIGN KEY (`id_contratacion`) REFERENCES `contratacion` (`id_contratacion`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -409,6 +416,7 @@ CREATE TABLE `historial_estado_contratacion` (
 
 LOCK TABLES `historial_estado_contratacion` WRITE;
 /*!40000 ALTER TABLE `historial_estado_contratacion` DISABLE KEYS */;
+INSERT INTO `historial_estado_contratacion` VALUES (36,14,NULL,'pendiente','2025-11-30 17:34:38','Contratación creada',NULL),(37,15,NULL,'pendiente','2025-11-30 17:35:58','Contratación creada',NULL),(38,16,NULL,'pendiente','2025-11-30 17:37:02','Contratación creada',NULL),(39,17,NULL,'pendiente','2025-11-30 17:38:22','Contratación creada',NULL),(40,18,NULL,'pendiente','2025-11-30 17:38:58','Contratación creada',NULL),(41,16,'pendiente','confirmado','2025-11-30 17:45:02','Ahi estaremos.',NULL),(42,16,'confirmado','en_proceso','2025-11-30 17:45:15','Empieza traslado en Grúa',NULL),(43,16,'en_proceso','completado','2025-11-30 17:45:26','Finaliza traslado en Grua, sin novedad',NULL),(44,17,'pendiente','confirmado','2025-11-30 18:38:21','',NULL),(45,17,'confirmado','en_proceso','2025-11-30 18:38:23','',NULL),(46,17,'en_proceso','completado','2025-11-30 18:38:27','',NULL);
 /*!40000 ALTER TABLE `historial_estado_contratacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -437,7 +445,7 @@ CREATE TABLE `mensaje` (
   KEY `idx_mensaje_conversacion_fecha` (`id_conversacion`,`fecha_envio`),
   CONSTRAINT `mensaje_ibfk_1` FOREIGN KEY (`id_conversacion`) REFERENCES `conversacion` (`id_conversacion`) ON DELETE CASCADE,
   CONSTRAINT `mensaje_ibfk_2` FOREIGN KEY (`id_remitente`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -446,6 +454,7 @@ CREATE TABLE `mensaje` (
 
 LOCK TABLES `mensaje` WRITE;
 /*!40000 ALTER TABLE `mensaje` DISABLE KEYS */;
+INSERT INTO `mensaje` VALUES (6,5,43,'Buenas tardes, por favor comenteme a que hora vendra?','texto',NULL,'2025-11-30 18:23:13',0,NULL),(7,5,43,'hey','texto',NULL,'2025-11-30 18:24:10',0,NULL),(8,4,43,'Buenas tardes','texto',NULL,'2025-11-30 18:35:40',0,NULL);
 /*!40000 ALTER TABLE `mensaje` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -473,7 +482,7 @@ CREATE TABLE `notificacion` (
   KEY `idx_tipo` (`tipo`),
   KEY `idx_fecha_creacion` (`fecha_creacion`),
   CONSTRAINT `notificacion_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -482,6 +491,7 @@ CREATE TABLE `notificacion` (
 
 LOCK TABLES `notificacion` WRITE;
 /*!40000 ALTER TABLE `notificacion` DISABLE KEYS */;
+INSERT INTO `notificacion` VALUES (31,45,'Nueva Orden Recibida','Has recibido una nueva orden de servicio de Pablo Jarrin. ID: 14','sistema',14,'contratacion',0,'2025-11-30 17:34:38',NULL),(32,44,'Nueva Orden Recibida','Has recibido una nueva orden de servicio de Pablo Jarrin. ID: 15','sistema',15,'contratacion',1,'2025-11-30 17:35:58','2025-11-30 19:45:28'),(33,45,'Nueva Orden Recibida','Has recibido una nueva orden de servicio de Pablo Jarrin. ID: 16','sistema',16,'contratacion',0,'2025-11-30 17:37:02',NULL),(34,44,'Nueva Orden Recibida','Has recibido una nueva orden de servicio de Pablo Jarrin. ID: 17','sistema',17,'contratacion',1,'2025-11-30 17:38:22','2025-11-30 19:45:27'),(35,44,'Nueva Orden Recibida','Has recibido una nueva orden de servicio de Pablo Jarrin. ID: 18','sistema',18,'contratacion',1,'2025-11-30 17:38:58','2025-11-30 19:45:27'),(36,43,'Orden Confirmada','¡Tu orden #16 ha sido confirmada por la empresa!\n\nNota de la empresa: Ahi estaremos.','cambio_estado',16,'contratacion',1,'2025-11-30 17:45:02','2025-11-30 17:46:23'),(37,43,'Servicio en Proceso','La empresa ha iniciado el servicio de la orden #16.\n\nNota de la empresa: Empieza traslado en Grúa','cambio_estado',16,'contratacion',1,'2025-11-30 17:45:15','2025-11-30 17:46:24'),(38,43,'Servicio Completado','El servicio de la orden #16 ha sido marcado como completado.\n\nNota de la empresa: Finaliza traslado en Grua, sin novedad','cambio_estado',16,'contratacion',1,'2025-11-30 17:45:26','2025-11-30 17:46:25'),(39,43,'Orden Confirmada','¡Tu orden #17 ha sido confirmada por la empresa!','cambio_estado',17,'contratacion',0,'2025-11-30 18:38:21',NULL),(40,43,'Servicio en Proceso','La empresa ha iniciado el servicio de la orden #17.','cambio_estado',17,'contratacion',0,'2025-11-30 18:38:23',NULL),(41,43,'Servicio Completado','El servicio de la orden #17 ha sido marcado como completado.','cambio_estado',17,'contratacion',0,'2025-11-30 18:38:27',NULL);
 /*!40000 ALTER TABLE `notificacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -505,7 +515,7 @@ CREATE TABLE `pago` (
   KEY `idx_estado_pago` (`estado_pago`),
   KEY `idx_referencia` (`referencia_transaccion`),
   CONSTRAINT `pago_ibfk_1` FOREIGN KEY (`id_contratacion`) REFERENCES `contratacion` (`id_contratacion`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -514,6 +524,7 @@ CREATE TABLE `pago` (
 
 LOCK TABLES `pago` WRITE;
 /*!40000 ALTER TABLE `pago` DISABLE KEYS */;
+INSERT INTO `pago` VALUES (11,14,63.00,'tarjeta_credito','pendiente','2025-11-30 17:34:38',NULL),(12,15,14.00,'tarjeta_credito','pendiente','2025-11-30 17:35:58',NULL),(13,16,100.00,'paypal','completado','2025-11-30 17:37:02',NULL),(14,17,13.50,'paypal','completado','2025-11-30 17:38:22',NULL),(15,18,25.00,'efectivo','pendiente','2025-11-30 17:38:58',NULL);
 /*!40000 ALTER TABLE `pago` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -542,7 +553,7 @@ CREATE TABLE `servicio` (
   KEY `idx_servicio_empresa_estado` (`id_empresa`,`estado`),
   CONSTRAINT `servicio_ibfk_1` FOREIGN KEY (`id_empresa`) REFERENCES `empresa` (`id_empresa`) ON DELETE CASCADE,
   CONSTRAINT `servicio_ibfk_2` FOREIGN KEY (`id_categoria`) REFERENCES `categoria_servicio` (`id_categoria`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -551,6 +562,7 @@ CREATE TABLE `servicio` (
 
 LOCK TABLES `servicio` WRITE;
 /*!40000 ALTER TABLE `servicio` DISABLE KEYS */;
+INSERT INTO `servicio` VALUES (15,10,15,'Limpieza General de Hogar','Limpieza básica de dormitorios, cocina, sala, baños y pisos.',18.00,2,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764526448/app_servicios/yraie4mwvbj8kcl3yl78.jpg','disponible','2025-11-30 13:01:07'),(16,10,15,'Limpieza Profunda Residencial','Limpieza con desinfección de puntos críticos, grasa, olores y manchas.',35.00,4,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764526603/app_servicios/hswawyxnfxp2ueeozedm.jpg','disponible','2025-11-30 13:02:22'),(17,10,15,'Limpieza de oficinas','Escritorios, vidrios internos, baños, áreas comunes y desinfección.',30.00,3,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764527578/app_servicios/fcg8lm82gsh0qfcizpdy.jpg','disponible','2025-11-30 13:03:06'),(18,10,14,'Lavado y Planchado de Ropa','Planchado, doblado y entrega ordenada de prendas.',15.00,2,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764526895/app_servicios/a6tglp2c0su9lxk3yx9t.jpg','disponible','2025-11-30 13:04:17'),(19,10,21,'Limpieza de Vidrios y Ventanales','Limpieza profesional interior/exterior con productos anti-manchas.',14.00,2,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764526996/app_servicios/izysbvauk9v7mvuudaao.jpg','disponible','2025-11-30 13:05:29'),(20,10,28,'Limpieza Post-Evento','Recolección de desechos, piso, baños, cocina, olores y desinfección.',40.00,3,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764526788/app_servicios/caqd7fvgji1imxff0tpr.jpg','disponible','2025-11-30 13:06:12'),(21,10,15,'Lavado de Tapicería (sofás, sillas, colchones)','Lavado con extracción, eliminación de olores y manchas.',32.00,3,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764526522/app_servicios/yvi6rrhxkfyhzmpiposy.jpg','disponible','2025-11-30 13:06:45'),(22,10,22,'Limpieza para Mudanzas','Limpieza total previo o posterior al cambio de vivienda.',50.00,5,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764526711/app_servicios/m8w84is8i20zxe84a3l7.jpg','disponible','2025-11-30 13:07:14'),(23,10,20,'Servicio de Jardinería Básica','Corte de césped, barrido, riego y mantenimiento ligero.',20.00,2,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764526665/app_servicios/plrefxuvyzv1zz4j955w.jpg','disponible','2025-11-30 13:08:04'),(24,10,15,'Desinfección y Sanitización Antibacterial','Nebulización y desinfección profesional anti-virus y bacterias.',25.00,2,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764527543/app_servicios/omxmpp24k5ug6qneezm6.jpg','disponible','2025-11-30 13:08:46'),(25,11,29,'Mantenimiento Preventivo Básico','Revisión de líquidos, filtros, estado de correas, llantas y diagnóstico rápido.',25.00,1,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764529967/app_servicios/qrthvaufpubdgnxo7dyo.jpg','disponible','2025-11-30 14:12:50'),(26,11,29,'Grúa 24/7 – Asistencia de Remolque','Servicio de grúa y remolque disponible las 24 horas del día, 7 días a la semana. Ideal para emergencias por falla mecánica, accidente o necesidad de traslado. Incluye asistencia hasta el punto solicitado dentro de la ciudad. Atención inmediata y segura para vehículos livianos.',100.00,2,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764530231/app_servicios/pqdtm9jnzkwssa4pvhnk.jpg','disponible','2025-11-30 14:17:15'),(27,11,29,'Asistencia de Batería / Encendido de Emergencia','Servicio de arranque de emergencia para vehículos que presentan batería descargada o fallas de encendido. Incluye conexión segura con cables profesionales, verificación de estado de la batería, prueba de voltaje y recomendación técnica si requiere reemplazo.\nAtención rápida a domicilio o en vía pública.',20.00,1,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764530509/app_servicios/doyuju5jhqernb2xbr2k.jpg','disponible','2025-11-30 14:21:52'),(28,11,29,'Diagnóstico con Scanner OBD-II','Lectura y análisis de fallos electrónicos mediante scanner OBD-II profesional.\nIncluye revisión de códigos de error, diagnóstico de sensores, fallas de encendido, mezcla, oxígeno, temperatura, transmisión y más. Al finalizar se entrega reporte con recomendaciones y posibles soluciones.\nServicio ideal cuando el vehículo presenta testigo encendido o comportamiento anómalo.',20.00,1,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764530787/app_servicios/vaqqjra75lo43sjctoel.jpg','disponible','2025-11-30 14:26:31'),(29,11,29,'Detailing Profesional – Interior & Exterior','Limpieza estética completa del vehículo, enfocada en restaurar brillo, eliminar suciedad profunda y mejorar la apariencia general. Incluye:\n\n✔ Lavado exterior con shampoo neutro\n✔ Descontaminación de pintura (clay bar)\n✔ Pulido ligero y sellado cerámico básico\n✔ Limpieza profunda de interiores\n✔ Tapicería con extracción de manchas\n✔ Tablero, vinilos y plásticos con protector UV\n✔ Vidrios internos y externos cristalinos\n\nUn servicio ideal para vehículos en venta, presentación especial o mantenimiento premium de imagen.',90.00,3,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764531193/app_servicios/tdpqllfyh16gwyg3aziw.jpg','disponible','2025-11-30 14:33:23'),(30,11,29,'Inspección Pre-Compra de Vehículo Usado','Revisión profesional para evaluar el estado real de un vehículo antes de comprarlo. Incluye análisis mecánico, estético y electrónico para identificar fallas ocultas y posibles costos futuros. Se entrega informe detallado para ayudar al cliente a tomar una decisión segura.',70.00,1,'https://res.cloudinary.com/dzoptmnx0/image/upload/v1764531657/app_servicios/qifexnfqfgls7d4dzrdp.jpg','disponible','2025-11-30 14:41:02');
 /*!40000 ALTER TABLE `servicio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -580,6 +592,7 @@ CREATE TABLE `servicio_favorito` (
 
 LOCK TABLES `servicio_favorito` WRITE;
 /*!40000 ALTER TABLE `servicio_favorito` DISABLE KEYS */;
+INSERT INTO `servicio_favorito` VALUES (21,13,'2025-11-30 14:44:51',NULL),(23,13,'2025-11-30 14:44:57',NULL),(24,13,'2025-11-30 14:44:53',NULL),(25,13,'2025-11-30 14:45:06',NULL),(26,13,'2025-11-30 14:44:48',NULL),(29,13,'2025-11-30 14:44:46',NULL);
 /*!40000 ALTER TABLE `servicio_favorito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -609,6 +622,7 @@ CREATE TABLE `servicio_sucursal` (
 
 LOCK TABLES `servicio_sucursal` WRITE;
 /*!40000 ALTER TABLE `servicio_sucursal` DISABLE KEYS */;
+INSERT INTO `servicio_sucursal` VALUES (15,12,1,NULL),(15,13,1,NULL),(15,14,1,NULL),(15,15,1,NULL),(15,16,1,NULL),(16,12,1,NULL),(16,13,1,NULL),(16,15,1,NULL),(16,16,1,NULL),(17,12,1,NULL),(17,13,1,NULL),(17,14,1,NULL),(17,16,1,NULL),(18,12,1,NULL),(18,14,1,NULL),(18,15,1,NULL),(19,12,1,NULL),(19,13,1,NULL),(19,15,1,NULL),(20,12,1,NULL),(20,13,0,NULL),(20,14,1,NULL),(20,16,1,NULL),(21,12,1,NULL),(21,13,1,NULL),(21,14,1,NULL),(21,15,1,NULL),(21,16,1,NULL),(22,12,1,NULL),(22,13,1,NULL),(22,15,1,NULL),(22,16,1,NULL),(23,13,1,NULL),(23,14,1,NULL),(23,16,1,NULL),(24,12,1,NULL),(24,13,1,NULL),(24,14,1,NULL),(24,15,1,NULL),(24,16,1,NULL),(25,17,1,NULL),(26,17,1,NULL),(27,17,1,NULL),(28,17,1,NULL),(29,17,1,NULL),(30,17,1,NULL);
 /*!40000 ALTER TABLE `servicio_sucursal` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -638,7 +652,7 @@ CREATE TABLE `sucursal` (
   KEY `idx_estado` (`estado`),
   CONSTRAINT `sucursal_ibfk_1` FOREIGN KEY (`id_empresa`) REFERENCES `empresa` (`id_empresa`) ON DELETE CASCADE,
   CONSTRAINT `sucursal_ibfk_2` FOREIGN KEY (`id_direccion`) REFERENCES `direccion` (`id_direccion`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -647,6 +661,7 @@ CREATE TABLE `sucursal` (
 
 LOCK TABLES `sucursal` WRITE;
 /*!40000 ALTER TABLE `sucursal` DISABLE KEYS */;
+INSERT INTO `sucursal` VALUES (12,10,21,'Sucursal 1 – Centro Histórico',NULL,NULL,NULL,'0987654321','08:00:00','18:00:00','1111100','activa'),(13,10,22,'Sucursal 2 – La Carolina',NULL,NULL,NULL,'0991122334','07:00:00','19:00:00','1111110','activa'),(14,10,23,'Sucursal 3 – Cumbayá',NULL,NULL,NULL,'0984422113','08:00:00','16:00:00','1111100','activa'),(15,10,24,'Sucursal 4 – Quitumbe',NULL,NULL,NULL,'0975566788','09:00:00','17:00:00','1111110','activa'),(16,10,25,'Sucursal 5 – El Inca',NULL,NULL,NULL,'0983344556','08:00:00','18:00:00','1111111','activa'),(17,11,26,'MotorGo Quito',NULL,NULL,NULL,'0994527810','08:00:00','19:00:00','1111111','activa');
 /*!40000 ALTER TABLE `sucursal` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -681,7 +696,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (42,'admin@app.com','$2b$10$rZX5bxG/9xWxSLbJdJUxJeF93so1jcTxpVqHcCtTyY9HWqbMD11Em','Admin','System',NULL,'admin',NULL,'2025-11-30 01:47:05','activo'),(43,'cliente@app.com','$2b$10$u2RO3NSKycnYaTRvXsW8M.qlcFysprntKvb1uRWpL4XWyy1Te1xHa','Pablo','Jarrin','0994460493','cliente',NULL,'2025-11-30 02:06:38','activo'),(44,'empresa1@app.com','$2b$10$978VmiclvD.N706D.ohqnO.48u/n4Y1LaW7zDsfFMXzx2aKCXITO6','Jarod','Tierra','0987654321','empresa',NULL,'2025-11-30 02:08:01','activo'),(45,'empresa2@app.com','$2b$10$3LBzhQlln5EN4lNy7fwP1uaxYe9r0oRnovAo7nfQPMc/2zMDALicq','Andres','Vega','0987654321','empresa',NULL,'2025-11-30 02:08:59','activo');
+INSERT INTO `usuario` VALUES (42,'admin@app.com','$2b$10$rZX5bxG/9xWxSLbJdJUxJeF93so1jcTxpVqHcCtTyY9HWqbMD11Em','Admin','System',NULL,'admin',NULL,'2025-11-30 01:47:05','activo'),(43,'cliente@app.com','$2b$10$u2RO3NSKycnYaTRvXsW8M.qlcFysprntKvb1uRWpL4XWyy1Te1xHa','Pablo','Jarrin','0994460493','cliente','https://res.cloudinary.com/dzoptmnx0/image/upload/v1764524181/app_servicios/gdfueolesdmgphlsflqr.jpg','2025-11-30 02:06:38','activo'),(44,'empresa1@app.com','$2b$10$978VmiclvD.N706D.ohqnO.48u/n4Y1LaW7zDsfFMXzx2aKCXITO6','Jarod','Tierra','0994839432','empresa',NULL,'2025-11-30 02:08:01','activo'),(45,'empresa2@app.com','$2b$10$3LBzhQlln5EN4lNy7fwP1uaxYe9r0oRnovAo7nfQPMc/2zMDALicq','Andres','Vega','','empresa',NULL,'2025-11-30 02:08:59','activo');
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -697,16 +712,25 @@ SET @saved_cs_client     = @@character_set_client;
  1 AS `id_contratacion`,
  1 AS `fecha_solicitud`,
  1 AS `fecha_programada`,
+ 1 AS `fecha_completada`,
  1 AS `estado_contratacion`,
  1 AS `precio_total`,
+ 1 AS `precio_subtotal`,
  1 AS `cliente_nombre`,
  1 AS `cliente_email`,
+ 1 AS `cliente_foto`,
  1 AS `servicio_nombre`,
+ 1 AS `servicio_imagen`,
  1 AS `empresa_nombre`,
  1 AS `nombre_sucursal`,
  1 AS `direccion_entrega`,
  1 AS `cupon_codigo`,
- 1 AS `descuento_aplicado`*/;
+ 1 AS `descuento_aplicado`,
+ 1 AS `metodo_pago`,
+ 1 AS `estado_pago`,
+ 1 AS `calificacion`,
+ 1 AS `calificacion_comentario`,
+ 1 AS `id_empresa`*/;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -726,6 +750,8 @@ SET @saved_cs_client     = @@character_set_client;
  1 AS `total_sucursales`,
  1 AS `total_contrataciones`,
  1 AS `ingresos_totales`,
+ 1 AS `subtotal_ventas`,
+ 1 AS `comision_app`,
  1 AS `cupones_activos`*/;
 SET character_set_client = @saved_cs_client;
 
@@ -781,6 +807,23 @@ SET @saved_cs_client     = @@character_set_client;
  1 AS `horario_apertura`,
  1 AS `horario_cierre`,
  1 AS `estado`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `vista_top_clientes`
+--
+
+DROP TABLE IF EXISTS `vista_top_clientes`;
+/*!50001 DROP VIEW IF EXISTS `vista_top_clientes`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `vista_top_clientes` AS SELECT 
+ 1 AS `id_cliente`,
+ 1 AS `nombre_completo`,
+ 1 AS `email`,
+ 1 AS `total_contrataciones`,
+ 1 AS `total_gastado`,
+ 1 AS `ultima_contratacion`*/;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -925,88 +968,86 @@ DELIMITER ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
 /*!50003 SET character_set_client  = utf8mb4 */ ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'IGNORE_SPACE,ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_crear_calificacion`(
-    IN p_id_contratacion INT,
-    IN p_calificacion TINYINT,
-    IN p_comentario TEXT,
-    OUT p_out_id_calificacion INT,
-    OUT p_out_mensaje VARCHAR(255)
-)
+          IN p_id_contratacion INT,
+          IN p_calificacion TINYINT,
+          IN p_comentario TEXT,
+          OUT p_out_id_calificacion INT,
+          OUT p_out_mensaje VARCHAR(255)
+      )
 BEGIN
-    DECLARE v_contratacion_estado VARCHAR(20);
-    DECLARE v_calificacion_count INT DEFAULT 0;
-    DECLARE v_id_empresa INT;
-    DECLARE v_id_servicio INT;
-    DECLARE v_nuevo_promedio DECIMAL(3,2);
+          DECLARE v_contratacion_estado VARCHAR(20);
+          DECLARE v_calificacion_count INT DEFAULT 0;
+          DECLARE v_id_empresa INT;
+          DECLARE v_id_servicio INT;
+          DECLARE v_nuevo_promedio DECIMAL(3,2);
 
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        SET p_out_id_calificacion = NULL;
-        SET p_out_mensaje = 'Error al crear calificación';
-    END;
+          DECLARE EXIT HANDLER FOR SQLEXCEPTION
+          BEGIN
+              ROLLBACK;
+              SET p_out_id_calificacion = NULL;
+              SET p_out_mensaje = 'Error al crear calificación';
+          END;
 
-    START TRANSACTION;
+          START TRANSACTION;
 
-    -- 1. Validar contratación y OBTENER EL ID_SERVICIO al mismo tiempo
-    SELECT estado, id_servicio 
-    INTO v_contratacion_estado, v_id_servicio
-    FROM contratacion
-    WHERE id_contratacion = p_id_contratacion;
+          -- Validar contratación y obtener servicio/empresa
+          SELECT c.estado, c.id_servicio, s.id_empresa 
+          INTO v_contratacion_estado, v_id_servicio, v_id_empresa
+          FROM contratacion c
+          INNER JOIN servicio s ON c.id_servicio = s.id_servicio
+          WHERE c.id_contratacion = p_id_contratacion;
 
-    IF v_contratacion_estado IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'La contratación no existe';
-    END IF;
+          IF v_contratacion_estado IS NULL THEN
+              SIGNAL SQLSTATE '45000'
+                  SET MESSAGE_TEXT = 'La contratación no existe';
+          END IF;
 
-    IF v_contratacion_estado != 'completado' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Solo se pueden calificar contrataciones completadas';
-    END IF;
+          IF v_contratacion_estado != 'completado' THEN
+              SIGNAL SQLSTATE '45000'
+                  SET MESSAGE_TEXT = 'Solo se pueden calificar contrataciones completadas';
+          END IF;
 
-    -- Validar que no exista calificación previa del mismo tipo
-    SELECT COUNT(*) INTO v_calificacion_count
-    FROM calificacion
-    WHERE id_contratacion = p_id_contratacion;
+          -- Validar duplicados
+          SELECT COUNT(*) INTO v_calificacion_count
+          FROM calificacion
+          WHERE id_contratacion = p_id_contratacion;
 
-    IF v_calificacion_count > 0 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Esta contratación ya fue calificada';
-    END IF;
+          IF v_calificacion_count > 0 THEN
+              SIGNAL SQLSTATE '45000'
+                  SET MESSAGE_TEXT = 'Esta contratación ya fue calificada';
+          END IF;
 
-    -- Validar rango de calificación
-    IF p_calificacion < 1 OR p_calificacion > 5 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'La calificación debe estar entre 1 y 5';
-    END IF;
+          -- Validar rango
+          IF p_calificacion < 1 OR p_calificacion > 5 THEN
+              SIGNAL SQLSTATE '45000'
+                  SET MESSAGE_TEXT = 'La calificación debe estar entre 1 y 5';
+          END IF;
 
-    -- Crear calificación
-    INSERT INTO calificacion (id_contratacion, id_servicio, calificacion, comentario, tipo)
-    VALUES (p_id_contratacion, v_id_servicio, p_calificacion, p_comentario, p_tipo);
+          -- Insertar calificación
+          INSERT INTO calificacion (id_contratacion, id_servicio, calificacion, comentario)
+          VALUES (p_id_contratacion, v_id_servicio, p_calificacion, p_comentario);
 
-    SET p_out_id_calificacion = LAST_INSERT_ID();
+          SET p_out_id_calificacion = LAST_INSERT_ID();
 
-    -- *** LÓGICA DEL TRIGGER IMPLEMENTADA AQUÍ ***
-        -- Calcular nuevo promedio
-        SELECT AVG(cal.calificacion) INTO v_nuevo_promedio
-        FROM calificacion cal
-        INNER JOIN contratacion c ON cal.id_contratacion = c.id_contratacion
-        INNER JOIN servicio s ON c.id_servicio = s.id_servicio
-        WHERE s.id_empresa = v_id_empresa;
+          -- Actualizar promedio empresa
+          SELECT AVG(cal.calificacion) INTO v_nuevo_promedio
+          FROM calificacion cal
+          INNER JOIN servicio s ON cal.id_servicio = s.id_servicio
+          WHERE s.id_empresa = v_id_empresa;
 
-        -- Actualizar promedio en tabla empresa
-        UPDATE empresa
-        SET calificacion_promedio = IFNULL(v_nuevo_promedio, 0)
-        WHERE id_empresa = v_id_empresa;
+          UPDATE empresa
+          SET calificacion_promedio = IFNULL(v_nuevo_promedio, 0)
+          WHERE id_empresa = v_id_empresa;
 
-    SET p_out_mensaje = 'Calificación creada exitosamente';
+          SET p_out_mensaje = 'Calificación creada exitosamente';
 
-    COMMIT;
-END ;;
+          COMMIT;
+      END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -1764,10 +1805,10 @@ DELIMITER ;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `vista_contrataciones_detalle` AS select `con`.`id_contratacion` AS `id_contratacion`,`con`.`fecha_solicitud` AS `fecha_solicitud`,`con`.`fecha_programada` AS `fecha_programada`,`con`.`estado` AS `estado_contratacion`,`con`.`precio_total` AS `precio_total`,concat(`uc`.`nombre`,' ',`uc`.`apellido`) AS `cliente_nombre`,`uc`.`email` AS `cliente_email`,`s`.`nombre` AS `servicio_nombre`,`e`.`razon_social` AS `empresa_nombre`,`suc`.`nombre_sucursal` AS `nombre_sucursal`,concat(`d`.`calle_principal`,', ',`d`.`ciudad`) AS `direccion_entrega`,`cup`.`codigo` AS `cupon_codigo`,`con`.`descuento_aplicado` AS `descuento_aplicado` from ((((((((`contratacion` `con` join `cliente` `cli` on((`con`.`id_cliente` = `cli`.`id_cliente`))) join `usuario` `uc` on((`cli`.`id_usuario` = `uc`.`id_usuario`))) join `servicio` `s` on((`con`.`id_servicio` = `s`.`id_servicio`))) join `empresa` `e` on((`s`.`id_empresa` = `e`.`id_empresa`))) join `usuario` `ue` on((`e`.`id_usuario` = `ue`.`id_usuario`))) join `sucursal` `suc` on((`con`.`id_sucursal` = `suc`.`id_sucursal`))) join `direccion` `d` on((`con`.`id_direccion_entrega` = `d`.`id_direccion`))) left join `cupon` `cup` on((`con`.`id_cupon` = `cup`.`id_cupon`))) */;
+/*!50001 VIEW `vista_contrataciones_detalle` AS select `con`.`id_contratacion` AS `id_contratacion`,`con`.`fecha_solicitud` AS `fecha_solicitud`,`con`.`fecha_programada` AS `fecha_programada`,`con`.`fecha_completada` AS `fecha_completada`,`con`.`estado` AS `estado_contratacion`,`con`.`precio_total` AS `precio_total`,`con`.`precio_subtotal` AS `precio_subtotal`,concat(`uc`.`nombre`,' ',`uc`.`apellido`) AS `cliente_nombre`,`uc`.`email` AS `cliente_email`,`uc`.`foto_perfil_url` AS `cliente_foto`,`s`.`nombre` AS `servicio_nombre`,`s`.`imagen_url` AS `servicio_imagen`,`e`.`razon_social` AS `empresa_nombre`,`suc`.`nombre_sucursal` AS `nombre_sucursal`,concat(`d`.`calle_principal`,', ',`d`.`ciudad`) AS `direccion_entrega`,`cup`.`codigo` AS `cupon_codigo`,`con`.`descuento_aplicado` AS `descuento_aplicado`,`p`.`metodo_pago` AS `metodo_pago`,`p`.`estado_pago` AS `estado_pago`,`cal`.`calificacion` AS `calificacion`,`cal`.`comentario` AS `calificacion_comentario`,`s`.`id_empresa` AS `id_empresa` from ((((((((((`contratacion` `con` join `cliente` `cli` on((`con`.`id_cliente` = `cli`.`id_cliente`))) join `usuario` `uc` on((`cli`.`id_usuario` = `uc`.`id_usuario`))) join `servicio` `s` on((`con`.`id_servicio` = `s`.`id_servicio`))) join `empresa` `e` on((`s`.`id_empresa` = `e`.`id_empresa`))) join `usuario` `ue` on((`e`.`id_usuario` = `ue`.`id_usuario`))) join `sucursal` `suc` on((`con`.`id_sucursal` = `suc`.`id_sucursal`))) join `direccion` `d` on((`con`.`id_direccion_entrega` = `d`.`id_direccion`))) left join `cupon` `cup` on((`con`.`id_cupon` = `cup`.`id_cupon`))) left join `pago` `p` on((`con`.`id_contratacion` = `p`.`id_contratacion`))) left join `calificacion` `cal` on((`con`.`id_contratacion` = `cal`.`id_contratacion`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -1782,10 +1823,10 @@ DELIMITER ;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_general_ci */;
+/*!50001 SET collation_connection      = utf8mb4_unicode_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `vista_estadisticas_empresa` AS select `e`.`id_empresa` AS `id_empresa`,`e`.`razon_social` AS `razon_social`,`e`.`logo_url` AS `logo_url`,`e`.`calificacion_promedio` AS `calificacion_promedio`,count(distinct `s`.`id_servicio`) AS `total_servicios`,count(distinct `suc`.`id_sucursal`) AS `total_sucursales`,count(distinct `con`.`id_contratacion`) AS `total_contrataciones`,sum((case when (`con`.`estado` = 'completado') then `con`.`precio_total` else 0 end)) AS `ingresos_totales`,count(distinct `cup`.`id_cupon`) AS `cupones_activos` from ((((`empresa` `e` left join `servicio` `s` on((`e`.`id_empresa` = `s`.`id_empresa`))) left join `sucursal` `suc` on((`e`.`id_empresa` = `suc`.`id_empresa`))) left join `contratacion` `con` on((`s`.`id_servicio` = `con`.`id_servicio`))) left join `cupon` `cup` on(((`e`.`id_empresa` = `cup`.`id_empresa`) and (`cup`.`activo` = true)))) group by `e`.`id_empresa`,`e`.`razon_social`,`e`.`logo_url`,`e`.`calificacion_promedio` */;
+/*!50001 VIEW `vista_estadisticas_empresa` AS select `e`.`id_empresa` AS `id_empresa`,`e`.`razon_social` AS `razon_social`,`e`.`logo_url` AS `logo_url`,`e`.`calificacion_promedio` AS `calificacion_promedio`,(select count(0) from `servicio` `s` where (`s`.`id_empresa` = `e`.`id_empresa`)) AS `total_servicios`,(select count(0) from `sucursal` `suc` where (`suc`.`id_empresa` = `e`.`id_empresa`)) AS `total_sucursales`,(select count(0) from (`contratacion` `c` join `servicio` `s` on((`c`.`id_servicio` = `s`.`id_servicio`))) where (`s`.`id_empresa` = `e`.`id_empresa`)) AS `total_contrataciones`,(select coalesce(sum(`c`.`ganancia_empresa`),0) from (`contratacion` `c` join `servicio` `s` on((`c`.`id_servicio` = `s`.`id_servicio`))) where ((`s`.`id_empresa` = `e`.`id_empresa`) and (`c`.`estado` = 'completado'))) AS `ingresos_totales`,(select coalesce(sum(`c`.`precio_total`),0) from (`contratacion` `c` join `servicio` `s` on((`c`.`id_servicio` = `s`.`id_servicio`))) where ((`s`.`id_empresa` = `e`.`id_empresa`) and (`c`.`estado` = 'completado'))) AS `subtotal_ventas`,(select coalesce(sum(`c`.`comision_plataforma`),0) from (`contratacion` `c` join `servicio` `s` on((`c`.`id_servicio` = `s`.`id_servicio`))) where ((`s`.`id_empresa` = `e`.`id_empresa`) and (`c`.`estado` = 'completado'))) AS `comision_app`,(select count(0) from `cupon` `cup` where ((`cup`.`id_empresa` = `e`.`id_empresa`) and (`cup`.`activo` = 1))) AS `cupones_activos` from `empresa` `e` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -1825,6 +1866,24 @@ DELIMITER ;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `vista_top_clientes`
+--
+
+/*!50001 DROP VIEW IF EXISTS `vista_top_clientes`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `vista_top_clientes` AS select `c`.`id_cliente` AS `id_cliente`,concat(`u`.`nombre`,' ',`u`.`apellido`) AS `nombre_completo`,`u`.`email` AS `email`,count(`con`.`id_contratacion`) AS `total_contrataciones`,coalesce(sum(`con`.`precio_total`),0) AS `total_gastado`,max(`con`.`fecha_solicitud`) AS `ultima_contratacion` from ((`cliente` `c` join `usuario` `u` on((`c`.`id_usuario` = `u`.`id_usuario`))) left join `contratacion` `con` on((`c`.`id_cliente` = `con`.`id_cliente`))) group by `c`.`id_cliente`,`u`.`nombre`,`u`.`apellido`,`u`.`email` order by `total_gastado` desc */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -1835,4 +1894,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-30  2:10:42
+-- Dump completed on 2025-11-30 20:58:52

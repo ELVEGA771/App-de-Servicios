@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/core/services/empresa_service.dart';
 import 'package:intl/intl.dart';
@@ -18,7 +17,6 @@ class _EmpresaIncomeDetailsScreenState extends State<EmpresaIncomeDetailsScreen>
   bool _isLoading = true;
   String? _error;
   int _currentPage = 1;
-  int _totalPages = 1;
   final int _limit = 20;
 
   @override
@@ -46,8 +44,6 @@ class _EmpresaIncomeDetailsScreenState extends State<EmpresaIncomeDetailsScreen>
 
         setState(() {
           _transactions = result['data'];
-          final meta = result['meta'];
-          _totalPages = meta['totalPages'];
           _isLoading = false;
         });
       } else {

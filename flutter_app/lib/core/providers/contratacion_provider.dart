@@ -13,7 +13,6 @@ class ContratacionProvider with ChangeNotifier {
   PaginationData? _pagination;
   Map<String, dynamic>? _estadisticas;
   bool _isLoading = false;
-  final bool _isLoadingMore = false;
   String? _error;
 
   // Historial
@@ -25,7 +24,6 @@ class ContratacionProvider with ChangeNotifier {
   PaginationData? get pagination => _pagination;
   Map<String, dynamic>? get estadisticas => _estadisticas;
   bool get isLoading => _isLoading;
-  bool get isLoadingMore => _isLoadingMore;
   String? get error => _error;
   bool get hasMore => _pagination?.hasNextPage ?? false;
   List<HistorialContratacion> get historial => _historial;
@@ -34,10 +32,6 @@ class ContratacionProvider with ChangeNotifier {
   void _safeNotify() {
     if (!hasListeners) return;
     final binding = WidgetsBinding.instance;
-    if (binding == null) {
-      notifyListeners();
-      return;
-    }
 
     final phase = SchedulerBinding.instance.schedulerPhase;
     if (phase == SchedulerPhase.idle ||

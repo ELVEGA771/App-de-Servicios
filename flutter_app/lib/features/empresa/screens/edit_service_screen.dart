@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/models/categoria.dart';
-import 'package:servicios_app/core/models/servicio.dart';
 import 'package:servicios_app/core/models/sucursal.dart';
 import 'package:servicios_app/core/services/categoria_service.dart';
 import 'package:servicios_app/core/services/servicio_service.dart';
@@ -38,7 +37,6 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
   int? _selectedCategoriaId;
   bool _isLoading = true;
   bool _isSaving = false;
-  Servicio? _servicio;
 
   Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
@@ -70,7 +68,6 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
         setState(() {
           _categorias = categorias;
           _sucursales = sucursales;
-          _servicio = servicio;
           
           // Pre-fill form
           _nombreController.text = servicio.nombre;
