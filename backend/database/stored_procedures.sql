@@ -190,7 +190,6 @@ CREATE PROCEDURE sp_crear_calificacion(
     IN p_id_contratacion INT,
     IN p_calificacion TINYINT,
     IN p_comentario TEXT,
-    IN p_tipo ENUM('cliente_a_empresa', 'empresa_a_cliente'),
     OUT p_out_id_calificacion INT,
     OUT p_out_mensaje VARCHAR(255)
 )
@@ -198,6 +197,7 @@ BEGIN
     DECLARE v_contratacion_estado VARCHAR(20);
     DECLARE v_calificacion_count INT DEFAULT 0;
     DECLARE v_id_empresa INT;
+    DECLARE v_id_servicio INT;
     DECLARE v_nuevo_promedio DECIMAL(3,2);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -210,9 +210,12 @@ BEGIN
     START TRANSACTION;
 
     -- Validar que la contratación exista y esté completada
-    SELECT estado INTO v_contratacion_estado
-    FROM contratacion
-    WHERE id_contratacion = p_id_contratacion;
+    -- Y obtener el servicio asociado
+    SELECT c.estado, c.id_servicio, s.id_empresa 
+    INTO v_contratacion_estado, v_id_servicio, v_id_empresa
+    FROM contratacion c
+    INNER JOIN servicio s ON c.id_servicio = s.id_servicio
+    WHERE c.id_contratacion = p_id_contratacion;
 
     IF v_contratacion_estado IS NULL THEN
         SIGNAL SQLSTATE '45000'
@@ -224,10 +227,10 @@ BEGIN
             SET MESSAGE_TEXT = 'Solo se pueden calificar contrataciones completadas';
     END IF;
 
-    -- Validar que no exista calificación previa del mismo tipo
+    -- Validar que no exista calificación previa
     SELECT COUNT(*) INTO v_calificacion_count
     FROM calificacion
-    WHERE id_contratacion = p_id_contratacion AND tipo = p_tipo;
+    WHERE id_contratacion = p_id_contratacion;
 
     IF v_calificacion_count > 0 THEN
         SIGNAL SQLSTATE '45000'
@@ -241,33 +244,22 @@ BEGIN
     END IF;
 
     -- Crear calificación
-    INSERT INTO calificacion (id_contratacion, calificacion, comentario, tipo)
-    VALUES (p_id_contratacion, p_calificacion, p_comentario, p_tipo);
+    INSERT INTO calificacion (id_contratacion, id_servicio, calificacion, comentario)
+    VALUES (p_id_contratacion, v_id_servicio, p_calificacion, p_comentario);
 
     SET p_out_id_calificacion = LAST_INSERT_ID();
 
-    -- *** LÓGICA DEL TRIGGER IMPLEMENTADA AQUÍ ***
-    -- Si es calificación de cliente a empresa, actualizar promedio de la empresa
-    IF p_tipo = 'cliente_a_empresa' THEN
-        -- Obtener el ID de la empresa
-        SELECT s.id_empresa INTO v_id_empresa
-        FROM contratacion c
-        INNER JOIN servicio s ON c.id_servicio = s.id_servicio
-        WHERE c.id_contratacion = p_id_contratacion;
+    -- Actualizar promedio de la empresa
+    -- Calcular nuevo promedio
+    SELECT AVG(cal.calificacion) INTO v_nuevo_promedio
+    FROM calificacion cal
+    INNER JOIN servicio s ON cal.id_servicio = s.id_servicio
+    WHERE s.id_empresa = v_id_empresa;
 
-        -- Calcular nuevo promedio
-        SELECT AVG(cal.calificacion) INTO v_nuevo_promedio
-        FROM calificacion cal
-        INNER JOIN contratacion c ON cal.id_contratacion = c.id_contratacion
-        INNER JOIN servicio s ON c.id_servicio = s.id_servicio
-        WHERE s.id_empresa = v_id_empresa
-        AND cal.tipo = 'cliente_a_empresa';
-
-        -- Actualizar promedio en tabla empresa
-        UPDATE empresa
-        SET calificacion_promedio = IFNULL(v_nuevo_promedio, 0)
-        WHERE id_empresa = v_id_empresa;
-    END IF;
+    -- Actualizar promedio en tabla empresa
+    UPDATE empresa
+    SET calificacion_promedio = IFNULL(v_nuevo_promedio, 0)
+    WHERE id_empresa = v_id_empresa;
 
     SET p_out_mensaje = 'Calificación creada exitosamente';
 

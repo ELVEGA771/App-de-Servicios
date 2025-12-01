@@ -14,8 +14,13 @@ const createCalificacion = async (req, res, next) => {
     if (!participated) {
       return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'Unauthorized', HTTP_STATUS.FORBIDDEN);
     }
-    const tipo = req.user.tipo_usuario === 'cliente' ? 'cliente_a_empresa' : 'empresa_a_cliente';
-    const alreadyRated = await Calificacion.isAlreadyRated(id_contratacion, tipo);
+    
+    // Only clients can rate
+    if (req.user.tipo_usuario !== 'cliente') {
+       return sendError(res, ERROR_CODES.AUTHORIZATION_ERROR, 'Only clients can rate services', HTTP_STATUS.FORBIDDEN);
+    }
+
+    const alreadyRated = await Calificacion.isAlreadyRated(id_contratacion);
     if (alreadyRated) {
       return sendError(res, ERROR_CODES.VALIDATION_ERROR, 'Already rated', HTTP_STATUS.BAD_REQUEST);
     }
@@ -23,9 +28,7 @@ const createCalificacion = async (req, res, next) => {
     await Calificacion.create({ 
       id_contratacion, 
       calificacion, 
-      comentario, 
-      tipo,
-      id_usuario: req.user.id_usuario 
+      comentario
     });
     
     sendSuccess(res, { success: true }, 'Rating created', 201);
