@@ -46,10 +46,27 @@ const getVistaTopClientes = async (req, res, next) => {
   }
 };
 
+const getIngresosPlataforma = async (req, res, next) => {
+  try {
+    const query = `
+      SELECT SUM(comision_plataforma) as total_ingresos 
+      FROM contratacion 
+      WHERE comision_plataforma IS NOT NULL
+    `;
+    const result = await executeQuery(query);
+    // result is an array, we want the first element
+    const total = result[0]?.total_ingresos || 0;
+    sendSuccess(res, { total_ingresos: total });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getVistaContrataciones,
   getVistaEstadisticasEmpresa,
   getVistaServicios,
   getVistaSucursales,
-  getVistaTopClientes
+  getVistaTopClientes,
+  getIngresosPlataforma
 };

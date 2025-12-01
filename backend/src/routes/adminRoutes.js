@@ -7,7 +7,8 @@ const {
   getVistaEstadisticasEmpresa, 
   getVistaServicios,
   getVistaSucursales,
-  getVistaTopClientes
+  getVistaTopClientes,
+  getIngresosPlataforma
 } = require('../controllers/adminVistasController');
 
 // All routes require admin privileges
@@ -19,5 +20,6 @@ router.get('/vistas/estadisticas-empresas', getVistaEstadisticasEmpresa);
 router.get('/vistas/servicios', getVistaServicios);
 router.get('/vistas/sucursales', getVistaSucursales);
 router.get('/vistas/top-clientes', getVistaTopClientes);
+router.get('/stats/ingresos-plataforma', getIngresosPlataforma);
 
 module.exports = router;

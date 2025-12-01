@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/models/categoria.dart';
 import 'package:servicios_app/core/models/servicio.dart';
+import 'package:servicios_app/core/models/sucursal.dart';
 import 'package:servicios_app/core/services/categoria_service.dart';
 import 'package:servicios_app/core/services/servicio_service.dart';
+import 'package:servicios_app/core/services/sucursal_service.dart';
 import 'dart:typed_data'; // Para Uint8List
 import 'package:image_picker/image_picker.dart';
 
@@ -20,6 +22,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
   final _formKey = GlobalKey<FormState>();
   final CategoriaService _categoriaService = CategoriaService();
   final ServicioService _servicioService = ServicioService();
+  final SucursalService _sucursalService = SucursalService();
 
   // Form controllers
   final _nombreController = TextEditingController();
@@ -30,6 +33,8 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
 
   // State variables
   List<Categoria> _categorias = [];
+  List<Sucursal> _sucursales = [];
+  List<int> _selectedSucursalIds = [];
   int? _selectedCategoriaId;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -58,11 +63,13 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
   Future<void> _loadData() async {
     try {
       final categorias = await _categoriaService.getAllCategorias();
+      final sucursales = await _sucursalService.getActiveSucursales();
       final servicio = await _servicioService.getServicioById(widget.servicioId);
 
       if (mounted) {
         setState(() {
           _categorias = categorias;
+          _sucursales = sucursales;
           _servicio = servicio;
           
           // Pre-fill form
@@ -76,6 +83,13 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
             _imagenUrlController.text = servicio.imagenPrincipal!;
           }
           _selectedCategoriaId = servicio.idCategoria;
+
+          // Pre-fill sucursales
+          if (servicio.sucursalesDisponibles != null) {
+            _selectedSucursalIds = servicio.sucursalesDisponibles!
+                .map((s) => int.parse(s['id_sucursal'].toString()))
+                .toList();
+          }
           
           _isLoading = false;
         });
@@ -121,6 +135,12 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
         imagenPrincipal: _imagenUrlController.text.trim().isEmpty
             ? null
             : _imagenUrlController.text.trim(),
+      );
+
+      // Update sucursales
+      await _servicioService.updateServicioSucursales(
+        servicioId: widget.servicioId,
+        sucursalIds: _selectedSucursalIds,
       );
 
       if (mounted) {
@@ -296,6 +316,52 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
                       ),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     ),
+                    const SizedBox(height: 24),
+
+                    // Sucursales
+                    const Text(
+                      'Disponibilidad en Sucursales',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_sucursales.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          'No tienes sucursales activas. Crea una sucursal primero.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    else
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: _sucursales.map((sucursal) {
+                            final isSelected =
+                                _selectedSucursalIds.contains(sucursal.idSucursal);
+                            return CheckboxListTile(
+                              title: Text(sucursal.nombreSucursal),
+                              subtitle: Text(sucursal.direccionCorta),
+                              value: isSelected,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  if (value == true) {
+                                    _selectedSucursalIds.add(sucursal.idSucursal);
+                                  } else {
+                                    _selectedSucursalIds.remove(sucursal.idSucursal);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     const SizedBox(height: 24),
 
                     // Imagen

@@ -136,6 +136,46 @@ class Empresa {
   }
 
   /**
+   * Get income details (contrataciones completadas)
+   */
+  static async getIncomeDetails(idEmpresa, page = 1, limit = 20) {
+    const limitNum = parseInt(limit, 10);
+    const pageNum = parseInt(page, 10);
+    const offset = (pageNum - 1) * limitNum;
+    
+    const query = `
+      SELECT 
+        id_contratacion,
+        fecha_completada,
+        servicio_nombre,
+        cliente_nombre,
+        cliente_foto,
+        metodo_pago,
+        precio_total,
+        calificacion,
+        calificacion_comentario
+      FROM vista_contrataciones_detalle
+      WHERE id_empresa = ? 
+        AND estado_contratacion = 'completado'
+      ORDER BY fecha_completada DESC
+      LIMIT ? OFFSET ?
+    `;
+    
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM vista_contrataciones_detalle
+      WHERE id_empresa = ? 
+        AND estado_contratacion = 'completado'
+    `;
+
+    const countResult = await executeQuery(countQuery, [idEmpresa]);
+    const total = countResult[0].total;
+
+    const results = await executeQuery(query, [idEmpresa, limitNum, offset]);
+    return { data: results, total };
+  }
+
+  /**
    * Check if RUC/NIT exists
    */
   static async rucExists(rucNit, excludeId = null) {

@@ -56,17 +56,7 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadStatistics,
-          ),
-        ],
-      ),
-      body: _isLoading
+    return _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(
@@ -213,49 +203,91 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
 
                         // Revenue Card
                         Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.successColor
-                                            .withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.attach_money,
-                                        color: AppTheme.successColor,
-                                        size: 32,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    const Expanded(
-                                      child: Text(
-                                        'Ingresos Totales',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textSecondaryColor,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                  context, '/empresa/income-details');
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.successColor
+                                              .withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.attach_money,
+                                          color: AppTheme.successColor,
+                                          size: 32,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  '\$${_formatCurrency(_stats?['ingresos_totales'])}',
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.successColor,
+                                      const SizedBox(width: 16),
+                                      const Expanded(
+                                        child: Text(
+                                          'Resumen Financiero',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.textPrimaryColor,
+                                          ),
+                                        ),
+                                      ),
+                                      const Icon(Icons.arrow_forward_ios,
+                                          size: 16,
+                                          color: AppTheme.textSecondaryColor),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 20),
+                                  
+                                  // Subtotal (Ventas Totales)
+                                  _buildFinancialRow(
+                                    'Ventas Totales',
+                                    _stats?['subtotal_ventas'],
+                                    Colors.grey[700]!,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  
+                                  // Comisión App
+                                  _buildFinancialRow(
+                                    'Comisión Plataforma',
+                                    _stats?['comision_app'],
+                                    Colors.red[400]!,
+                                    isNegative: true,
+                                  ),
+                                  const Divider(height: 24),
+                                  
+                                  // Ganancia Neta (Ingresos Totales)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Ganancia Neta',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.textPrimaryColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$${_formatCurrency(_stats?['ingresos_totales'])}',
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.successColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -320,8 +352,7 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
                       ],
                     ),
                   ),
-                ),
-    );
+                );
   }
 
   Widget _buildStatCard({
@@ -402,5 +433,29 @@ class _EmpresaDashboardScreenState extends State<EmpresaDashboardScreen> {
     if (value == null) return '0.00';
     final num = double.tryParse(value.toString()) ?? 0.0;
     return num.toStringAsFixed(2);
+  }
+
+  Widget _buildFinancialRow(String label, dynamic value, Color color,
+      {bool isNegative = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+          ),
+        ),
+        Text(
+          '${isNegative ? "- " : ""}\$${_formatCurrency(value)}',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
+    );
   }
 }

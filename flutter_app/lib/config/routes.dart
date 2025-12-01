@@ -31,6 +31,7 @@ import 'package:servicios_app/features/chat/screens/chat_screen.dart';
 import 'package:servicios_app/features/notificaciones/screens/notificaciones_screen.dart';
 import 'package:servicios_app/features/empresa/screens/empresa_cupones_screen.dart';
 import 'package:servicios_app/features/empresa/screens/create_cupon_screen.dart';
+import 'package:servicios_app/features/empresa/screens/empresa_income_details_screen.dart';
 import 'package:servicios_app/features/cupones/screens/cupones_disponibles_screen.dart';
 import 'package:servicios_app/features/admin/screens/admin_dashboard_screen.dart';
 
@@ -77,6 +78,7 @@ class AppRoutes {
   static const String createSucursal = '/empresa/sucursal/create';
   static const String editSucursal = '/empresa/sucursal/edit';
   static const String empresaCupones = '/empresa/cupones';
+  static const String empresaIncomeDetails = '/empresa/income-details';
 
   // Notificaciones
   static const String notificaciones = '/notificaciones';
@@ -230,6 +232,9 @@ class AppRoutes {
 
       case createCupon:
         return MaterialPageRoute(builder: (_) => const CreateCuponScreen());
+
+      case empresaIncomeDetails:
+        return MaterialPageRoute(builder: (_) => const EmpresaIncomeDetailsScreen());
 
       case cuponesDisponibles:
         return MaterialPageRoute(builder: (_) => const CuponesDisponiblesScreen());

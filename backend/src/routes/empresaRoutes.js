@@ -75,4 +75,30 @@ router.get('/:id', asyncHandler(empresaController.getEmpresaById));
  */
 router.get('/:id/estadisticas', asyncHandler(empresaController.getEmpresaStats));
 
+/**
+ * @swagger
+ * /api/empresas/{id}/ingresos-detalles:
+ *   get:
+ *     summary: Get detailed income report
+ *     tags: [Empresas]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of completed transactions with details
+ */
+router.get('/:id/ingresos-detalles', asyncHandler(empresaController.getIncomeDetails));
+
 module.exports = router;

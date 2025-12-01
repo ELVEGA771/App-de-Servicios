@@ -29,45 +29,118 @@ class _AdminStatsScreenState extends State<AdminStatsScreen> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+        child: Column(
           children: [
-            _buildStatCard(
-              'Contrataciones Detalle',
-              Icons.assignment,
-              Colors.blue,
-              () => _navigateToView(
-                  'Contrataciones', _adminService.getVistaContrataciones()),
+            // Total Revenue Card
+            FutureBuilder<double>(
+              future: _adminService.getIngresosPlataforma(),
+              builder: (context, snapshot) {
+                final total = snapshot.data ?? 0.0;
+                return Card(
+                  elevation: 4,
+                  color: Colors.indigo,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.monetization_on,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Ingresos Totales Plataforma',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            snapshot.connectionState == ConnectionState.waiting
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    ),
+                                  )
+                                : Text(
+                                    '\$${total.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            _buildStatCard(
-              'Estadísticas Empresas',
-              Icons.business,
-              Colors.green,
-              () => _navigateToView('Estadísticas Empresas',
-                  _adminService.getVistaEstadisticasEmpresa()),
-            ),
-            _buildStatCard(
-              'Servicios Completos',
-              Icons.cleaning_services,
-              Colors.orange,
-              () => _navigateToView(
-                  'Servicios', _adminService.getVistaServicios()),
-            ),
-            _buildStatCard(
-              'Sucursales y Direcciones',
-              Icons.store,
-              Colors.purple,
-              () => _navigateToView(
-                  'Sucursales', _adminService.getVistaSucursales()),
-            ),
-            _buildStatCard(
-              'Top Clientes',
-              Icons.people,
-              Colors.red,
-              () => _navigateToView(
-                  'Top Clientes', _adminService.getVistaTopClientes()),
+            const SizedBox(height: 16),
+            // Grid of Stats
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
+                  _buildStatCard(
+                    'Contrataciones Detalle',
+                    Icons.assignment,
+                    Colors.blue,
+                    () => _navigateToView('Contrataciones',
+                        _adminService.getVistaContrataciones()),
+                  ),
+                  _buildStatCard(
+                    'Estadísticas Empresas',
+                    Icons.business,
+                    Colors.green,
+                    () => _navigateToView('Estadísticas Empresas',
+                        _adminService.getVistaEstadisticasEmpresa()),
+                  ),
+                  _buildStatCard(
+                    'Servicios Completos',
+                    Icons.cleaning_services,
+                    Colors.orange,
+                    () => _navigateToView(
+                        'Servicios', _adminService.getVistaServicios()),
+                  ),
+                  _buildStatCard(
+                    'Sucursales y Direcciones',
+                    Icons.store,
+                    Colors.purple,
+                    () => _navigateToView(
+                        'Sucursales', _adminService.getVistaSucursales()),
+                  ),
+                  _buildStatCard(
+                    'Top Clientes',
+                    Icons.people,
+                    Colors.red,
+                    () => _navigateToView(
+                        'Top Clientes', _adminService.getVistaTopClientes()),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

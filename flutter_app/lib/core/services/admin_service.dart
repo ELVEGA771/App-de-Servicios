@@ -71,6 +71,23 @@ class AdminService {
     }
   }
 
+  // Stats: Ingresos Plataforma
+  Future<double> getIngresosPlataforma() async {
+    try {
+      final response = await _dioClient.get('/admin/stats/ingresos-plataforma');
+      if (response.data is Map && response.data.containsKey('data')) {
+        final data = response.data['data'];
+        if (data is Map && data.containsKey('total_ingresos')) {
+          return double.tryParse(data['total_ingresos'].toString()) ?? 0.0;
+        }
+      }
+      return 0.0;
+    } catch (e) {
+      print('Error fetching ingresos plataforma: $e');
+      return 0.0;
+    }
+  }
+
   // Helper para limpiar la respuesta
   List<dynamic> _parseResponse(dynamic response) {
     if (response.data is Map && response.data.containsKey('data')) {

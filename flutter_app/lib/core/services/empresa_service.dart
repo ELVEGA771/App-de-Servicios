@@ -9,6 +9,18 @@ class EmpresaService {
     return response.data['data'] as Map<String, dynamic>;
   }
 
+  // Get income details
+  Future<Map<String, dynamic>> getIncomeDetails(int empresaId, {int page = 1, int limit = 20}) async {
+    final response = await _dioClient.get(
+      '/empresas/$empresaId/ingresos-detalles',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return {
+      'data': (response.data['data'] as List).cast<Map<String, dynamic>>(),
+      'meta': response.data['pagination'],
+    };
+  }
+
   // Get empresa services
   Future<List<Map<String, dynamic>>> getEmpresaServices(int empresaId) async {
     final response = await _dioClient.get('/servicios/empresa/$empresaId');

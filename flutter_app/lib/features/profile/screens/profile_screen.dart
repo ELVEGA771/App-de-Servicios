@@ -87,26 +87,31 @@ class ProfileScreen extends StatelessWidget {
                   _buildProfileOption(
                     context,
                     icon: Icons.person_outline,
-                    title: 'Información Personal',
-                    subtitle: 'Nombre, teléfono, fecha nacimiento',
+                    title: user?.tipoUsuario == 'empresa'
+                        ? 'Información Empresarial'
+                        : 'Información Personal',
+                    subtitle: user?.tipoUsuario == 'empresa'
+                        ? 'Razón social, contacto, detalles'
+                        : 'Nombre, teléfono, fecha nacimiento',
                     onTap: () {
                       // Navegar a editar perfil (EditProfileScreen ya existía como placeholder en tu proyecto)
                       Navigator.pushNamed(context, AppRoutes.editProfile);
                     },
                   ),
-                  _buildProfileOption(
-                    context,
-                    icon: Icons.location_on_outlined,
-                    title: 'Mis Direcciones',
-                    subtitle: 'Gestionar direcciones de entrega',
-                    onTap: () {
-                      // Navegar a la pantalla de direcciones que creamos arriba
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const AddressesScreen()));
-                    },
-                  ),
+                  if (user?.tipoUsuario != 'empresa')
+                    _buildProfileOption(
+                      context,
+                      icon: Icons.location_on_outlined,
+                      title: 'Mis Direcciones',
+                      subtitle: 'Gestionar direcciones de entrega',
+                      onTap: () {
+                        // Navegar a la pantalla de direcciones que creamos arriba
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const AddressesScreen()));
+                      },
+                    ),
                   const SizedBox(height: 24),
                   const Padding(
                     padding: EdgeInsets.only(left: 12, bottom: 8),

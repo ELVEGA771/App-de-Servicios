@@ -23,4 +23,12 @@ const getEmpresaStats = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { getAllEmpresas, getEmpresaById, getEmpresaStats };
+const getIncomeDetails = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const result = await Empresa.getIncomeDetails(req.params.id, page, limit);
+    sendPaginated(res, result.data, page, limit, result.total);
+  } catch (error) { next(error); }
+};
+
+module.exports = { getAllEmpresas, getEmpresaById, getEmpresaStats, getIncomeDetails };
