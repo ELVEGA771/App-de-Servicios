@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:provider/provider.dart';
-import 'package:servicios_app/config/theme.dart';
 import 'package:servicios_app/core/providers/calificacion_provider.dart';
 
 class CalificacionDialog extends StatefulWidget {

@@ -7,9 +7,9 @@ class AppConstants {
     if (kIsWeb) {
       return 'http://localhost:3000/api';
     }
-    // En Android emulador, usar 10.0.2.2
+    // En Android (Físico o Emulador), usar la IP de la máquina de desarrollo
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3000/api';
+      return 'http://172.20.10.3:3000/api';
     }
     // Para iOS y otras plataformas, usar localhost
     return 'http://localhost:3000/api';
@@ -102,11 +102,12 @@ class AppConstants {
     // En web, no cambiar nada
     if (kIsWeb) return url;
 
-    // Si estamos en Android (Emulador), cambiamos localhost por 10.0.2.2
+    // Si estamos en Android, cambiamos localhost por la IP de desarrollo
     if (defaultTargetPlatform == TargetPlatform.android) {
       return url
-          .replaceFirst('localhost', '10.0.2.2')
-          .replaceFirst('127.0.0.1', '10.0.2.2');
+          .replaceFirst('localhost', '172.20.10.3')
+          .replaceFirst('127.0.0.1', '172.20.10.3')
+          .replaceFirst('10.0.2.2', '172.20.10.3');
     }
 
     return url;
