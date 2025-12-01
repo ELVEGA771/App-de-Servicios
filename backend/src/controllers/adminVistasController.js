@@ -28,8 +28,28 @@ const getVistaServicios = async (req, res, next) => {
   }
 };
 
+const getVistaSucursales = async (req, res, next) => {
+  try {
+    const data = await executeQuery('SELECT * FROM vista_sucursales_direccion_completa');
+    sendSuccess(res, data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getVistaTopClientes = async (req, res, next) => {
+  try {
+    const data = await executeQuery('SELECT * FROM vista_top_clientes');
+    sendSuccess(res, data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getVistaContrataciones,
   getVistaEstadisticasEmpresa,
-  getVistaServicios
+  getVistaServicios,
+  getVistaSucursales,
+  getVistaTopClientes
 };

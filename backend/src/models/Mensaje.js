@@ -34,7 +34,16 @@ class Mensaje {
    * Find mensaje by ID
    */
   static async findById(id) {
-    const query = 'SELECT * FROM mensaje WHERE id_mensaje = ?';
+    const query = `
+      SELECT 
+        m.*,
+        CONCAT(u.nombre, ' ', u.apellido) as remitente_nombre,
+        u.foto_perfil_url as remitente_foto,
+        u.tipo_usuario as tipo_remitente
+      FROM mensaje m
+      INNER JOIN usuario u ON m.id_remitente = u.id_usuario
+      WHERE m.id_mensaje = ?
+    `;
     const results = await executeQuery(query, [id]);
     return results[0] || null;
   }

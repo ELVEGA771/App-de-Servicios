@@ -58,6 +58,34 @@ router.get('/:id', asyncHandler(conversacionController.getConversacionById));
 /**
  * @swagger
  * /api/conversaciones/{id}/mensajes:
+ *   get:
+ *     summary: Get messages from conversation
+ *     tags: [Conversaciones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of messages
+ */
+router.get('/:id/mensajes', asyncHandler(conversacionController.getMensajes));
+
+/**
+ * @swagger
+ * /api/conversaciones/{id}/mensajes:
  *   post:
  *     summary: Send message in conversation
  *     tags: [Conversaciones]
@@ -108,5 +136,25 @@ router.post('/:id/mensajes', asyncHandler(conversacionController.sendMensaje));
  *         description: Messages marked as read
  */
 router.put('/:id/leer', asyncHandler(conversacionController.markAsRead));
+
+/**
+ * @swagger
+ * /api/conversaciones/contrato/{id}:
+ *   get:
+ *     summary: Get or create conversation by contract ID
+ *     tags: [Conversaciones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Conversation found or created
+ */
+router.get('/contrato/:id', asyncHandler(conversacionController.getOrCreateByContratacion));
 
 module.exports = router;
