@@ -25,10 +25,10 @@ class Mensaje {
 
   factory Mensaje.fromJson(Map<String, dynamic> json) {
     return Mensaje(
-      id: json['id'] as int,
+      id: (json['id'] ?? json['id_mensaje']) as int,
       idConversacion: json['id_conversacion'] as int,
       idRemitente: json['id_remitente'] as int,
-      tipoRemitente: json['tipo_remitente'] as String,
+      tipoRemitente: (json['tipo_remitente'] ?? 'unknown') as String,
       contenido: json['contenido'] as String,
       fechaEnvio: DateTime.parse(json['fecha_envio'] as String),
       leido: json['leido'] == 1 || json['leido'] == true,

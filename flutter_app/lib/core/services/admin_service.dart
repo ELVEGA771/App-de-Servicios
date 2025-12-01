@@ -51,6 +51,26 @@ class AdminService {
     }
   }
 
+  // Vista: vista_sucursales_direccion_completa
+  Future<List<dynamic>> getVistaSucursales() async {
+    try {
+      final response = await _dioClient.get('/admin/vistas/sucursales');
+      return _parseResponse(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Vista: vista_top_clientes
+  Future<List<dynamic>> getVistaTopClientes() async {
+    try {
+      final response = await _dioClient.get('/admin/vistas/top-clientes');
+      return _parseResponse(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Helper para limpiar la respuesta
   List<dynamic> _parseResponse(dynamic response) {
     if (response.data is Map && response.data.containsKey('data')) {

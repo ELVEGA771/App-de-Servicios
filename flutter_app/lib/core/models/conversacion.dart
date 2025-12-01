@@ -33,7 +33,7 @@ class Conversacion {
 
   factory Conversacion.fromJson(Map<String, dynamic> json) {
     return Conversacion(
-      id: json['id'] as int,
+      id: json['id'] as int? ?? json['id_conversacion'] as int,
       idCliente: json['id_cliente'] as int,
       idEmpresa: json['id_empresa'] as int,
       idContratacion: json['id_contratacion'] as int?,
