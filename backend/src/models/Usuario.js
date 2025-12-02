@@ -47,31 +47,35 @@ class Usuario {
     const fields = [];
     const params = [];
 
+    params.push(id);
+
     if (userData.nombre !== undefined) {
-      fields.push('nombre = ?');
       params.push(userData.nombre);
+    }else {
+      params.push(null);
     }
     if (userData.apellido !== undefined) {
-      fields.push('apellido = ?');
       params.push(userData.apellido);
+    }else {
+      params.push(null);
     }
     if (userData.telefono !== undefined) {
-      fields.push('telefono = ?');
       params.push(userData.telefono);
+    }else {
+      params.push(null);
     }
     if (userData.foto_perfil_url !== undefined) {
-      fields.push('foto_perfil_url = ?');
       params.push(userData.foto_perfil_url);
+    }else {
+      params.push(null);
     }
     if (userData.estado !== undefined) {
-      fields.push('estado = ?');
       params.push(userData.estado);
+    }else {
+      params.push(null);
     }
 
-    if (fields.length === 0) return null;
-
-    params.push(id);
-    const query = `UPDATE usuario SET ${fields.join(', ')} WHERE id_usuario = ?`;
+    const query = `CALL sp_actualizar_usuario(?, ?, ?, ?, ?, ?, @mensaje)`;
     await executeQuery(query, params);
     return this.findById(id);
   }
