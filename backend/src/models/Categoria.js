@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Categoria {
   /**
@@ -31,45 +31,52 @@ class Categoria {
    * Create new categoria
    */
   static async create(categoriaData) {
-    const query = `
-      INSERT INTO categoria_servicio (nombre, descripcion, icono_url)
-      VALUES (?, ?, ?)
-    `;
-    const params = [
-      categoriaData.nombre,
-      categoriaData.descripcion || null,
-      categoriaData.icono_url || null
-    ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+    return executeTransaction(async (connection) => {
+      const query = `
+        INSERT INTO categoria_servicio (nombre, descripcion, icono_url)
+        VALUES (?, ?, ?)
+      `;
+      const params = [
+        categoriaData.nombre,
+        categoriaData.descripcion || null,
+        categoriaData.icono_url || null
+      ];
+      const result = await executeQuery(query, params, connection);
+      return result.insertId;
+    });
   }
 
   /**
    * Update categoria
    */
   static async update(id, categoriaData) {
-    const fields = [];
-    const params = [];
+    return executeTransaction(async (connection) => {
+      const fields = [];
+      const params = [];
 
-    if (categoriaData.nombre !== undefined) {
-      fields.push('nombre = ?');
-      params.push(categoriaData.nombre);
-    }
-    if (categoriaData.descripcion !== undefined) {
-      fields.push('descripcion = ?');
-      params.push(categoriaData.descripcion);
-    }
-    if (categoriaData.icono_url !== undefined) {
-      fields.push('icono_url = ?');
-      params.push(categoriaData.icono_url);
-    }
+      if (categoriaData.nombre !== undefined) {
+        fields.push('nombre = ?');
+        params.push(categoriaData.nombre);
+      }
+      if (categoriaData.descripcion !== undefined) {
+        fields.push('descripcion = ?');
+        params.push(categoriaData.descripcion);
+      }
+      if (categoriaData.icono_url !== undefined) {
+        fields.push('icono_url = ?');
+        params.push(categoriaData.icono_url);
+      }
 
-    if (fields.length === 0) return null;
+      if (fields.length === 0) return null;
 
-    params.push(id);
-    const query = `UPDATE categoria_servicio SET ${fields.join(', ')} WHERE id_categoria = ?`;
-    await executeQuery(query, params);
-    return this.findById(id);
+      params.push(id);
+      const query = `UPDATE categoria_servicio SET ${fields.join(', ')} WHERE id_categoria = ?`;
+      await executeQuery(query, params, connection);
+      
+      const findQuery = 'SELECT * FROM categoria_servicio WHERE id_categoria = ?';
+      const results = await executeQuery(findQuery, [id], connection);
+      return results[0] || null;
+    });
   }
 
   /**

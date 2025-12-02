@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Usuario {
   /**
@@ -23,75 +23,88 @@ class Usuario {
    * Create new user
    */
   static async create(userData) {
-    const query = `
-      INSERT INTO usuario (email, password_hash, nombre, apellido, telefono, tipo_usuario, foto_perfil_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    const params = [
-      userData.email,
-      userData.password_hash,
-      userData.nombre,
-      userData.apellido,
-      userData.telefono || null,
-      userData.tipo_usuario,
-      userData.foto_perfil_url || null
-    ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+    return executeTransaction(async (connection) => {
+      const query = `
+        INSERT INTO usuario (email, password_hash, nombre, apellido, telefono, tipo_usuario, foto_perfil_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        userData.email,
+        userData.password_hash,
+        userData.nombre,
+        userData.apellido,
+        userData.telefono || null,
+        userData.tipo_usuario,
+        userData.foto_perfil_url || null
+      ];
+      const result = await executeQuery(query, params, connection);
+      return result.insertId;
+    });
   }
 
   /**
    * Update user
    */
   static async update(id, userData) {
-    const fields = [];
-    const params = [];
+    return executeTransaction(async (connection) => {
+      const fields = [];
+      const params = [];
 
-    if (userData.nombre !== undefined) {
-      fields.push('nombre = ?');
-      params.push(userData.nombre);
-    }
-    if (userData.apellido !== undefined) {
-      fields.push('apellido = ?');
-      params.push(userData.apellido);
-    }
-    if (userData.telefono !== undefined) {
-      fields.push('telefono = ?');
-      params.push(userData.telefono);
-    }
-    if (userData.foto_perfil_url !== undefined) {
-      fields.push('foto_perfil_url = ?');
-      params.push(userData.foto_perfil_url);
-    }
-    if (userData.estado !== undefined) {
-      fields.push('estado = ?');
-      params.push(userData.estado);
-    }
+      if (userData.nombre !== undefined) {
+        fields.push('nombre = ?');
+        params.push(userData.nombre);
+      }
+      if (userData.apellido !== undefined) {
+        fields.push('apellido = ?');
+        params.push(userData.apellido);
+      }
+      if (userData.telefono !== undefined) {
+        fields.push('telefono = ?');
+        params.push(userData.telefono);
+      }
+      if (userData.foto_perfil_url !== undefined) {
+        fields.push('foto_perfil_url = ?');
+        params.push(userData.foto_perfil_url);
+      }
+      if (userData.estado !== undefined) {
+        fields.push('estado = ?');
+        params.push(userData.estado);
+      }
 
-    if (fields.length === 0) return null;
+      if (fields.length === 0) return null;
 
-    params.push(id);
-    const query = `UPDATE usuario SET ${fields.join(', ')} WHERE id_usuario = ?`;
-    await executeQuery(query, params);
-    return this.findById(id);
+      params.push(id);
+      const query = `UPDATE usuario SET ${fields.join(', ')} WHERE id_usuario = ?`;
+      await executeQuery(query, params, connection);
+      
+      // Para devolver el usuario actualizado, necesitamos hacer la consulta dentro de la transacción
+      // o fuera. Si es dentro, usamos la conexión.
+      const findQuery = 'SELECT * FROM usuario WHERE id_usuario = ?';
+      const results = await executeQuery(findQuery, [id], connection);
+      return results[0] || null;
+    });
   }
 
   /**
    * Update password
    */
   static async updatePassword(id, newPasswordHash) {
-    const query = 'UPDATE usuario SET password_hash = ? WHERE id_usuario = ?';
-    await executeQuery(query, [newPasswordHash, id]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'UPDATE usuario SET password_hash = ? WHERE id_usuario = ?';
+      await executeQuery(query, [newPasswordHash, id], connection);
+      return true;
+    });
   }
 
   /**
    * Delete user
    */
   static async delete(id) {
-    const query = 'DELETE FROM usuario WHERE id_usuario = ?';
-    await executeQuery(query, [id]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'DELETE FROM usuario WHERE id_usuario = ?';
+      await executeQuery(query, [id], connection);
+      return true;
+    });
   }
 
   /**

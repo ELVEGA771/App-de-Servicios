@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Contratacion {
   /**
@@ -105,79 +105,107 @@ class Contratacion {
    * Create new contratacion (using stored procedure)
    */
   static async create(contratacionData) {
-    const query = `
-      CALL sp_crear_contratacion(
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-        @out_id_contratacion, @out_mensaje
-      )
-    `;
+    return executeTransaction(async (connection) => {
+      const query = `
+        CALL sp_crear_contratacion(
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+          @out_id_contratacion, @out_mensaje
+        )
+      `;
 
-    const params = [
-      contratacionData.id_cliente,
-      contratacionData.id_servicio,
-      contratacionData.id_sucursal,
-      contratacionData.id_direccion_entrega || null,
-      contratacionData.id_cupon || null,
-      contratacionData.fecha_programada,
-      contratacionData.precio_subtotal,
-      contratacionData.descuento_aplicado,
-      contratacionData.precio_total,
-      contratacionData.porcentaje_comision || null, // Nuevo campo
-      contratacionData.notas_cliente || null
-    ];
+      const params = [
+        contratacionData.id_cliente,
+        contratacionData.id_servicio,
+        contratacionData.id_sucursal,
+        contratacionData.id_direccion_entrega || null,
+        contratacionData.id_cupon || null,
+        contratacionData.fecha_programada,
+        contratacionData.precio_subtotal,
+        contratacionData.descuento_aplicado,
+        contratacionData.precio_total,
+        contratacionData.porcentaje_comision || null, // Nuevo campo
+        contratacionData.notas_cliente || null
+      ];
 
-    try {
-      await executeQuery(query, params);
-      
-      // Obtener resultados del procedimiento
-      const output = await executeQuery('SELECT @out_id_contratacion as id, @out_mensaje as mensaje');
-      
-      if (!output[0].id) {
-        throw new Error(output[0].mensaje || 'Error al crear la contratación');
+      try {
+        await executeQuery(query, params, connection);
+        
+        // Obtener resultados del procedimiento
+        const output = await executeQuery('SELECT @out_id_contratacion as id, @out_mensaje as mensaje', [], connection);
+        
+        if (!output[0].id) {
+          throw new Error(output[0].mensaje || 'Error al crear la contratación');
+        }
+
+        return output[0].id;
+      } catch (error) {
+        throw error;
       }
-
-      return output[0].id;
-    } catch (error) {
-      throw error;
-    }
+    });
   }
 
   static async updateFinancials(id, comisionPlataforma, gananciaEmpresa) {
-    const query = `
-      UPDATE contratacion 
-      SET comision_plataforma = ?, 
-          ganancia_empresa = ? 
-      WHERE id_contratacion = ?
-    `;
-    await executeQuery(query, [comisionPlataforma, gananciaEmpresa, id]);
+    return executeTransaction(async (connection) => {
+      const query = `
+        UPDATE contratacion 
+        SET comision_plataforma = ?, 
+            ganancia_empresa = ? 
+        WHERE id_contratacion = ?
+      `;
+      await executeQuery(query, [comisionPlataforma, gananciaEmpresa, id], connection);
+    });
   }
 
   /**
    * Update contratacion estado (using stored procedure)
    */
   static async updateEstado(id, estado, notas = null) {
-    // Call stored procedure
-    const query = 'CALL sp_actualizar_estado_contratacion(?, ?, ?, @out_mensaje)';
-    await executeQuery(query, [id, estado, notas]);
+    return executeTransaction(async (connection) => {
+      // Call stored procedure
+      const query = 'CALL sp_actualizar_estado_contratacion(?, ?, ?, @out_mensaje)';
+      await executeQuery(query, [id, estado, notas], connection);
 
-    // Get output message
-    const resultQuery = 'SELECT @out_mensaje as mensaje';
-    const results = await executeQuery(resultQuery);
+      // Get output message
+      const resultQuery = 'SELECT @out_mensaje as mensaje';
+      const results = await executeQuery(resultQuery, [], connection);
 
-    return this.findById(id);
+      // We can't easily return findById here because it doesn't accept connection
+      // But since we are just returning the result, we can fetch it again or return true
+      // The original code returned this.findById(id)
+      
+      // Let's replicate findById logic with connection
+      const findQuery = `
+        SELECT v.*, p.metodo_pago, p.estado_pago 
+        FROM vista_contrataciones_detalle v
+        LEFT JOIN pago p ON v.id_contratacion = p.id_contratacion
+        WHERE v.id_contratacion = ?
+      `;
+      const findResults = await executeQuery(findQuery, [id], connection);
+      return findResults[0] || null;
+    });
   }
 
   /**
    * Cancel contratacion
    */
   static async cancel(id, userId) {
-    const query = `
-      UPDATE contratacion
-      SET estado = 'cancelado'
-      WHERE id_contratacion = ? AND estado IN ('pendiente', 'confirmado')
-    `;
-    await executeQuery(query, [id]);
-    return this.findById(id);
+    return executeTransaction(async (connection) => {
+      const query = `
+        UPDATE contratacion
+        SET estado = 'cancelado'
+        WHERE id_contratacion = ? AND estado IN ('pendiente', 'confirmado')
+      `;
+      await executeQuery(query, [id], connection);
+      
+      const findQuery = `
+        SELECT v.*, p.metodo_pago, p.estado_pago 
+        FROM vista_contrataciones_detalle v
+        LEFT JOIN pago p ON v.id_contratacion = p.id_contratacion
+        WHERE v.id_contratacion = ?
+      `;
+      const findResults = await executeQuery(findQuery, [id], connection);
+      return findResults[0] || null;
+    });
   }
 
   /**
@@ -225,9 +253,11 @@ class Contratacion {
    * Update payment status
    */
   static async updatePaymentStatus(idContratacion, status) {
-    const query = 'UPDATE pago SET estado_pago = ? WHERE id_contratacion = ?';
-    await executeQuery(query, [status, idContratacion]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'UPDATE pago SET estado_pago = ? WHERE id_contratacion = ?';
+      await executeQuery(query, [status, idContratacion], connection);
+      return true;
+    });
   }
 
   /**

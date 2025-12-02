@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Notificacion {
   /**
@@ -29,67 +29,77 @@ class Notificacion {
    * Create new notificacion
    */
   static async create(notificacionData) {
-    const query = `
-      INSERT INTO notificacion (id_usuario, titulo, contenido, tipo, referencia_id, referencia_tipo)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    const params = [
-      notificacionData.id_usuario,
-      notificacionData.titulo,
-      notificacionData.contenido || null,
-      notificacionData.tipo,
-      notificacionData.referencia_id || null,
-      notificacionData.referencia_tipo || null
-    ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+    return executeTransaction(async (connection) => {
+      const query = `
+        INSERT INTO notificacion (id_usuario, titulo, contenido, tipo, referencia_id, referencia_tipo)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        notificacionData.id_usuario,
+        notificacionData.titulo,
+        notificacionData.contenido || null,
+        notificacionData.tipo,
+        notificacionData.referencia_id || null,
+        notificacionData.referencia_tipo || null
+      ];
+      const result = await executeQuery(query, params, connection);
+      return result.insertId;
+    });
   }
 
   /**
    * Mark notificacion as read
    */
   static async markAsRead(id) {
-    const query = 'UPDATE notificacion SET leida = 1, fecha_lectura = NOW() WHERE id_notificacion = ?';
-    await executeQuery(query, [id]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'UPDATE notificacion SET leida = 1, fecha_lectura = NOW() WHERE id_notificacion = ?';
+      await executeQuery(query, [id], connection);
+      return true;
+    });
   }
 
   /**
    * Toggle read status
    */
   static async toggleRead(id) {
-    // First get current status
-    const checkQuery = 'SELECT leida FROM notificacion WHERE id_notificacion = ?';
-    const checkResult = await executeQuery(checkQuery, [id]);
-    
-    if (!checkResult[0]) return null;
-    
-    const currentLeida = checkResult[0].leida;
-    const newLeida = currentLeida ? 0 : 1;
-    const fechaLectura = newLeida ? new Date() : null;
+    return executeTransaction(async (connection) => {
+      // First get current status
+      const checkQuery = 'SELECT leida FROM notificacion WHERE id_notificacion = ?';
+      const checkResult = await executeQuery(checkQuery, [id], connection);
+      
+      if (!checkResult[0]) return null;
+      
+      const currentLeida = checkResult[0].leida;
+      const newLeida = currentLeida ? 0 : 1;
+      const fechaLectura = newLeida ? new Date() : null;
 
-    const updateQuery = 'UPDATE notificacion SET leida = ?, fecha_lectura = ? WHERE id_notificacion = ?';
-    await executeQuery(updateQuery, [newLeida, fechaLectura, id]);
-    
-    return { leida: newLeida === 1 };
+      const updateQuery = 'UPDATE notificacion SET leida = ?, fecha_lectura = ? WHERE id_notificacion = ?';
+      await executeQuery(updateQuery, [newLeida, fechaLectura, id], connection);
+      
+      return { leida: newLeida === 1 };
+    });
   }
 
   /**
    * Mark all notificaciones as read for user
    */
   static async markAllAsRead(userId) {
-    const query = 'UPDATE notificacion SET leida = 1, fecha_lectura = NOW() WHERE id_usuario = ? AND leida = 0';
-    await executeQuery(query, [userId]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'UPDATE notificacion SET leida = 1, fecha_lectura = NOW() WHERE id_usuario = ? AND leida = 0';
+      await executeQuery(query, [userId], connection);
+      return true;
+    });
   }
 
   /**
    * Delete notificacion
    */
   static async delete(id) {
-    const query = 'DELETE FROM notificacion WHERE id_notificacion = ?';
-    await executeQuery(query, [id]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'DELETE FROM notificacion WHERE id_notificacion = ?';
+      await executeQuery(query, [id], connection);
+      return true;
+    });
   }
 
   /**

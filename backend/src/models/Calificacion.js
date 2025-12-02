@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Calificacion {
   /**
@@ -83,20 +83,22 @@ class Calificacion {
    * Create new calificacion (using stored procedure)
    */
   static async create(calificacionData) {
-    // Call stored procedure
-    // sp_crear_calificacion(p_id_contratacion, p_calificacion, p_comentario, OUT p_id, OUT p_msg)
-    const query = `
-      CALL sp_crear_calificacion(?, ?, ?, @id_out, @msg_out)
-    `;
-    const params = [
-      calificacionData.id_contratacion,
-      calificacionData.calificacion,
-      calificacionData.comentario || null
-    ];
+    return executeTransaction(async (connection) => {
+      // Call stored procedure
+      // sp_crear_calificacion(p_id_contratacion, p_calificacion, p_comentario, OUT p_id, OUT p_msg)
+      const query = `
+        CALL sp_crear_calificacion(?, ?, ?, @id_out, @msg_out)
+      `;
+      const params = [
+        calificacionData.id_contratacion,
+        calificacionData.calificacion,
+        calificacionData.comentario || null
+      ];
 
-    await executeQuery(query, params);
-    
-    return true;
+      await executeQuery(query, params, connection);
+      
+      return true;
+    });
   }
 
   /**

@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Cupon {
   /**
@@ -54,55 +54,61 @@ class Cupon {
    * Create new cupon
    */
   static async create(cuponData) {
-    const query = `
-      CALL sp_crear_cupon(?, ?, ?, ?, ?, ?, ?, ?, ?, @out_id_cupon, @out_mensaje)
-    `;
-    const params = [
-      cuponData.codigo,
-      cuponData.descripcion || '',
-      cuponData.tipo_descuento,
-      cuponData.valor_descuento,
-      cuponData.monto_minimo_compra || 0,
-      cuponData.cantidad_disponible || null,
-      cuponData.fecha_inicio || new Date(),
-      cuponData.fecha_expiracion || null,
-      cuponData.id_empresa
-    ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+    return executeTransaction(async (connection) => {
+      const query = `
+        CALL sp_crear_cupon(?, ?, ?, ?, ?, ?, ?, ?, ?, @out_id_cupon, @out_mensaje)
+      `;
+      const params = [
+        cuponData.codigo,
+        cuponData.descripcion || '',
+        cuponData.tipo_descuento,
+        cuponData.valor_descuento,
+        cuponData.monto_minimo_compra || 0,
+        cuponData.cantidad_disponible || null,
+        cuponData.fecha_inicio || new Date(),
+        cuponData.fecha_expiracion || null,
+        cuponData.id_empresa
+      ];
+      const result = await executeQuery(query, params, connection);
+      return result.insertId;
+    });
   }
 
   /**
    * Update cupon
    */
   static async update(id, cuponData) {
-    const query = `
-      CALL sp_editar_cupon(?, ?, ?, ?, ?, ?, ?, ?, ?, @out_mensaje)
-    `;
-    
-    const params = [
-      id,
-      cuponData.codigo,
-      cuponData.descripcion || '',
-      cuponData.tipo_descuento,
-      cuponData.valor_descuento,
-      cuponData.monto_minimo_compra || 0,
-      cuponData.cantidad_disponible || null,
-      cuponData.fecha_inicio,
-      cuponData.fecha_expiracion
-    ];
+    return executeTransaction(async (connection) => {
+      const query = `
+        CALL sp_editar_cupon(?, ?, ?, ?, ?, ?, ?, ?, ?, @out_mensaje)
+      `;
+      
+      const params = [
+        id,
+        cuponData.codigo,
+        cuponData.descripcion || '',
+        cuponData.tipo_descuento,
+        cuponData.valor_descuento,
+        cuponData.monto_minimo_compra || 0,
+        cuponData.cantidad_disponible || null,
+        cuponData.fecha_inicio,
+        cuponData.fecha_expiracion
+      ];
 
-    await executeQuery(query, params);
-    const result = await executeQuery('SELECT @out_mensaje as mensaje');
-    return result[0];
+      await executeQuery(query, params, connection);
+      const result = await executeQuery('SELECT @out_mensaje as mensaje', [], connection);
+      return result[0];
+    });
   }
 
   // Eliminar Cupón
   static async delete(id) {
-    const query = `CALL sp_eliminar_cupon(?, @out_mensaje)`;
-    await executeQuery(query, [id]);
-    const result = await executeQuery('SELECT @out_mensaje as mensaje');
-    return result[0];
+    return executeTransaction(async (connection) => {
+      const query = `CALL sp_eliminar_cupon(?, @out_mensaje)`;
+      await executeQuery(query, [id], connection);
+      const result = await executeQuery('SELECT @out_mensaje as mensaje', [], connection);
+      return result[0];
+    });
   }
 
   /**
@@ -177,18 +183,22 @@ class Cupon {
    * Add categoria to cupon
    */
   static async addCategoria(idCupon, idCategoria) {
-    const query = 'INSERT INTO cupon_categoria (id_cupon, id_categoria) VALUES (?, ?)';
-    await executeQuery(query, [idCupon, idCategoria]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'INSERT INTO cupon_categoria (id_cupon, id_categoria) VALUES (?, ?)';
+      await executeQuery(query, [idCupon, idCategoria], connection);
+      return true;
+    });
   }
 
   /**
    * Add servicio to cupon
    */
   static async addServicio(idCupon, idServicio) {
-    const query = 'INSERT INTO cupon_servicio (id_cupon, id_servicio) VALUES (?, ?)';
-    await executeQuery(query, [idCupon, idServicio]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'INSERT INTO cupon_servicio (id_cupon, id_servicio) VALUES (?, ?)';
+      await executeQuery(query, [idCupon, idServicio], connection);
+      return true;
+    });
   }
 }
 

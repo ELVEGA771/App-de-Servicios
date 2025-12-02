@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Favorito {
   /**
@@ -26,22 +26,26 @@ class Favorito {
    * Add to favoritos
    */
   static async add(idCliente, idServicio, notasCliente = null) {
-    const query = `
-      INSERT INTO servicio_favorito (id_servicio, id_cliente, fecha_agregado, notas_cliente)
-      VALUES (?, ?, NOW(), ?)
-      ON DUPLICATE KEY UPDATE notas_cliente = ?, fecha_agregado = NOW()
-    `;
-    await executeQuery(query, [idServicio, idCliente, notasCliente, notasCliente]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = `
+        INSERT INTO servicio_favorito (id_servicio, id_cliente, fecha_agregado, notas_cliente)
+        VALUES (?, ?, NOW(), ?)
+        ON DUPLICATE KEY UPDATE notas_cliente = ?, fecha_agregado = NOW()
+      `;
+      await executeQuery(query, [idServicio, idCliente, notasCliente, notasCliente], connection);
+      return true;
+    });
   }
 
   /**
    * Remove from favoritos
    */
   static async remove(idCliente, idServicio) {
-    const query = 'DELETE FROM servicio_favorito WHERE id_cliente = ? AND id_servicio = ?';
-    await executeQuery(query, [idCliente, idServicio]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'DELETE FROM servicio_favorito WHERE id_cliente = ? AND id_servicio = ?';
+      await executeQuery(query, [idCliente, idServicio], connection);
+      return true;
+    });
   }
 
   /**

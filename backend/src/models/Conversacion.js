@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Conversacion {
   /**
@@ -76,27 +76,31 @@ class Conversacion {
    * Create new conversacion
    */
   static async create(conversacionData) {
-    const query = `
-      INSERT INTO conversacion (id_cliente, id_empresa, id_contratacion, estado)
-      VALUES (?, ?, ?, ?)
-    `;
-    const params = [
-      conversacionData.id_cliente,
-      conversacionData.id_empresa,
-      conversacionData.id_contratacion || null,
-      conversacionData.estado || 'abierta'
-    ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+    return executeTransaction(async (connection) => {
+      const query = `
+        INSERT INTO conversacion (id_cliente, id_empresa, id_contratacion, estado)
+        VALUES (?, ?, ?, ?)
+      `;
+      const params = [
+        conversacionData.id_cliente,
+        conversacionData.id_empresa,
+        conversacionData.id_contratacion || null,
+        conversacionData.estado || 'abierta'
+      ];
+      const result = await executeQuery(query, params, connection);
+      return result.insertId;
+    });
   }
 
   /**
    * Update conversacion estado
    */
   static async updateEstado(id, estado) {
-    const query = 'UPDATE conversacion SET estado = ? WHERE id_conversacion = ?';
-    await executeQuery(query, [estado, id]);
-    return this.findById(id);
+    return executeTransaction(async (connection) => {
+      const query = 'UPDATE conversacion SET estado = ? WHERE id_conversacion = ?';
+      await executeQuery(query, [estado, id], connection);
+      return this.findById(id);
+    });
   }
 
   /**
@@ -130,13 +134,15 @@ class Conversacion {
    * Mark mensajes as read
    */
   static async markAsRead(idConversacion, userId) {
-    const query = `
-      UPDATE mensaje
-      SET leido = 1, fecha_lectura = NOW()
-      WHERE id_conversacion = ? AND id_remitente != ? AND leido = 0
-    `;
-    await executeQuery(query, [idConversacion, userId]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = `
+        UPDATE mensaje
+        SET leido = 1, fecha_lectura = NOW()
+        WHERE id_conversacion = ? AND id_remitente != ? AND leido = 0
+      `;
+      await executeQuery(query, [idConversacion, userId], connection);
+      return true;
+    });
   }
 }
 

@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Empresa {
   /**
@@ -77,51 +77,65 @@ class Empresa {
    * Create new empresa
    */
   static async create(empresaData) {
-    const query = `
-      INSERT INTO empresa (id_usuario, razon_social, ruc_nit, descripcion, logo_url)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    const params = [
-      empresaData.id_usuario,
-      empresaData.razon_social,
-      empresaData.ruc_nit || null,
-      empresaData.descripcion || null,
-      empresaData.logo_url || null
-    ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+    return executeTransaction(async (connection) => {
+      const query = `
+        INSERT INTO empresa (id_usuario, razon_social, ruc_nit, descripcion, logo_url)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      const params = [
+        empresaData.id_usuario,
+        empresaData.razon_social,
+        empresaData.ruc_nit || null,
+        empresaData.descripcion || null,
+        empresaData.logo_url || null
+      ];
+      const result = await executeQuery(query, params, connection);
+      return result.insertId;
+    });
   }
 
   /**
    * Update empresa
    */
   static async update(id, empresaData) {
-    const fields = [];
-    const params = [];
+    return executeTransaction(async (connection) => {
+      const fields = [];
+      const params = [];
 
-    if (empresaData.razon_social !== undefined) {
-      fields.push('razon_social = ?');
-      params.push(empresaData.razon_social);
-    }
-    if (empresaData.ruc_nit !== undefined) {
-      fields.push('ruc_nit = ?');
-      params.push(empresaData.ruc_nit);
-    }
-    if (empresaData.descripcion !== undefined) {
-      fields.push('descripcion = ?');
-      params.push(empresaData.descripcion);
-    }
-    if (empresaData.logo_url !== undefined) {
-      fields.push('logo_url = ?');
-      params.push(empresaData.logo_url);
-    }
+      if (empresaData.razon_social !== undefined) {
+        fields.push('razon_social = ?');
+        params.push(empresaData.razon_social);
+      }
+      if (empresaData.ruc_nit !== undefined) {
+        fields.push('ruc_nit = ?');
+        params.push(empresaData.ruc_nit);
+      }
+      if (empresaData.descripcion !== undefined) {
+        fields.push('descripcion = ?');
+        params.push(empresaData.descripcion);
+      }
+      if (empresaData.logo_url !== undefined) {
+        fields.push('logo_url = ?');
+        params.push(empresaData.logo_url);
+      }
 
-    if (fields.length === 0) return null;
+      if (fields.length === 0) return null;
 
-    params.push(id);
-    const query = `UPDATE empresa SET ${fields.join(', ')} WHERE id_empresa = ?`;
-    await executeQuery(query, params);
-    return this.findById(id);
+      params.push(id);
+      const query = `UPDATE empresa SET ${fields.join(', ')} WHERE id_empresa = ?`;
+      await executeQuery(query, params, connection);
+      
+      // Para devolver la empresa actualizada, necesitamos hacer la consulta dentro de la transacción
+      // o fuera. Si es dentro, usamos la conexión.
+      const findQuery = `
+        SELECT e.*, u.*
+        FROM empresa e
+        INNER JOIN usuario u ON e.id_usuario = u.id_usuario
+        WHERE e.id_empresa = ?
+      `;
+      const results = await executeQuery(findQuery, [id], connection);
+      return results[0] || null;
+    });
   }
 
   /**

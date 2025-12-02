@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Servicio {
   /**
@@ -156,75 +156,85 @@ class Servicio {
    * Create new servicio
    */
   static async create(servicioData) {
-    const query = `
-      INSERT INTO servicio (id_empresa, id_categoria, nombre, descripcion, precio_base, duracion_estimada, imagen_url, estado)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const params = [
-      servicioData.id_empresa,
-      servicioData.id_categoria,
-      servicioData.nombre,
-      servicioData.descripcion || null,
-      servicioData.precio_base,
-      servicioData.duracion_estimada || null,
-      servicioData.imagen_url || null,
-      servicioData.estado || 'disponible'
-    ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+    return executeTransaction(async (connection) => {
+      const query = `
+        INSERT INTO servicio (id_empresa, id_categoria, nombre, descripcion, precio_base, duracion_estimada, imagen_url, estado)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        servicioData.id_empresa,
+        servicioData.id_categoria,
+        servicioData.nombre,
+        servicioData.descripcion || null,
+        servicioData.precio_base,
+        servicioData.duracion_estimada || null,
+        servicioData.imagen_url || null,
+        servicioData.estado || 'disponible'
+      ];
+      const result = await executeQuery(query, params, connection);
+      return result.insertId;
+    });
   }
 
   /**
    * Update servicio
    */
   static async update(id, servicioData) {
-    const fields = [];
-    const params = [];
+    return executeTransaction(async (connection) => {
+      const fields = [];
+      const params = [];
 
-    if (servicioData.nombre !== undefined) {
-      fields.push('nombre = ?');
-      params.push(servicioData.nombre);
-    }
-    if (servicioData.descripcion !== undefined) {
-      fields.push('descripcion = ?');
-      params.push(servicioData.descripcion);
-    }
-    if (servicioData.precio_base !== undefined) {
-      fields.push('precio_base = ?');
-      params.push(servicioData.precio_base);
-    }
-    if (servicioData.duracion_estimada !== undefined) {
-      fields.push('duracion_estimada = ?');
-      params.push(servicioData.duracion_estimada);
-    }
-    if (servicioData.imagen_url !== undefined) {
-      fields.push('imagen_url = ?');
-      params.push(servicioData.imagen_url);
-    }
-    if (servicioData.estado !== undefined) {
-      fields.push('estado = ?');
-      params.push(servicioData.estado);
-    }
-    if (servicioData.id_categoria !== undefined) {
-      fields.push('id_categoria = ?');
-      params.push(servicioData.id_categoria);
-    }
+      if (servicioData.nombre !== undefined) {
+        fields.push('nombre = ?');
+        params.push(servicioData.nombre);
+      }
+      if (servicioData.descripcion !== undefined) {
+        fields.push('descripcion = ?');
+        params.push(servicioData.descripcion);
+      }
+      if (servicioData.precio_base !== undefined) {
+        fields.push('precio_base = ?');
+        params.push(servicioData.precio_base);
+      }
+      if (servicioData.duracion_estimada !== undefined) {
+        fields.push('duracion_estimada = ?');
+        params.push(servicioData.duracion_estimada);
+      }
+      if (servicioData.imagen_url !== undefined) {
+        fields.push('imagen_url = ?');
+        params.push(servicioData.imagen_url);
+      }
+      if (servicioData.estado !== undefined) {
+        fields.push('estado = ?');
+        params.push(servicioData.estado);
+      }
+      if (servicioData.id_categoria !== undefined) {
+        fields.push('id_categoria = ?');
+        params.push(servicioData.id_categoria);
+      }
 
-    if (fields.length === 0) return null;
+      if (fields.length === 0) return null;
 
-    params.push(id);
-    const query = `UPDATE servicio SET ${fields.join(', ')} WHERE id_servicio = ?`;
-    await executeQuery(query, params);
-    return this.findById(id);
+      params.push(id);
+      const query = `UPDATE servicio SET ${fields.join(', ')} WHERE id_servicio = ?`;
+      await executeQuery(query, params, connection);
+      
+      // Return updated service
+      const findQuery = 'SELECT * FROM vista_servicios_completos WHERE id_servicio = ?';
+      const results = await executeQuery(findQuery, [id], connection);
+      return results[0] || null;
+    });
   }
 
   /**
    * Delete servicio
    */
   static async delete(id) {
-    const query = 'DELETE FROM servicio WHERE id_servicio = ?';
-    await executeQuery(query, [id]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'DELETE FROM servicio WHERE id_servicio = ?';
+      await executeQuery(query, [id], connection);
+      return true;
+    });
   }
 
   /**
@@ -251,37 +261,42 @@ class Servicio {
    * Associate servicio with sucursal (using stored procedure)
    */
   static async addToSucursal(idServicio, idSucursal, precioSucursal = null) {
-    // Call stored procedure
-    const query = 'CALL sp_asociar_servicio_sucursal(?, ?, ?, @out_mensaje)';
-    await executeQuery(query, [idServicio, idSucursal, precioSucursal]);
+    return executeTransaction(async (connection) => {
+      // Call stored procedure
+      const query = 'CALL sp_asociar_servicio_sucursal(?, ?, ?, @out_mensaje)';
+      await executeQuery(query, [idServicio, idSucursal, precioSucursal], connection);
 
-    // Get output message
-    const resultQuery = 'SELECT @out_mensaje as mensaje';
-    const results = await executeQuery(resultQuery);
-
-    return true;
+      // Get output message
+      const resultQuery = 'SELECT @out_mensaje as mensaje';
+      const results = await executeQuery(resultQuery, [], connection);
+      return true;
+    });
   }
 
   /**
    * Remove servicio from sucursal
    */
   static async removeFromSucursal(idServicio, idSucursal) {
-    const query = 'DELETE FROM servicio_sucursal WHERE id_servicio = ? AND id_sucursal = ?';
-    await executeQuery(query, [idServicio, idSucursal]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'DELETE FROM servicio_sucursal WHERE id_servicio = ? AND id_sucursal = ?';
+      await executeQuery(query, [idServicio, idSucursal], connection);
+      return true;
+    });
   }
 
   /**
    * Toggle servicio disponibilidad in sucursal
    */
   static async toggleDisponibilidad(idServicio, idSucursal, disponible) {
-    const query = `
-      UPDATE servicio_sucursal
-      SET disponible = ?
-      WHERE id_servicio = ? AND id_sucursal = ?
-    `;
-    await executeQuery(query, [disponible ? 1 : 0, idServicio, idSucursal]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = `
+        UPDATE servicio_sucursal
+        SET disponible = ?
+        WHERE id_servicio = ? AND id_sucursal = ?
+      `;
+      await executeQuery(query, [disponible ? 1 : 0, idServicio, idSucursal], connection);
+      return true;
+    });
   }
 }
 

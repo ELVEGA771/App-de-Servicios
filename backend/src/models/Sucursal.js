@@ -89,44 +89,46 @@ class Sucursal {
    * Create new sucursal with direccion (using stored procedure)
    */
   static async create(sucursalData) {
-    // Call stored procedure
-    const query = `
-      CALL sp_crear_sucursal(
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-        @out_id_sucursal, @out_id_direccion, @out_mensaje
-      )
-    `;
-    const params = [
-      sucursalData.id_empresa,
-      sucursalData.nombre_sucursal,
-      sucursalData.telefono || null,
-      sucursalData.horario_apertura || null,
-      sucursalData.horario_cierre || null,
-      sucursalData.dias_laborales || null,
-      sucursalData.estado || null,
-      sucursalData.calle_principal,
-      sucursalData.calle_secundaria || null,
-      sucursalData.numero || null,
-      sucursalData.ciudad,
-      sucursalData.provincia_estado,
-      sucursalData.codigo_postal || null,
-      sucursalData.pais || null,
-      sucursalData.latitud || null,
-      sucursalData.longitud || null,
-      sucursalData.referencia || null
-    ];
+    return executeTransaction(async (connection) => {
+      // Call stored procedure
+      const query = `
+        CALL sp_crear_sucursal(
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+          @out_id_sucursal, @out_id_direccion, @out_mensaje
+        )
+      `;
+      const params = [
+        sucursalData.id_empresa,
+        sucursalData.nombre_sucursal,
+        sucursalData.telefono || null,
+        sucursalData.horario_apertura || null,
+        sucursalData.horario_cierre || null,
+        sucursalData.dias_laborales || null,
+        sucursalData.estado || null,
+        sucursalData.calle_principal,
+        sucursalData.calle_secundaria || null,
+        sucursalData.numero || null,
+        sucursalData.ciudad,
+        sucursalData.provincia_estado,
+        sucursalData.codigo_postal || null,
+        sucursalData.pais || null,
+        sucursalData.latitud || null,
+        sucursalData.longitud || null,
+        sucursalData.referencia || null
+      ];
 
-    await executeQuery(query, params);
+      await executeQuery(query, params, connection);
 
-    // Get output parameters
-    const resultQuery = 'SELECT @out_id_sucursal as id_sucursal, @out_id_direccion as id_direccion, @out_mensaje as mensaje';
-    const results = await executeQuery(resultQuery);
+      // Get output parameters
+      const resultQuery = 'SELECT @out_id_sucursal as id_sucursal, @out_id_direccion as id_direccion, @out_mensaje as mensaje';
+      const results = await executeQuery(resultQuery, [], connection);
 
-    if (!results[0].id_sucursal) {
-      throw new Error(results[0].mensaje || 'Error al crear sucursal');
-    }
+      if (!results[0].id_sucursal) {
+        throw new Error(results[0].mensaje || 'Error al crear sucursal');
+      }
 
-    return results[0].id_sucursal;
+      return results[0].id_sucursal;
+    });
   }
 
   /**
@@ -166,7 +168,7 @@ class Sucursal {
       if (sucursalFields.length > 0) {
         sucursalParams.push(id);
         const sucursalQuery = `UPDATE sucursal SET ${sucursalFields.join(', ')} WHERE id_sucursal = ?`;
-        await connection.query(sucursalQuery, sucursalParams);
+        await executeQuery(sucursalQuery, sucursalParams, connection);
       }
 
       // Update direccion if direccion data provided
@@ -216,11 +218,11 @@ class Sucursal {
 
       if (direccionFields.length > 0) {
         // Get id_direccion for this sucursal
-        const [sucursal] = await connection.query('SELECT id_direccion FROM sucursal WHERE id_sucursal = ?', [id]);
+        const sucursal = await executeQuery('SELECT id_direccion FROM sucursal WHERE id_sucursal = ?', [id], connection);
         if (sucursal.length > 0) {
           direccionParams.push(sucursal[0].id_direccion);
           const direccionQuery = `UPDATE direccion SET ${direccionFields.join(', ')} WHERE id_direccion = ?`;
-          await connection.query(direccionQuery, direccionParams);
+          await executeQuery(direccionQuery, direccionParams, connection);
         }
       }
 
@@ -232,18 +234,22 @@ class Sucursal {
    * Delete sucursal (set to inactive)
    */
   static async delete(id) {
-    const query = "UPDATE sucursal SET estado = 'inactiva' WHERE id_sucursal = ?";
-    await executeQuery(query, [id]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = "UPDATE sucursal SET estado = 'inactiva' WHERE id_sucursal = ?";
+      await executeQuery(query, [id], connection);
+      return true;
+    });
   }
 
   /**
    * Reactivate sucursal (set to active)
    */
   static async reactivate(id) {
-    const query = "UPDATE sucursal SET estado = 'activa' WHERE id_sucursal = ?";
-    await executeQuery(query, [id]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = "UPDATE sucursal SET estado = 'activa' WHERE id_sucursal = ?";
+      await executeQuery(query, [id], connection);
+      return true;
+    });
   }
 
   /**

@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Direccion {
   /**
@@ -14,98 +14,107 @@ class Direccion {
    * Create new direccion
    */
   static async create(direccionData) {
-    // Construct numero from exterior/interior
-    const numero = direccionData.numero || 
-      (direccionData.numero_interior 
-        ? `${direccionData.numero_exterior} Int. ${direccionData.numero_interior}`
-        : direccionData.numero_exterior);
+    return executeTransaction(async (connection) => {
+      // Construct numero from exterior/interior
+      const numero = direccionData.numero || 
+        (direccionData.numero_interior 
+          ? `${direccionData.numero_exterior} Int. ${direccionData.numero_interior}`
+          : direccionData.numero_exterior);
 
-    const query = `
-      INSERT INTO direccion (
-        calle_principal, calle_secundaria, numero, ciudad, provincia_estado,
-        codigo_postal, pais, latitud, longitud, referencia
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const params = [
-      direccionData.calle_principal,
-      direccionData.calle_secundaria || null,
-      numero || null,
-      direccionData.ciudad,
-      direccionData.provincia_estado || direccionData.estado,
-      direccionData.codigo_postal || null,
-      direccionData.pais || 'Ecuador',
-      direccionData.latitud || null,
-      direccionData.longitud || null,
-      direccionData.referencia || null
-    ];
-    const result = await executeQuery(query, params);
-    return result.insertId;
+      const query = `
+        INSERT INTO direccion (
+          calle_principal, calle_secundaria, numero, ciudad, provincia_estado,
+          codigo_postal, pais, latitud, longitud, referencia
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        direccionData.calle_principal,
+        direccionData.calle_secundaria || null,
+        numero || null,
+        direccionData.ciudad,
+        direccionData.provincia_estado || direccionData.estado,
+        direccionData.codigo_postal || null,
+        direccionData.pais || 'Ecuador',
+        direccionData.latitud || null,
+        direccionData.longitud || null,
+        direccionData.referencia || null
+      ];
+      const result = await executeQuery(query, params, connection);
+      return result.insertId;
+    });
   }
 
   /**
    * Update direccion
    */
   static async update(id, direccionData) {
-    const fields = [];
-    const params = [];
+    return executeTransaction(async (connection) => {
+      const fields = [];
+      const params = [];
 
-    if (direccionData.calle_principal !== undefined) {
-      fields.push('calle_principal = ?');
-      params.push(direccionData.calle_principal);
-    }
-    if (direccionData.calle_secundaria !== undefined) {
-      fields.push('calle_secundaria = ?');
-      params.push(direccionData.calle_secundaria);
-    }
-    if (direccionData.numero !== undefined) {
-      fields.push('numero = ?');
-      params.push(direccionData.numero);
-    }
-    if (direccionData.ciudad !== undefined) {
-      fields.push('ciudad = ?');
-      params.push(direccionData.ciudad);
-    }
-    if (direccionData.provincia_estado !== undefined) {
-      fields.push('provincia_estado = ?');
-      params.push(direccionData.provincia_estado);
-    }
-    if (direccionData.codigo_postal !== undefined) {
-      fields.push('codigo_postal = ?');
-      params.push(direccionData.codigo_postal);
-    }
-    if (direccionData.pais !== undefined) {
-      fields.push('pais = ?');
-      params.push(direccionData.pais);
-    }
-    if (direccionData.latitud !== undefined) {
-      fields.push('latitud = ?');
-      params.push(direccionData.latitud);
-    }
-    if (direccionData.longitud !== undefined) {
-      fields.push('longitud = ?');
-      params.push(direccionData.longitud);
-    }
-    if (direccionData.referencia !== undefined) {
-      fields.push('referencia = ?');
-      params.push(direccionData.referencia);
-    }
+      if (direccionData.calle_principal !== undefined) {
+        fields.push('calle_principal = ?');
+        params.push(direccionData.calle_principal);
+      }
+      if (direccionData.calle_secundaria !== undefined) {
+        fields.push('calle_secundaria = ?');
+        params.push(direccionData.calle_secundaria);
+      }
+      if (direccionData.numero !== undefined) {
+        fields.push('numero = ?');
+        params.push(direccionData.numero);
+      }
+      if (direccionData.ciudad !== undefined) {
+        fields.push('ciudad = ?');
+        params.push(direccionData.ciudad);
+      }
+      if (direccionData.provincia_estado !== undefined) {
+        fields.push('provincia_estado = ?');
+        params.push(direccionData.provincia_estado);
+      }
+      if (direccionData.codigo_postal !== undefined) {
+        fields.push('codigo_postal = ?');
+        params.push(direccionData.codigo_postal);
+      }
+      if (direccionData.pais !== undefined) {
+        fields.push('pais = ?');
+        params.push(direccionData.pais);
+      }
+      if (direccionData.latitud !== undefined) {
+        fields.push('latitud = ?');
+        params.push(direccionData.latitud);
+      }
+      if (direccionData.longitud !== undefined) {
+        fields.push('longitud = ?');
+        params.push(direccionData.longitud);
+      }
+      if (direccionData.referencia !== undefined) {
+        fields.push('referencia = ?');
+        params.push(direccionData.referencia);
+      }
 
-    if (fields.length === 0) return null;
+      if (fields.length === 0) return null;
 
-    params.push(id);
-    const query = `UPDATE direccion SET ${fields.join(', ')} WHERE id_direccion = ?`;
-    await executeQuery(query, params);
-    return this.findById(id);
+      params.push(id);
+      const query = `UPDATE direccion SET ${fields.join(', ')} WHERE id_direccion = ?`;
+      await executeQuery(query, params, connection);
+      
+      const findQuery = 'SELECT * FROM direccion WHERE id_direccion = ?';
+      const results = await executeQuery(findQuery, [id], connection);
+      return results[0] || null;
+    });
   }
 
   /**
    * Delete direccion
    */
   static async delete(id) {
-    const query = 'DELETE FROM direccion WHERE id_direccion = ?';
-    await executeQuery(query, [id]);
-    return true;
+    return executeTransaction(async (connection) => {
+      const query = 'DELETE FROM direccion WHERE id_direccion = ?';
+      await executeQuery(query, [id], connection);
+      return true;
+    });
   }
 
   /**

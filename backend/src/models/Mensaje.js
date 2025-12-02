@@ -1,33 +1,35 @@
-const { executeQuery } = require('../config/database');
+const { executeQuery, executeTransaction } = require('../config/database');
 
 class Mensaje {
   /**
    * Create new mensaje (using stored procedure)
    */
   static async create(mensajeData) {
-    // Call stored procedure
-    const query = `
-      CALL sp_crear_mensaje(?, ?, ?, ?, ?, @out_id_mensaje, @out_mensaje)
-    `;
-    const params = [
-      mensajeData.id_conversacion,
-      mensajeData.id_remitente,
-      mensajeData.contenido,
-      mensajeData.tipo_mensaje || null,
-      mensajeData.archivo_url || null
-    ];
+    return executeTransaction(async (connection) => {
+      // Call stored procedure
+      const query = `
+        CALL sp_crear_mensaje(?, ?, ?, ?, ?, @out_id_mensaje, @out_mensaje)
+      `;
+      const params = [
+        mensajeData.id_conversacion,
+        mensajeData.id_remitente,
+        mensajeData.contenido,
+        mensajeData.tipo_mensaje || null,
+        mensajeData.archivo_url || null
+      ];
 
-    await executeQuery(query, params);
+      await executeQuery(query, params, connection);
 
-    // Get output parameters
-    const resultQuery = 'SELECT @out_id_mensaje as id_mensaje, @out_mensaje as mensaje';
-    const results = await executeQuery(resultQuery);
+      // Get output parameters
+      const resultQuery = 'SELECT @out_id_mensaje as id_mensaje, @out_mensaje as mensaje';
+      const results = await executeQuery(resultQuery, [], connection);
 
-    if (!results[0].id_mensaje) {
-      throw new Error(results[0].mensaje || 'Error al crear mensaje');
-    }
+      if (!results[0].id_mensaje) {
+        throw new Error(results[0].mensaje || 'Error al crear mensaje');
+      }
 
-    return results[0].id_mensaje;
+      return results[0].id_mensaje;
+    });
   }
 
   /**
