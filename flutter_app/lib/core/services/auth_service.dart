@@ -104,7 +104,6 @@ class AuthService {
     required String nombre,
     required String apellido,
     String? telefono,
-    DateTime? fechaNacimiento,
   }) async {
     final data = {
       'email': email,
@@ -117,10 +116,6 @@ class AuthService {
     // Only add optional fields if they have values
     if (telefono != null && telefono.isNotEmpty) {
       data['telefono'] = telefono;
-    }
-    if (fechaNacimiento != null) {
-      data['fecha_nacimiento'] =
-          fechaNacimiento.toIso8601String().split('T')[0];
     }
 
     final response = await _dioClient.post(

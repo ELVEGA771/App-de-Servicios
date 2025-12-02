@@ -51,9 +51,6 @@ const { asyncHandler } = require('../middleware/errorHandler');
  *                 description: Required if tipo_usuario is empresa
  *               ruc_nit:
  *                 type: string
- *               fecha_nacimiento:
- *                 type: string
- *                 format: date
  *     responses:
  *       201:
  *         description: User registered successfully

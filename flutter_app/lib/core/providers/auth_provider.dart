@@ -71,7 +71,6 @@ class AuthProvider with ChangeNotifier {
     String? telefono,
     String? razonSocial,
     String? descripcion,
-    DateTime? fechaNacimiento,
     String? fotoUrl, // <--- NUEVO PARÁMETRO
   }) async {
     _setLoading(true);
@@ -95,10 +94,6 @@ class AuthProvider with ChangeNotifier {
       if (isEmpresa) {
         if (razonSocial != null) data['razon_social'] = razonSocial;
         if (descripcion != null) data['descripcion'] = descripcion;
-      } else if (isCliente) {
-        if (fechaNacimiento != null) {
-           data['fecha_nacimiento'] = fechaNacimiento.toIso8601String().split('T')[0];
-        }
       }
 
       await _authService.updateProfile(data);
@@ -164,7 +159,6 @@ class AuthProvider with ChangeNotifier {
     required String nombre,
     required String apellido,
     String? telefono,
-    DateTime? fechaNacimiento,
   }) async {
     _setLoading(true);
     _clearError();
@@ -175,7 +169,6 @@ class AuthProvider with ChangeNotifier {
         nombre: nombre,
         apellido: apellido,
         telefono: telefono,
-        fechaNacimiento: fechaNacimiento,
       );
       _setAuthData(authResponse);
       return true;

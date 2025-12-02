@@ -137,7 +137,6 @@ const login = async (req, res, next) => {
       if (cliente) {
         additionalData.cliente = {
           id_cliente: cliente.id_cliente,
-          fecha_nacimiento: cliente.fecha_nacimiento,
           calificacion_promedio: cliente.calificacion_promedio
         };
       }
@@ -202,7 +201,6 @@ const getMe = async (req, res, next) => {
           id_cliente: cliente.id_cliente,
           id_usuario: user.id_usuario, // Agregado por seguridad
           nombre: user.nombre,         // Agregado para consistencia
-          fecha_nacimiento: cliente.fecha_nacimiento,
           calificacion_promedio: cliente.calificacion_promedio
         };
       }
@@ -286,8 +284,13 @@ const updateMe = async (req, res, next) => {
     } else if (tipoUsuario === 'cliente' || tipoUsuario === 'client') {
       // Lógica de cliente...
       const cliente = await Cliente.findByUserId(req.user.id_usuario);
-      if (cliente && fecha_nacimiento !== undefined) {
-        await Cliente.update(cliente.id_cliente, { fecha_nacimiento });
+      if (cliente) {
+        const clienteData = {};
+        if (foto_perfil_url !== undefined) clienteData.foto_perfil_url = foto_perfil_url;
+        
+        if (Object.keys(clienteData).length > 0) {
+          await Cliente.update(cliente.id_cliente, clienteData);
+        }
       }
     }
 

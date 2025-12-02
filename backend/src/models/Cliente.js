@@ -47,12 +47,11 @@ class Cliente {
    */
   static async create(clienteData) {
     const query = `
-      INSERT INTO cliente (id_usuario, fecha_nacimiento)
-      VALUES (?, ?)
+      INSERT INTO cliente (id_usuario)
+      VALUES (?)
     `;
     const params = [
-      clienteData.id_usuario,
-      clienteData.fecha_nacimiento || null
+      clienteData.id_usuario
     ];
     const result = await executeQuery(query, params);
     return result.insertId;
@@ -62,12 +61,19 @@ class Cliente {
    * Update cliente
    */
   static async update(id, clienteData) {
-    const query = `
-      UPDATE cliente
-      SET fecha_nacimiento = ?
-      WHERE id_cliente = ?
-    `;
-    await executeQuery(query, [clienteData.fecha_nacimiento, id]);
+    const fields = [];
+    const params = [];
+
+    if (clienteData.foto_perfil_url !== undefined) {
+      fields.push('foto_perfil_url = ?');
+      params.push(clienteData.foto_perfil_url);
+    }
+
+    if (fields.length === 0) return this.findById(id);
+
+    params.push(id);
+    const query = `UPDATE cliente SET ${fields.join(', ')} WHERE id_cliente = ?`;
+    await executeQuery(query, params);
     return this.findById(id);
   }
 
