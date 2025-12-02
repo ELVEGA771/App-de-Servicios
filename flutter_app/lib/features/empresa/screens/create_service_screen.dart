@@ -334,7 +334,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
 
                     // Categoría
                     DropdownButtonFormField<int>(
-                      initialValue: _selectedCategoriaId,
+                      value: _selectedCategoriaId,
                       decoration: InputDecoration(
                         labelText: 'Categoría',
                         prefixIcon: const Icon(Icons.category),
@@ -364,7 +364,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
 
                     // Sucursal (opcional)
                     DropdownButtonFormField<int>(
-                      initialValue: _selectedSucursalId,
+                      value: _selectedSucursalId,
                       decoration: InputDecoration(
                         labelText: 'Sucursal (opcional)',
                         prefixIcon: const Icon(Icons.store),

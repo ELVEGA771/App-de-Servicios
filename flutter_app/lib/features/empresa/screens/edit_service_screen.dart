@@ -239,7 +239,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
 
                     // Categoría
                     DropdownButtonFormField<int>(
-                      initialValue: _selectedCategoriaId,
+                      value: _selectedCategoriaId,
                       decoration: InputDecoration(
                         labelText: 'Categoría',
                         border: OutlineInputBorder(
