@@ -1465,39 +1465,6 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `sp_obtener_cupones_empresa` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_obtener_cupones_empresa`(
-    IN p_id_empresa INT
-)
-BEGIN
-    SELECT 
-        id_cupon, 
-        codigo, 
-        tipo_descuento, 
-        valor_descuento, 
-        monto_minimo_compra, 
-        cantidad_disponible, 
-        cantidad_usada, 
-        fecha_expiracion, 
-        activo
-    FROM cupon
-    WHERE id_empresa = p_id_empresa
-    ORDER BY fecha_expiracion DESC;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `sp_registrar_usuario` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1575,56 +1542,6 @@ BEGIN
     END IF;
 
     COMMIT;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `sp_servicios_por_ubicacion` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_servicios_por_ubicacion`(
-    IN p_ciudad VARCHAR(100),
-    IN p_id_categoria INT
-)
-BEGIN
-    SELECT DISTINCT
-        s.id_servicio,
-        s.nombre,
-        s.descripcion,
-        s.precio_base,
-        s.imagen_url,
-        e.razon_social,
-        e.calificacion_promedio,
-        suc.nombre_sucursal,
-        d.ciudad,
-        -- ⭐ Incluir detalles específicos del enfoque híbrido
-        suc.piso,
-        suc.numero_local,
-        CONCAT(
-            d.calle_principal,
-            IFNULL(CONCAT(', Piso ', suc.piso), ''),
-            IFNULL(CONCAT(', Local ', suc.numero_local), '')
-        ) AS direccion_formateada
-    FROM servicio s
-    INNER JOIN servicio_sucursal ss ON s.id_servicio = ss.id_servicio
-    INNER JOIN sucursal suc ON ss.id_sucursal = suc.id_sucursal
-    INNER JOIN direccion d ON suc.id_direccion = d.id_direccion
-    INNER JOIN empresa e ON s.id_empresa = e.id_empresa
-    WHERE d.ciudad = p_ciudad
-    AND s.estado = 'disponible'
-    AND ss.disponible = TRUE
-    AND suc.estado = 'activa'
-    AND (p_id_categoria IS NULL OR s.id_categoria = p_id_categoria)
-    ORDER BY e.calificacion_promedio DESC;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -1822,4 +1739,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-01 20:37:59
+-- Dump completed on 2025-12-01 23:39:32

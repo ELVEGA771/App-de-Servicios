@@ -38,3 +38,16 @@ PASOS
    Nota: La base de datos se inicializará automáticamente con el archivo
    'BASEVERSIONFINAL9.sql'.
 
+USUARIOS DEMO CREADOS CLAVE PARA PROBAR LA FUNCIONALIDAD DESDE EL PRIMER LAUNCH DE LA APP
+
+email: admin@app.com
+clave: Admin1234
+
+email: Cliente@app.com
+clave: Cliente1234
+
+email: empresa1@app.com
+clave: Empresa1
+
+email: empresa2@app.com
+clave: Empresa2
