@@ -5,6 +5,8 @@ import 'package:servicios_app/core/providers/auth_provider.dart';
 import 'package:servicios_app/core/providers/contratacion_provider.dart';
 import 'package:servicios_app/config/theme.dart';
 import 'package:intl/intl.dart';
+import 'package:servicios_app/core/services/chat_service.dart';
+import 'package:servicios_app/features/chat/screens/chat_screen.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final int orderId;
@@ -25,6 +27,37 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       Provider.of<ContratacionProvider>(context, listen: false)
           .loadContratacionDetails(widget.orderId);
     });
+  }
+
+  Future<void> _openChat(Contratacion order) async {
+    try {
+      setState(() => _isLoadingAction = true);
+      final chatService = ChatService();
+      final conversation = await chatService.getOrCreateByContratacion(order.id);
+      
+      if (!mounted) return;
+      setState(() => _isLoadingAction = false);
+
+      final isEmpresa = Provider.of<AuthProvider>(context, listen: false).isEmpresa;
+      final otherName = isEmpresa ? (order.clienteNombre ?? 'Cliente') : (order.empresaNombre ?? 'Empresa');
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            conversacionId: conversation.id,
+            otherUserName: otherName,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingAction = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al abrir el chat: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _updateStatus(String newStatus) async {
@@ -173,6 +206,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 const SizedBox(height: 10),
                 _buildServiceCard(order),
                 const SizedBox(height: 20),
+                if (order.isActive) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openChat(order),
+                      icon: const Icon(Icons.chat),
+                      label: Text(isEmpresa ? 'Chat con el Cliente' : 'Chat con la Empresa'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
                 _buildSectionTitle('Información de Pago'),
                 const SizedBox(height: 10),
                 _buildPaymentCard(order),

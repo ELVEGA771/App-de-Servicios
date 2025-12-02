@@ -24,7 +24,7 @@ class Calificacion {
       INNER JOIN contratacion con ON cal.id_contratacion = con.id_contratacion
       INNER JOIN cliente cli ON con.id_cliente = cli.id_cliente
       INNER JOIN usuario u ON cli.id_usuario = u.id_usuario
-      WHERE con.id_servicio = ? AND cal.tipo = 'cliente_a_empresa'
+      WHERE con.id_servicio = ?
       ORDER BY cal.fecha_calificacion DESC
       LIMIT ? OFFSET ?
     `;
@@ -35,7 +35,7 @@ class Calificacion {
       SELECT COUNT(*) as total
       FROM calificacion cal
       INNER JOIN contratacion con ON cal.id_contratacion = con.id_contratacion
-      WHERE con.id_servicio = ? AND cal.tipo = 'cliente_a_empresa'
+      WHERE con.id_servicio = ?
     `;
     const countResult = await executeQuery(countQuery, [idServicio]);
     const total = countResult[0].total;
@@ -59,7 +59,7 @@ class Calificacion {
       INNER JOIN cliente cli ON con.id_cliente = cli.id_cliente
       INNER JOIN usuario u ON cli.id_usuario = u.id_usuario
       INNER JOIN servicio s ON con.id_servicio = s.id_servicio
-      WHERE s.id_empresa = ? AND cal.tipo = 'cliente_a_empresa'
+      WHERE s.id_empresa = ?
       ORDER BY cal.fecha_calificacion DESC
       LIMIT ? OFFSET ?
     `;
@@ -71,7 +71,7 @@ class Calificacion {
       FROM calificacion cal
       INNER JOIN contratacion con ON cal.id_contratacion = con.id_contratacion
       INNER JOIN servicio s ON con.id_servicio = s.id_servicio
-      WHERE s.id_empresa = ? AND cal.tipo = 'cliente_a_empresa'
+      WHERE s.id_empresa = ?
     `;
     const countResult = await executeQuery(countQuery, [idEmpresa]);
     const total = countResult[0].total;
@@ -84,9 +84,9 @@ class Calificacion {
    */
   static async create(calificacionData) {
     // Call stored procedure
-    // sp_crear_calificacion(p_id_contratacion, p_calificacion, p_comentario, p_id_usuario)
+    // sp_crear_calificacion(p_id_contratacion, p_calificacion, p_comentario, OUT p_id, OUT p_msg)
     const query = `
-      CALL sp_crear_calificacion(?, ?, ?, ?)
+      CALL sp_crear_calificacion(?, ?, ?, @id_out, @msg_out)
     `;
     const params = [
       calificacionData.id_contratacion,
@@ -96,20 +96,19 @@ class Calificacion {
 
     await executeQuery(query, params);
     
-    // Since the new SP doesn't return the ID via OUT param, we return a success indicator
     return true;
   }
 
   /**
    * Check if contratacion already rated
    */
-  static async isAlreadyRated(idContratacion, tipo) {
+  static async isAlreadyRated(idContratacion) {
     const query = `
       SELECT COUNT(*) as count
       FROM calificacion
       WHERE id_contratacion = ?
     `;
-    const results = await executeQuery(query, [idContratacion, tipo]);
+    const results = await executeQuery(query, [idContratacion]);
     return results[0].count > 0;
   }
 
@@ -120,9 +119,8 @@ class Calificacion {
     const query = `
       SELECT AVG(cal.calificacion) as promedio
       FROM calificacion cal
-      INNER JOIN contratacion con ON cal.id_contratacion = con.id_contratacion
-      INNER JOIN servicio s ON con.id_servicio = s.id_servicio
-      WHERE s.id_empresa = ?'
+      INNER JOIN servicio s ON cal.id_servicio = s.id_servicio
+      WHERE s.id_empresa = ?
     `;
     const results = await executeQuery(query, [idEmpresa]);
     return parseFloat(results[0].promedio) || 0;
@@ -143,7 +141,7 @@ class Calificacion {
       INNER JOIN cliente cli ON c.id_cliente = cli.id_cliente
       INNER JOIN servicio s ON c.id_servicio = s.id_servicio
       INNER JOIN empresa e ON s.id_empresa = e.id_empresa
-      LEFT JOIN calificacion cal ON c.id_contratacion = cal.id_contratacion AND cal.tipo = 'cliente_a_empresa'
+      LEFT JOIN calificacion cal ON c.id_contratacion = cal.id_contratacion
       WHERE cli.id_usuario = ?
         AND c.estado = 'completado'
         AND cal.id_calificacion IS NULL

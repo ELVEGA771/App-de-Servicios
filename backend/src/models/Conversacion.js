@@ -21,6 +21,17 @@ class Conversacion {
   }
 
   /**
+   * Find conversacion by contratacion ID
+   */
+  static async findByContratacionId(idContratacion) {
+    const query = `
+      SELECT * FROM conversacion WHERE id_contratacion = ?
+    `;
+    const results = await executeQuery(query, [idContratacion]);
+    return results[0] || null;
+  }
+
+  /**
    * Get conversaciones by user
    */
   static async getByUser(userId, userType) {
@@ -97,7 +108,8 @@ class Conversacion {
       SELECT
         m.*,
         CONCAT(u.nombre, ' ', u.apellido) as remitente_nombre,
-        u.foto_perfil_url as remitente_foto
+        u.foto_perfil_url as remitente_foto,
+        u.tipo_usuario as tipo_remitente
       FROM mensaje m
       INNER JOIN usuario u ON m.id_remitente = u.id_usuario
       WHERE m.id_conversacion = ?

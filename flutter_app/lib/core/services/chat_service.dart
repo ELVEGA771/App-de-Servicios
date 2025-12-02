@@ -34,6 +34,12 @@ class ChatService {
     return Conversacion.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 
+  // Get or create conversacion by contratacion ID
+  Future<Conversacion> getOrCreateByContratacion(int contratacionId) async {
+    final response = await _dioClient.get('/conversaciones/contrato/$contratacionId');
+    return Conversacion.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
   // Get mensajes from conversacion
   Future<List<Mensaje>> getMensajes(int conversacionId) async {
     final response = await _dioClient.get('/conversaciones/$conversacionId/mensajes');
