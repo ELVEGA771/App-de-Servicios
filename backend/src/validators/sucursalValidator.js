@@ -23,8 +23,6 @@ const createSucursalValidator = [
   body('provincia_estado').trim().notEmpty().withMessage('Province/state is required'),
   body('codigo_postal').optional().trim(),
   body('pais').optional().trim(),
-  body('latitud').optional().isFloat({ min: -90, max: 90 }),
-  body('longitud').optional().isFloat({ min: -180, max: 180 }),
   body('referencia').optional().trim(),
   body('estado').optional().isIn([BRANCH_STATUS.ACTIVE, BRANCH_STATUS.INACTIVE]),
   
@@ -51,8 +49,6 @@ const updateSucursalValidator = [
   body('provincia_estado').optional().trim(),
   body('codigo_postal').optional().trim(),
   body('pais').optional().trim(),
-  body('latitud').optional().isFloat({ min: -90, max: 90 }),
-  body('longitud').optional().isFloat({ min: -180, max: 180 }),
   body('referencia').optional().trim(),
   body('estado').optional().isIn([BRANCH_STATUS.ACTIVE, BRANCH_STATUS.INACTIVE]),
   body('horario_apertura').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/),

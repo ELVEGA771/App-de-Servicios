@@ -258,17 +258,29 @@ class Servicio {
   }
 
   /**
-   * Associate servicio with sucursal (using stored procedure)
+   * Associate servicio with sucursal
    */
   static async addToSucursal(idServicio, idSucursal, precioSucursal = null) {
     return executeTransaction(async (connection) => {
-      // Call stored procedure
-      const query = 'CALL sp_asociar_servicio_sucursal(?, ?, ?, @out_mensaje)';
-      await executeQuery(query, [idServicio, idSucursal, precioSucursal], connection);
+      // Check if service exists
+      const serviceCheck = await executeQuery('SELECT id_servicio FROM servicio WHERE id_servicio = ?', [idServicio], connection);
+      if (serviceCheck.length === 0) {
+        throw new Error('El servicio no existe');
+      }
 
-      // Get output message
-      const resultQuery = 'SELECT @out_mensaje as mensaje';
-      const results = await executeQuery(resultQuery, [], connection);
+      // Check if sucursal exists
+      const sucursalCheck = await executeQuery('SELECT id_sucursal FROM sucursal WHERE id_sucursal = ?', [idSucursal], connection);
+      if (sucursalCheck.length === 0) {
+        throw new Error('La sucursal no existe');
+      }
+
+      // Insert or update association
+      const query = `
+        INSERT INTO servicio_sucursal (id_servicio, id_sucursal, disponible)
+        VALUES (?, ?, 1)
+        ON DUPLICATE KEY UPDATE disponible = 1
+      `;
+      await executeQuery(query, [idServicio, idSucursal], connection);
       return true;
     });
   }

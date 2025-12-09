@@ -24,9 +24,9 @@ class Direccion {
       const query = `
         INSERT INTO direccion (
           calle_principal, calle_secundaria, numero, ciudad, provincia_estado,
-          codigo_postal, pais, latitud, longitud, referencia
+          codigo_postal, pais, referencia
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const params = [
         direccionData.calle_principal,
@@ -36,8 +36,6 @@ class Direccion {
         direccionData.provincia_estado || direccionData.estado,
         direccionData.codigo_postal || null,
         direccionData.pais || 'Ecuador',
-        direccionData.latitud || null,
-        direccionData.longitud || null,
         direccionData.referencia || null
       ];
       const result = await executeQuery(query, params, connection);
@@ -80,14 +78,6 @@ class Direccion {
       if (direccionData.pais !== undefined) {
         fields.push('pais = ?');
         params.push(direccionData.pais);
-      }
-      if (direccionData.latitud !== undefined) {
-        fields.push('latitud = ?');
-        params.push(direccionData.latitud);
-      }
-      if (direccionData.longitud !== undefined) {
-        fields.push('longitud = ?');
-        params.push(direccionData.longitud);
       }
       if (direccionData.referencia !== undefined) {
         fields.push('referencia = ?');

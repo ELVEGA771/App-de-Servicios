@@ -25,14 +25,14 @@ class Favorito {
   /**
    * Add to favoritos
    */
-  static async add(idCliente, idServicio, notasCliente = null) {
+  static async add(idCliente, idServicio) {
     return executeTransaction(async (connection) => {
       const query = `
-        INSERT INTO servicio_favorito (id_servicio, id_cliente, fecha_agregado, notas_cliente)
-        VALUES (?, ?, NOW(), ?)
-        ON DUPLICATE KEY UPDATE notas_cliente = ?, fecha_agregado = NOW()
+        INSERT INTO servicio_favorito (id_servicio, id_cliente, fecha_agregado)
+        VALUES (?, ?, NOW())
+        ON DUPLICATE KEY UPDATE fecha_agregado = NOW()
       `;
-      await executeQuery(query, [idServicio, idCliente, notasCliente, notasCliente], connection);
+      await executeQuery(query, [idServicio, idCliente], connection);
       return true;
     });
   }

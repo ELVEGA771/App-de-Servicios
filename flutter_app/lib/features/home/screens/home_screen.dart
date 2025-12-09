@@ -17,6 +17,7 @@ import 'package:servicios_app/features/favoritos/screens/favoritos_screen.dart';
 import 'package:servicios_app/core/providers/favorito_provider.dart';
 import 'package:servicios_app/core/providers/calificacion_provider.dart';
 import 'package:servicios_app/features/calificacion/widgets/calificacion_dialog.dart';
+import 'package:servicios_app/features/chat/screens/chatbot_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -128,6 +129,18 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: _buildBody(),
+      floatingActionButton: !Provider.of<AuthProvider>(context).isEmpresa
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+                );
+              },
+              backgroundColor: AppTheme.primaryColor,
+              child: const Icon(Icons.smart_toy, color: Colors.white),
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {

@@ -99,10 +99,7 @@ const addToSucursalValidator = [
     .isInt({ min: 1 }).withMessage('Invalid service ID'),
   body('id_sucursal')
     .notEmpty().withMessage('Sucursal ID is required')
-    .isInt({ min: 1 }).withMessage('Invalid sucursal ID'),
-  body('precio_sucursal')
-    .optional()
-    .isFloat({ min: 0 }).withMessage('Price must be a positive number')
+    .isInt({ min: 1 }).withMessage('Invalid sucursal ID')
 ];
 
 module.exports = {

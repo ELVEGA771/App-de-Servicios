@@ -6,29 +6,39 @@ class Mensaje {
    */
   static async create(mensajeData) {
     return executeTransaction(async (connection) => {
-      // Call stored procedure
+      // 1. Validate conversation exists
+      const checkConvQuery = 'SELECT 1 FROM conversacion WHERE id_conversacion = ?';
+      const convExists = await executeQuery(checkConvQuery, [mensajeData.id_conversacion], connection);
+      if (convExists.length === 0) {
+        throw new Error('La conversación no existe');
+      }
+
+      // 2. Validate content
+      const tipo = mensajeData.tipo_mensaje || 'texto';
+      if (tipo === 'texto' && (!mensajeData.contenido || !mensajeData.contenido.trim())) {
+        throw new Error('El contenido del mensaje no puede estar vacío');
+      }
+
+      // 3. Insert message
       const query = `
-        CALL sp_crear_mensaje(?, ?, ?, ?, ?, @out_id_mensaje, @out_mensaje)
+        INSERT INTO mensaje (id_conversacion, id_remitente, contenido, tipo_mensaje)
+        VALUES (?, ?, ?, ?)
       `;
       const params = [
         mensajeData.id_conversacion,
         mensajeData.id_remitente,
         mensajeData.contenido,
-        mensajeData.tipo_mensaje || null,
-        mensajeData.archivo_url || null
+        tipo
       ];
 
-      await executeQuery(query, params, connection);
+      const result = await executeQuery(query, params, connection);
+      const idMensaje = result.insertId;
 
-      // Get output parameters
-      const resultQuery = 'SELECT @out_id_mensaje as id_mensaje, @out_mensaje as mensaje';
-      const results = await executeQuery(resultQuery, [], connection);
+      // 4. Update conversation
+      const updateConvQuery = 'UPDATE conversacion SET fecha_ultimo_mensaje = NOW() WHERE id_conversacion = ?';
+      await executeQuery(updateConvQuery, [mensajeData.id_conversacion], connection);
 
-      if (!results[0].id_mensaje) {
-        throw new Error(results[0].mensaje || 'Error al crear mensaje');
-      }
-
-      return results[0].id_mensaje;
+      return idMensaje;
     });
   }
 

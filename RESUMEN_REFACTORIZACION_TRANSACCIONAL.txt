@@ -1,0 +1,52 @@
+RESUMEN DE TRABAJO REALIZADO - REFACTORIZACIÓN TRANSACCIONAL
+FECHA: 01 de Diciembre de 2025
+
+1. OBJETIVO PRINCIPAL
+   Implementar un manejo transaccional robusto en la capa de modelos del backend (Node.js) para asegurar la integridad de los datos durante operaciones de escritura (INSERT, UPDATE, DELETE).
+
+2. CAMBIOS IMPLEMENTADOS
+   Se refactorizaron los métodos de creación, actualización y eliminación en los modelos para utilizar el helper `executeTransaction`. Esto garantiza que si ocurre un error durante la operación, se realice un ROLLBACK automático, y si todo es exitoso, se haga COMMIT.
+
+   Patrón aplicado:
+   static async metodo(data) {
+     return executeTransaction(async (connection) => {
+       // Operaciones usando 'connection'
+       await executeQuery(query, params, connection);
+       // ... más lógica
+       return result;
+     });
+   }
+
+3. ARCHIVOS MODIFICADOS (BACKEND/SRC/MODELS)
+   Se actualizaron los siguientes 14 archivos:
+
+   - Usuario.js
+   - Empresa.js
+   - Cliente.js
+   - Servicio.js
+   - Contratacion.js (Manejo crítico de órdenes y estados)
+   - Calificacion.js
+   - Direccion.js
+   - Sucursal.js
+   - Categoria.js
+   - Cupon.js
+   - Favorito.js
+   - Notificacion.js
+   - Conversacion.js
+   - Mensaje.js
+
+4. NOTAS ADICIONALES
+   - Archivo Pago.js: Se detectó que este archivo no existe en el directorio de modelos, por lo que no se pudo refactorizar. Es posible que la lógica de pagos esté integrada en otros controladores o servicios externos.
+   - Stored Procedures: Se mantuvieron las llamadas a procedimientos almacenados existentes (ej. sp_crear_contratacion), envolviéndolos también en la transacción para consistencia.
+
+5. CONTROL DE VERSIONES (GIT)
+   - Rama de trabajo: finalavance
+   - Acciones realizadas:
+     1. Stage de todos los archivos modificados.
+     2. Commit con mensaje: "Refactor models to use transactional schema".
+     3. Push a origin/finalavance.
+     4. Merge de finalavance hacia main.
+     5. Push a origin/main.
+
+ESTADO FINAL:
+El backend ahora cuenta con una capa de persistencia más segura y robusta frente a fallos en operaciones de base de datos.

@@ -16,8 +16,6 @@ class Sucursal {
         d.provincia_estado,
         d.codigo_postal,
         d.pais,
-        d.latitud,
-        d.longitud,
         d.referencia
       FROM sucursal s
       INNER JOIN direccion d ON s.id_direccion = d.id_direccion
@@ -42,8 +40,6 @@ class Sucursal {
         d.provincia_estado,
         d.codigo_postal,
         d.pais,
-        d.latitud,
-        d.longitud,
         d.referencia
       FROM sucursal s
       INNER JOIN direccion d ON s.id_direccion = d.id_direccion
@@ -90,44 +86,55 @@ class Sucursal {
    */
   static async create(sucursalData) {
     return executeTransaction(async (connection) => {
-      // Call stored procedure
-      const query = `
-        CALL sp_crear_sucursal(
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-          @out_id_sucursal, @out_id_direccion, @out_mensaje
+      // 1. Validate empresa exists
+      const checkEmpresaQuery = 'SELECT 1 FROM empresa WHERE id_empresa = ?';
+      const empresaExists = await executeQuery(checkEmpresaQuery, [sucursalData.id_empresa], connection);
+      if (empresaExists.length === 0) {
+        throw new Error('La empresa no existe');
+      }
+
+      // 2. Insert Direccion
+      const dirQuery = `
+        INSERT INTO direccion (
+          calle_principal, calle_secundaria, numero, ciudad, provincia_estado,
+          codigo_postal, pais, referencia
         )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const params = [
-        sucursalData.id_empresa,
-        sucursalData.nombre_sucursal,
-        sucursalData.telefono || null,
-        sucursalData.horario_apertura || null,
-        sucursalData.horario_cierre || null,
-        sucursalData.dias_laborales || null,
-        sucursalData.estado || null,
+      const dirParams = [
         sucursalData.calle_principal,
         sucursalData.calle_secundaria || null,
         sucursalData.numero || null,
         sucursalData.ciudad,
         sucursalData.provincia_estado,
         sucursalData.codigo_postal || null,
-        sucursalData.pais || null,
-        sucursalData.latitud || null,
-        sucursalData.longitud || null,
+        sucursalData.pais || 'Ecuador',
         sucursalData.referencia || null
       ];
+      const dirResult = await executeQuery(dirQuery, dirParams, connection);
+      const idDireccion = dirResult.insertId;
 
-      await executeQuery(query, params, connection);
-
-      // Get output parameters
-      const resultQuery = 'SELECT @out_id_sucursal as id_sucursal, @out_id_direccion as id_direccion, @out_mensaje as mensaje';
-      const results = await executeQuery(resultQuery, [], connection);
-
-      if (!results[0].id_sucursal) {
-        throw new Error(results[0].mensaje || 'Error al crear sucursal');
-      }
-
-      return results[0].id_sucursal;
+      // 3. Insert Sucursal
+      const sucQuery = `
+        INSERT INTO sucursal (
+          id_empresa, id_direccion, nombre_sucursal, telefono,
+          horario_apertura, horario_cierre, dias_laborales, estado
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const sucParams = [
+        sucursalData.id_empresa,
+        idDireccion,
+        sucursalData.nombre_sucursal,
+        sucursalData.telefono || null,
+        sucursalData.horario_apertura || null,
+        sucursalData.horario_cierre || null,
+        sucursalData.dias_laborales || '1111100',
+        sucursalData.estado || 'activa'
+      ];
+      const sucResult = await executeQuery(sucQuery, sucParams, connection);
+      
+      return sucResult.insertId;
     });
   }
 
@@ -202,14 +209,6 @@ class Sucursal {
       if (sucursalData.pais !== undefined) {
         direccionFields.push('pais = ?');
         direccionParams.push(sucursalData.pais);
-      }
-      if (sucursalData.latitud !== undefined) {
-        direccionFields.push('latitud = ?');
-        direccionParams.push(sucursalData.latitud);
-      }
-      if (sucursalData.longitud !== undefined) {
-        direccionFields.push('longitud = ?');
-        direccionParams.push(sucursalData.longitud);
       }
       if (sucursalData.referencia !== undefined) {
         direccionFields.push('referencia = ?');

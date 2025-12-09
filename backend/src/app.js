@@ -90,6 +90,9 @@ app.use('/api/sucursales', sucursalRoutes);
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/admin', adminRoutes);
 
+const chatbotRoutes = require('./routes/chatbotRoutes');
+app.use('/api/chatbot', chatbotRoutes);
+
 const uploadRoutes = require('./routes/uploadRoutes'); // Importar
 app.use('/api/upload', uploadRoutes);
 
