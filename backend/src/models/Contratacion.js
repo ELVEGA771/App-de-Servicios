@@ -266,11 +266,10 @@ class Contratacion {
   static async getHistorialByEmpresa(idEmpresa, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
     const query = `
-      SELECT h.*, c.id_servicio, s.nombre as servicio_nombre, u.nombre as usuario_nombre, u.apellido as usuario_apellido
+      SELECT h.*, c.id_servicio, s.nombre as servicio_nombre
       FROM historial_estado_contratacion h
       INNER JOIN contratacion c ON h.id_contratacion = c.id_contratacion
       INNER JOIN servicio s ON c.id_servicio = s.id_servicio
-      LEFT JOIN usuario u ON h.id_usuario_responsable = u.id_usuario
       WHERE s.id_empresa = ?
       ORDER BY h.fecha_cambio DESC
       LIMIT ? OFFSET ?

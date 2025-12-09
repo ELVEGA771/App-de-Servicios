@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:servicios_app/core/models/servicio.dart';
 import 'package:servicios_app/core/services/chatbot_service.dart';
 import 'package:servicios_app/features/servicio/screens/servicio_detail_screen.dart';
